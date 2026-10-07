@@ -7,6 +7,7 @@ import subprocess
 import threading
 import uuid
 from pathlib import Path
+from urllib.parse import parse_qs
 from prompt_library import ROOT
 import providers
 import creation_api
@@ -39,6 +40,19 @@ def launch(name, command, cwd=ROOT):
 
 
 def handle_get(handler, route, jobs=None):
+    if route.path == '/api/jianying/status':
+        import jianying_bridge
+        try:
+            query = parse_qs(route.query, keep_blank_values=True)
+            if set(query) - {'project_id'} or any(len(values) != 1 for values in query.values()):
+                raise ValueError('仅接受单个 project_id 参数')
+            project_id = query['project_id'][0] if 'project_id' in query else None
+            if project_id is not None:
+                _jianying_project_id(project_id)
+            handler.reply(jianying_bridge.status(project_id))
+        except (ValueError, OSError, RuntimeError) as exc:
+            handler.reply({'error': str(exc)}, 400)
+        return True
     if library_api.get(handler, route, jobs):return True
     if route.path=='/api/music':
         import music_api
@@ -59,7 +73,34 @@ def handle_get(handler, route, jobs=None):
     return False
 
 
+def _jianying_project_id(value):
+    if not isinstance(value, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,119}', value):
+        raise ValueError('请选择工作台中已有的工程，不接受文件路径或命令')
+    return value
+
+
 def handle_post(handler, data, jobs):
+    if handler.path in ('/api/jianying/export', '/api/jianying/open'):
+        import jianying_bridge
+        if handler.headers.get('Content-Type', '').split(';', 1)[0].strip().lower() != 'application/json':
+            handler.reply({'error': '剪映操作需要 application/json 请求'}, 415)
+            return True
+        exporting = handler.path.endswith('/export')
+        fields = {'project_id', 'mode'} if exporting else {'project_id'}
+        if not isinstance(data, dict) or set(data) - fields:
+            raise ValueError('剪映操作只接受工程 ID 和草稿模式')
+        project_id = data.get('project_id')
+        if exporting or 'project_id' in data:
+            project_id = _jianying_project_id(project_id)
+        if exporting:
+            mode = data.get('mode', 'auto')
+            if not isinstance(mode, str) or mode not in ('auto', 'scenes', 'flattened'):
+                raise ValueError('草稿模式应为 auto、scenes 或 flattened')
+            result = jianying_bridge.export_project(project_id, mode=mode)
+        else:
+            result = jianying_bridge.open_jianying(project_id)
+        handler.reply(result)
+        return True
     if library_api.post(handler, data, jobs):return True
     if handler.path=='/api/music':
         import music_api

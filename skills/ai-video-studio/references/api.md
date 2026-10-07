@@ -72,6 +72,33 @@ python CLIENT project JOB_ID
 
 保存返回的 `gaps` 需处理；HTTP 422 可能已保存项目并返回 `job_id`，应复用它。渲染已有项目需要完整 `storyboard`，不能仅传 job_id。中断恢复用 `submit investigation-resume`，JSON 仅 `{"job_id":"实际工程ID"}`，会复用原冻结配置；不对已完成工程调用。恢复编辑：`/investigation?project=JOB_ID`。
 
+## 剪映草稿交接
+
+作品需已完成渲染，且工程内有最终视频。先读取状态，不能把音频任务、空草稿或只有预览图的任务直接当作视频工程：
+
+```powershell
+python CLIENT jianying status
+python CLIENT jianying status --project JOB_ID
+python CLIENT jianying export --project JOB_ID --mode auto
+python CLIENT jianying open --project JOB_ID
+```
+
+路由分别为 `GET /api/jianying/status?project_id=ID`、`POST /api/jianying/export` 与 `POST /api/jianying/open`。导出请求只传 `{"project_id":"实际工程ID","mode":"auto"}`，打开请求只传 `project_id`；不提供项目 ID 的 `open` 仅启动已检测到的剪映。CLI 不接受任意可执行文件、启动参数或输出路径。
+
+状态中的 `installed / executable / draft_root / bridge_ready` 表示安装及桥接环境；`project` 对象里的 `can_export / available_modes / mode_reasons` 决定本工程能用哪种方式。桥接未安装时在工作台根运行 `scripts/Install-JianyingBridge.ps1`，依赖隔离到 `apps/jianying-bridge/.venv`；剪映本体从其官网安装并完成首次启动。`draft_root_source=jianying-settings` 表示已采用剪映中设置的自定义草稿目录。
+
+- `auto` 自动选择可用方式；检查响应中的实际 `mode` 和 `warnings`。
+- `scenes` 把保留的镜头、角色配音和字幕组成轨道。白板/讲解镜头没有独立图片或视频时会重建为原生标题、要点文字卡片，可直接改文字；原手绘描边、排版动效和转场不自动迁移。已有图片或视频内部的文字与图形仍属于画面。
+- `flattened` 以最终视频交接，保留原画面与混音；不是重新拆出所有角色声音或原始图形。字幕已经烧录的成片不能直接再叠加同一套可见字幕。
+
+导出返回 `draft_id / draft_name / draft_path / mode / tracks / warnings / manifest_url / delivery_dir`，保留这些字段用于后续剪映操作。生成草稿后，再运行 `open`，在剪映中按返回的草稿名打开。`open` 响应 `opened=true` 仅代表启动应用，`draft_opened_automatically=false` 明确表示没有自动进入工程。`desktop_export_available=false` 表示桥接 API 没有自动导出 MP4 的功能，不代表当前 Codex 会话的桌面工具不可用。应用启动、草稿打开和最终导出分别核对。最终 MP4 可保存到响应的 `delivery_dir`，与原工作台工程保持关联。
+
+草稿创建会复制素材，CLI 为该命令默认等待最多 600 秒，其余请求默认 20 秒。可在 `jianying` 前加 `--timeout 秒数` 调整。如果连接中断或超时，先用 `status --project` 查看 `last_export`，不要把未收到响应当成草稿必然不存在。相同素材的重复请求会复用已存在的交接草稿，响应中 `reused=true`；已经在剪映修改过的草稿不会被覆盖。
+
+剪映 MP4 放入 `delivery_dir` 后，再读取项目状态。`last_export.files` 只列出已稳定、未被写入占用且容器可读取的导出文件；仍在写入或不完整的文件列在 `pending_files`，没有交付 URL。文件的 `verification.container_readable=true` 只是容器检查，`visual_review / audio_review=pending` 仍需实际视听，不能自动改称质量通过。
+
+如用户要求剪映最终成片，使用实际可用的 Windows 桌面控制工具完成时间线核对和导出，遇到登录、会员素材或不兼容提示时读取具体原因。新版剪映与社区草稿库须以实际打开结果验证，不降级软件或尝试改写加密旧草稿。修改用户已有剪映项目应先复制保留原版。
+
 ## 音色与单项素材
 
 `voices` 返回 `presets / default_preset_id / default_voice / references`。预设内 `voice` 为完整配置。独立配音请求：

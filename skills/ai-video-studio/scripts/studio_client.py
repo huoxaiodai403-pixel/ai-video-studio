@@ -35,6 +35,7 @@ ACTIONS = {
 }
 JOB_PATTERN = r'(?:[a-f0-9]{12}|(?:whiteboard|investigation|speech|music|motion|asr|video|enhance|story)-[a-f0-9]{10})'
 LIB_PATTERN = r'lib-[a-f0-9]{24}'
+PROJECT_PATTERN = r'[A-Za-z0-9][A-Za-z0-9_-]{0,119}'
 DOWNLOAD_FIELDS = ('video', 'audio', 'subtitle', 'bundle', 'image', 'storyboard_url',
                    'manifest_url', 'verification', 'metadata', 'transcript', 'manuscript',
                    'source_ledger', 'publish_copy')
@@ -248,7 +249,8 @@ def doctor(client):
 def parser():
     result = argparse.ArgumentParser(description=__doc__)
     result.add_argument('--url', default=os.environ.get('AI_VIDEO_STUDIO_URL', 'http://127.0.0.1:8189'))
-    result.add_argument('--timeout', type=float, default=20)
+    result.add_argument('--timeout', type=float, default=None,
+                        help='Request timeout seconds; default 600 for Jianying draft creation, 20 otherwise')
     sub = result.add_subparsers(dest='command', required=True)
     sub.add_parser('doctor', help='Read-only service and dependency checks')
     listing = sub.add_parser('list', help='List unified products or reusable assets')
@@ -270,6 +272,15 @@ def parser():
     submit = sub.add_parser('submit', help='Submit a JSON file to a named creation endpoint')
     submit.add_argument('action', choices=tuple(ACTIONS))
     submit.add_argument('--json', required=True, dest='json_file')
+    jianying = sub.add_parser('jianying', help='Check, create a local draft, or launch installed Jianying')
+    editor = jianying.add_subparsers(dest='editor_action', required=True)
+    editor_status = editor.add_parser('status', help='Read installation and optional project handoff status')
+    editor_status.add_argument('--project')
+    editor_export = editor.add_parser('export', help='Create a new Jianying draft from an existing studio project')
+    editor_export.add_argument('--project', required=True)
+    editor_export.add_argument('--mode', choices=('auto', 'scenes', 'flattened'), default='auto')
+    editor_open = editor.add_parser('open', help='Launch detected Jianying; project selection remains a UI action')
+    editor_open.add_argument('--project')
     download = sub.add_parser('download', help='Download a real local delivery without overwriting')
     source = download.add_mutually_exclusive_group(required=True)
     source.add_argument('--job')
@@ -284,9 +295,12 @@ def parser():
 
 def main(argv=None):
     args = parser().parse_args(argv)
-    if not 0 < args.timeout <= 60:
-        raise StudioError('请求超时应为 0–60 秒。')
-    client = Client(args.url, args.timeout)
+    draft_creation = args.command == 'jianying' and args.editor_action == 'export'
+    timeout_limit = 600 if draft_creation else 60
+    timeout = args.timeout if args.timeout is not None else (600 if draft_creation else 20)
+    if not 0 < timeout <= timeout_limit:
+        raise StudioError(f'请求超时应大于 0 且不超过 {timeout_limit} 秒。')
+    client = Client(args.url, timeout)
     if args.command == 'doctor':
         result = doctor(client)
         output(result)
@@ -322,6 +336,16 @@ def main(argv=None):
         if args.action == 'produce' and any(value != 'local' for value in payload.get('storyboard', {}).get('backends', {}).values()):
             raise StudioError('此分享客户端不提交在线流水线。')
         result = client.json(ACTIONS[args.action], payload)
+    elif args.command == 'jianying':
+        project_id = identifier(args.project, PROJECT_PATTERN, '工程 ID') if args.project else None
+        if args.editor_action == 'status':
+            query = '?' + urlencode({'project_id': project_id}) if project_id else ''
+            result = client.json('/api/jianying/status' + query)
+        else:
+            payload = {'project_id': project_id} if project_id else {}
+            if args.editor_action == 'export':
+                payload['mode'] = args.mode
+            result = client.json('/api/jianying/' + args.editor_action, payload)
     elif args.command == 'download':
         if not 1 <= args.max_mb <= 16384:
             raise StudioError('下载上限应为 1–16384 MB。')

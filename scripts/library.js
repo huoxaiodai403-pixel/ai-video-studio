@@ -11,6 +11,70 @@
   const dateText = value => { if(!value)return '时间未记录';const date = new Date(typeof value === 'number' ? value * 1000 : value); return Number.isNaN(date.valueOf()) ? '时间未记录' : date.toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}); };
   const typeText = row => names[row.workflow] || names[row.kind] || names[row.media_type] || '工程';
   function action(label, url) { const a = element('a',label,'hub-button secondary'); a.href=url; return a; }
+  function jianyingPanel(row) {
+    const panel=element('section',null,'jianying-panel'), heading=element('h3','送到剪映精修'), state=element('p','正在检查剪映与草稿组件…','detail-meta');
+    panel.setAttribute('aria-label','剪映精修');state.setAttribute('role','status');
+    panel.append(heading,element('p','生成草稿 → 在剪映中调整画面、声音与字幕 → 导出 MP4','jianying-steps'),state);
+    const controls=element('div',null,'jianying-controls'),label=element('label','交接方式'),mode=element('select');
+    for(const [value,text] of [['auto','自动选择'],['scenes','素材分轨'],['flattened','成片交接']])mode.append(new Option(text,value));
+    label.append(mode);const generate=element('button','生成剪映草稿','hub-button primary'),open=element('button','打开剪映','hub-button secondary'),reload=element('button','刷新状态','hub-button secondary');
+    for(const button of [generate,open,reload])button.type='button';generate.disabled=true;open.disabled=true;
+    controls.append(label,generate,open,reload);panel.append(controls);
+    const help=element('p',null,'detail-meta'),availability=element('p',null,'jianying-unavailable'),result=element('div',null,'jianying-result'),notice=element('p',null,'detail-meta');notice.setAttribute('role','status');notice.setAttribute('aria-live','polite');
+    availability.id='jianying-availability';availability.setAttribute('role','status');generate.setAttribute('aria-describedby',availability.id);
+    panel.append(help,availability,result,notice,element('p','草稿已生成或剪映已打开，都不代表 MP4 已导出。完成精修后，请在剪映内导出到下方交付目录，再点“刷新状态”回收成片。','jianying-boundary'));
+    const modeNames={scenes:'素材分轨',flattened:'成片交接',auto:'自动选择'};let installation=null,busy=false,latest=null;
+    function explainMode(){help.textContent=({auto:'优先使用可编辑的镜头与独立声音；素材不足时交接已生成的成片。',scenes:'按现有镜头素材建立轨道，可分别调整画面、旁白与字幕。',flattened:'把已生成的成片放入剪映，原片内已混合的画面、声音或烧录字幕无法拆开。'})[mode.value];}
+    function updateButtons(){
+      let reason='';const project=installation?.project,reasons=project?.mode_reasons||{};
+      if(!installation)reason=busy?'正在检查工程是否可交接…':'尚未获得工程状态，请刷新后再生成草稿。';
+      else if(!installation.installed)reason='尚未检测到剪映，请安装官方桌面版后刷新状态。';
+      else if(!installation.bridge_ready)reason='草稿组件未就绪，请先按工作台安装说明准备组件。';
+      else if(!installation.editable_available)reason='尚未找到剪映草稿目录，请先打开剪映完成首次设置，再刷新状态。';
+      else if(!project?.can_export)reason='当前工程还没有可交接的镜头素材或成片。'+[...new Set(Object.values(reasons).flat().filter(v=>typeof v==='string'))].join('；');
+      else if(mode.value!=='auto'&&Array.isArray(project.available_modes)&&!project.available_modes.includes(mode.value))reason='当前工程暂不支持“'+modeNames[mode.value]+'”。'+(Array.isArray(reasons[mode.value])?reasons[mode.value].join('；'):'请尝试自动选择。');
+      generate.disabled=busy||!!reason;generate.title=reason;availability.textContent=reason;availability.hidden=!reason;
+      open.disabled=busy||!installation?.installed;reload.disabled=busy;mode.disabled=busy;
+    }
+    function pathField(labelText,value){if(!value)return;const group=element('label',labelText,'jianying-path'),field=element('input');field.value=value;field.readOnly=true;field.onclick=()=>field.select();group.append(field);result.append(group);}
+    function showExport(value){
+      latest=value||null;for(const video of result.querySelectorAll('video')){video.pause();video.removeAttribute('src');video.load();}result.replaceChildren();if(!latest)return;
+      result.append(element('h4','已生成：'+(latest.draft_name||'剪映草稿')));
+      result.append(element('p','交接方式：'+(modeNames[latest.mode]||latest.mode||'草稿'),'detail-meta'));
+      if(latest.draft_name)result.append(element('p','打开剪映后，在首页选择“'+latest.draft_name+'”草稿继续编辑。','detail-meta'));
+      pathField('剪映草稿位置',latest.draft_path);pathField('MP4 交付目录',latest.delivery_dir||latest.export_dir);
+      const files=element('div',null,'detail-deliverables'),videos=element('div',null,'jianying-videos'),seen=new Set();
+      for(const file of [{label:'交接清单',url:latest.manifest_url},...(Array.isArray(latest.files)?latest.files:[])]){
+        const url=localUrl(file.url);if(!url||seen.has(url))continue;seen.add(url);
+        if(file.kind==='video'){
+          const item=element('section',null,'jianying-video'),title=element('h5',file.label||'剪映导出视频'),video=element('video');video.src=url;video.controls=true;video.preload='metadata';video.setAttribute('aria-label',file.label||'剪映导出视频预览');
+          const metadata=[];if(Number.isFinite(file.duration)&&file.duration>0)metadata.push(file.duration.toFixed(1)+' 秒');if(Number.isFinite(file.bytes)&&file.bytes>0)metadata.push((file.bytes/1024/1024).toFixed(1)+' MB');
+          if(file.verification?.visual_review==='pending'||file.verification?.audio_review==='pending')metadata.push('画面与声音待检查');
+          const links=element('div',null,'hub-actions'),watch=action('打开成片',url),download=action('下载 MP4',url);watch.target='_blank';watch.rel='noopener noreferrer';download.download='';links.append(watch,download);
+          item.append(title,video,element('p',metadata.join(' · '),'detail-meta'),links);videos.append(item);
+        }else{const link=element('a',file.label||'草稿附件');link.href=url;link.download='';files.append(link);}
+      }
+      result.append(files);
+      if(videos.childElementCount)result.append(element('h4','剪映导出成片'),videos);
+      if(Array.isArray(latest.pending_files)&&latest.pending_files.length){
+        const pending=element('div',null,'jianying-pending');pending.setAttribute('role','status');pending.append(element('p','以下文件仍在导出或尚不可播放。请等待剪映完成导出，再点“刷新状态”。'));
+        const list=element('ul');for(const file of latest.pending_files){const item=element('li',typeof file.name==='string'?file.name:'正在写入的视频');if(typeof file.reason==='string'&&file.reason)item.append(element('span',' · '+file.reason));list.append(item);}pending.append(list);result.append(pending);
+      }
+      if(Array.isArray(latest.warnings)&&latest.warnings.length){const list=element('ul',null,'jianying-warnings');for(const warning of latest.warnings)list.append(element('li',String(warning)));result.append(list);}
+    }
+    async function load(){
+      busy=true;updateButtons();state.textContent='正在检查剪映与草稿组件…';
+      try{const data=await api('/api/jianying/status?'+new URLSearchParams({project_id:row.project_id}));if(!panel.isConnected)return;installation=data;
+        const ready=!!data.bridge_ready;state.textContent=(data.installed?'已检测到剪映':'尚未检测到剪映')+' · '+(ready?'草稿组件已就绪':'草稿组件未就绪');
+        if(!data.installed){const link=element('a','下载剪映官方桌面版');link.href='https://www.capcut.cn/';link.target='_blank';link.rel='noopener noreferrer';state.append(' · ',link);}
+        if(!ready)state.append('。请先按工作台安装说明准备剪映草稿组件。');
+        showExport(data.last_export||data.project?.last_export);
+      }catch(error){if(panel.isConnected){state.textContent=error.message;installation=null;}}finally{busy=false;updateButtons();}
+    }
+    generate.onclick=async()=>{busy=true;updateButtons();notice.classList.remove('library-error');notice.textContent='正在整理素材并生成剪映草稿，请稍候…';try{const data=await api('/api/jianying/export',{project_id:row.project_id,mode:mode.value});if(!panel.isConnected)return;showExport(data);notice.textContent='草稿已生成。打开剪映后选择上方草稿继续精修。';}catch(error){notice.textContent=error.message;notice.classList.add('library-error');}finally{busy=false;updateButtons();}};
+    open.onclick=async()=>{busy=true;updateButtons();notice.classList.remove('library-error');notice.textContent='正在打开剪映…';try{const data=await api('/api/jianying/open',{project_id:row.project_id});if(!panel.isConnected)return;notice.textContent=data.message||'已启动剪映，请在首页选择生成的草稿。';}catch(error){notice.textContent=error.message;notice.classList.add('library-error');}finally{busy=false;updateButtons();}};
+    reload.onclick=load;mode.onchange=()=>{explainMode();updateButtons();};explainMode();queueMicrotask(load);return panel;
+  }
   function updateUrl(item) { const q = new URLSearchParams(location.search); item ? q.set('item',item) : q.delete('item'); history.replaceState(null,'',location.pathname+(q.size?'?'+q:'')); }
   async function favorite(row,button) { button.disabled=true; try { const data=await api('/api/library/metadata',{id:row.id,favorite:!row.favorite}); Object.assign(row,data.item); button.textContent=row.favorite?'★ 已收藏':'☆ 收藏';button.setAttribute('aria-pressed',String(row.favorite)); if($('library-favorite').checked)await refresh(); } catch(e){$('library-status').textContent=e.message;} finally {button.disabled=false;} }
   function card(row) {
@@ -49,6 +113,7 @@
         if(row.absolute_path)links.append(action('制作动态镜头','/motion?'+new URLSearchParams({image:row.absolute_path,preview})));
       }
       host.append(links);const files=element('div',null,'detail-deliverables');for(const file of row.deliverables||[]){const url=localUrl(file.url);if(url&&url!==download){const a=element('a',file.label||'附件');a.href=url;a.download='';files.append(a);}}host.append(files);
+      if(!assetView&&row.media_type==='video'&&row.project_id&&row.collections?.includes('products')&&!row.temporary)host.append(jianyingPanel(row));
       const edit=element('form',null,'detail-edit'),nameLabel=element('label','作品名称'),name=element('input'),tagLabel=element('label','标签（逗号分隔）'),tags=element('input');name.value=row.title;name.maxLength=200;name.required=true;tags.value=(row.tags||[]).join('，');nameLabel.append(name);tagLabel.append(tags);const save=element('button','保存名称与标签','hub-button secondary');save.type='submit';const message=element('p',null,'detail-meta');message.setAttribute('role','status');edit.append(nameLabel,tagLabel,save,message);
       edit.onsubmit=async event=>{event.preventDefault();save.disabled=true;try{const updated=(await api('/api/library/metadata',{id:row.id,title:name.value.trim(),tags:tags.value.split(/[,，]/).map(v=>v.trim()).filter(Boolean)})).item;title.textContent=updated.title;message.textContent='已保存';await refresh();}catch(e){message.textContent=e.message;}finally{save.disabled=false;}};host.append(edit);
       if(!$('library-detail').open)$('library-detail').showModal();updateUrl(id);

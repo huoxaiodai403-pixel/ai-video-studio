@@ -2,14 +2,13 @@ name: Build release downloads
 
 on:
   push:
-    branches: [main]
-    paths: [.github/workflows/release-assets.yml]
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       tag:
         description: Existing release tag to package
         required: true
-        default: v0.1.0
+        default: v0.2.0
         type: string
 
 permissions:
@@ -20,23 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      RELEASE_TAG: ${{ inputs.tag || 'v0.1.0' }}
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
       GH_TOKEN: ${{ github.token }}
-      RELEASE_NOTES: |
-        首个公开版本：用 Codex 写文稿与分镜，通过本机工作台管理素材、角色音色、生成任务和成片。
-
-        下载 `ai-video-studio-0.1.0-windows.zip`，解压后双击 `Install.cmd`，安装完成再双击 `Start.cmd`。
-        首次安装需要网络和兼容 Python；缺少 Python 时会通过 winget 安装 Python 3.12。没有 winget 时请先自行安装 64 位 Python 3.11–3.14。
-
-        工作台包内已附 Codex Skill。运行 `scripts/Install-CodexSkill.ps1`，在 Codex 打开解压目录，新建对话使用 `$ai-video-studio`。
-        `ai-video-studio-skill-0.1.0.zip` 是单独分享的 Skill，其安装脚本在解压目录根部，需要已运行的工作台。
-        `SHA256SUMS.txt` 包含两个 ZIP 的校验值。
-
-        基础包包含源码、安装与启动脚本、公共示例和文档，不包含模型权重、私人作品、录音、照片或 API 密钥。
-        实际生成需配置兼容在线接口或对应本地引擎；白板和长片需要可选渲染器、配音及对齐依赖。请阅读仓库快速上手和本地模型说明。
-
-        已验证干净目录安装、页面启动、接口测试及测试供应商合成流程；未承诺朋友设备上每个模型的运行和生成质量。
-        Windows 剪映接入说明位于 docs/jianying-windows.md；本版未内置剪映草稿或一键导出。
     steps:
       - name: Read the tagged public source
         shell: bash
@@ -58,6 +42,12 @@ jobs:
         run: |
           set -euo pipefail
           if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --title "$RELEASE_TAG · Codex AI 视频工作台" --notes "$RELEASE_NOTES"
+            notes="source/docs/releases/$RELEASE_TAG.md"
+            if [[ -f "$notes" ]]; then
+              gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --title "$RELEASE_TAG · Codex AI 视频工作台" --notes-file "$notes"
+            else
+              gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --title "$RELEASE_TAG · Codex AI 视频工作台" --generate-notes
+            fi
           fi
           gh release upload "$RELEASE_TAG" source/dist/*.zip source/dist/SHA256SUMS.txt --repo "$GITHUB_REPOSITORY"
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false

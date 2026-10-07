@@ -11,6 +11,9 @@ change licenses of dependencies, downloaded models, media or fonts.
   `apps/investigation-renderer/LICENSE.simon-skills`.
 - Bundled Noto Sans SC fonts are under SIL Open Font License 1.1. The full notice
   is at `apps/investigation-renderer/fonts/LICENSE.OFL.txt`.
+- The optional Jianying draft bridge installs [pyJianYingDraft](https://github.com/GuanYixuan/pyJianYingDraft)
+  0.3.0 separately under its [Apache-2.0 license](https://github.com/GuanYixuan/pyJianYingDraft/blob/main/LICENSE).
+  It is a community library, not a Jianying official API; Jianying itself is not redistributed.
 - Remotion, React and other npm/Python packages remain under their own licenses.
   The package manager installs their notices together with dependencies.
   Review [Remotion's license](https://www.remotion.dev/license) for your use.

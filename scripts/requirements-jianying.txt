@@ -1,0 +1,8 @@
+# Isolated CPU draft writer; no model worker dependencies.
+pyjianyingdraft==0.3.0
+pymediainfo==7.0.1
+ImageIO==2.38.0
+numpy==2.5.3
+pillow==12.3.0
+uiautomation==2.0.29; sys_platform == 'win32'
+comtypes==1.4.17; sys_platform == 'win32'

@@ -12,8 +12,8 @@ Codex 负责选题、文稿、分镜和审阅；工作台负责可重复执行�
 
 在 [Releases](https://github.com/huoxaiodai403-pixel/ai-video-studio/releases) 下载：
 
-- `ai-video-studio-0.1.0-windows.zip`：工作台源码、安装/启动脚本、Codex skill、公共示例与文档。
-- `ai-video-studio-skill-0.1.0.zip`：单独分享的 Codex skill；需要连接已安装的工作台。
+- `ai-video-studio-0.2.0-windows.zip`：工作台源码、安装/启动脚本、Codex skill、公共示例与文档。
+- `ai-video-studio-skill-0.2.0.zip`：单独分享的 Codex skill；需要连接已安装的工作台。
 - `SHA256SUMS.txt`：下载校验值。
 
 解压到可写目录，在 PowerShell 中运行：
@@ -38,6 +38,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-CodexSkill
 > 使用 $ai-video-studio，做一个讲“如何判断一条热点消息是否可靠”的白板视频。先给出分镜，使用平静清晰的中文解说，检查可用引擎后再制作。
 
 > 使用 $ai-video-studio，把这个脚本做成双角色调查长片。先检查来源与素材，保留可编辑工程、旁白和 SRT，成片放入作品库。
+
+> 使用 $ai-video-studio，把刚才的作品送到剪映，保留可编辑轨道，检查后将精修成片放回原作品。
 
 完整入口见 [Skill](skills/ai-video-studio/SKILL.md)。分享单独 skill 时，朋友还需安装工作台和实际使用的媒体引擎。
 
@@ -74,7 +76,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-CodexSkill
 - 需要对事实来源、人物一致性、配音听感和字幕进行实际审阅。
 - 分享包不带原作者个人作品、参考照片、克隆录音、凭据、模型权重或私人笔记。
 - 不自动公开发布视频。工作台默认仅绑定本机环回地址，不应直接暴露到公网。
-- Windows 可以通过桌面自动化或社区草稿工具与剪映配合；本发行版不承诺内置新版剪映一键导出。见 [剪映接入说明](docs/jianying-windows.md)。
+- v0.2.0 提供剪映草稿交接与成片回收。在“我的作品 → 送到剪映精修”生成草稿；剪映内的编辑、导出由用户或具备桌面工具的 Codex 完成。首次使用先运行 `scripts/Install-JianyingBridge.ps1`，剪映应用需另行安装。见 [剪映接入说明](docs/jianying-windows.md)。
 
 ## 文档与开发
 
