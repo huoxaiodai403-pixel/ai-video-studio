@@ -1,0 +1,43 @@
+name: Build release downloads
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to package
+        required: true
+        default: v0.1.0
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Read the tagged public source
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null
+          git clone --depth 1 --branch "$RELEASE_TAG" "https://github.com/$GITHUB_REPOSITORY.git" source
+          test "v$(cat source/VERSION | tr -d '\r\n')" = "$RELEASE_TAG"
+      - name: Build and verify source-only archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 source/packaging/build_release.py
+          cd source/dist
+          sha256sum --check SHA256SUMS.txt
+          cat SHA256SUMS.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload downloadable release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release upload "$RELEASE_TAG" source/dist/*.zip source/dist/SHA256SUMS.txt --repo "$GITHUB_REPOSITORY"
