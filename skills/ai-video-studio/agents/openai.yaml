@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI 视频工作台"
+  short_description: "用 Codex 编写视频口播与分镜，调用本机工作台制作白板、长片和角色配音"
+  default_prompt: "使用 $ai-video-studio 帮我把选题写成分镜，选择本机可用音色并制作一条视频。"

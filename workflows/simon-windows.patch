@@ -1,0 +1,154 @@
+diff --git a/skills/whiteboard-video/lib/captions.cjs b/skills/whiteboard-video/lib/captions.cjs
+index b9e241f..8aeac86 100644
+--- a/skills/whiteboard-video/lib/captions.cjs
++++ b/skills/whiteboard-video/lib/captions.cjs
+@@ -104,7 +104,8 @@ function writeSrt(projectDir) {
+   const ts = (t) => { const ms = Math.round(t * 1000); const h = Math.floor(ms / 3600000), m = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')},${String(ms % 1000).padStart(3, '0')}`; };
+   for (const info of infos) {
+     for (const c of cuesForScene(info)) lines.push(`${++n}\n${ts(offset + c.start)} --> ${ts(offset + c.end)}\n${c.text}\n`);
+-    offset += info.duration + LEAD + HOLD;
++    // Segment encoders emit a whole number of frames; keep exported SRT in sync.
++    offset += Math.ceil((info.duration + LEAD + HOLD) * cfg.render.fps) / cfg.render.fps;
+   }
+   const out = path.join(P.project, '字幕.srt');
+   fs.writeFileSync(out, lines.join('\n'));
+diff --git a/skills/whiteboard-video/lib/paths.cjs b/skills/whiteboard-video/lib/paths.cjs
+index 4f8ffb1..290af32 100644
+--- a/skills/whiteboard-video/lib/paths.cjs
++++ b/skills/whiteboard-video/lib/paths.cjs
+@@ -5,15 +5,16 @@ const fs = require('fs');
+ const path = require('path');
+ 
+ const ROOT = path.join(__dirname, '..');
+-const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'config.json')));
+-const expand = (p) => { const e = p.replace(/^~/, process.env.HOME); return path.isAbsolute(e) ? e : path.join(ROOT, e); };
++// Optional per-project configuration; the default CLI keeps its upstream behavior.
++const cfg = JSON.parse(fs.readFileSync(process.env.SIMON_WB_CONFIG || path.join(ROOT, 'config.json')));
++const expand = (p) => { const e = p.replace(/^~/, process.env.HOME || process.env.USERPROFILE || ''); return path.isAbsolute(e) ? e : path.join(ROOT, e); };
+ const PROJECTS_DIR = expand(cfg.dirs.projects);
+ const BUILD_DIR = expand(cfg.dirs.build);
+ 
+ function projectPaths(projectDir) {
+   const project = path.resolve(projectDir);
+   const name = path.basename(project);
+-  const studio = path.join(BUILD_DIR, name);   // 本期的后台目录
++  const studio = cfg.dirs.studio ? expand(cfg.dirs.studio) : path.join(BUILD_DIR, name);   // 本期的后台目录
+   const build = path.join(studio, 'work');
+   const outputs = path.join(studio, 'outputs');
+   return {
+diff --git a/skills/whiteboard-video/lib/render.js b/skills/whiteboard-video/lib/render.js
+index 32c7181..fd9e3f6 100644
+--- a/skills/whiteboard-video/lib/render.js
++++ b/skills/whiteboard-video/lib/render.js
+@@ -7,6 +7,7 @@
+ // 主进程按帧号顺序喂 ffmpeg；截图参数不变，workers=1 与 workers=4 出的帧逐字节一致。
+ const fs = require('fs');
+ const path = require('path');
++const { pathToFileURL } = require('url');
+ const { spawn } = require('child_process');
+ const { chromium } = require('playwright');
+ 
+@@ -23,6 +24,8 @@ const only = args.slice(1).filter((a) => !a.startsWith('--'));
+ const FPS = cfg.render.fps, HOLD = cfg.render.holdSeconds, LEAD = cfg.render.leadSeconds;
+ const WORKERS = Math.max(1, Number(cfg.render.workers) || 1);
+ const BRAND = cfg.brand || {};
++const FFMPEG = process.env.SIMON_FFMPEG || 'ffmpeg';
++const activeBrowsers = new Set();
+ const expand = (p) => { const e = p.replace(/^~/, process.env.HOME); return path.isAbsolute(e) ? e : path.join(__dirname, '..', e); };
+ 
+ // 传给页面的品牌数据：logo 读成 dataURL（可选）
+@@ -42,10 +45,12 @@ function brandPayload() {
+ function loadDrawing(name) {
+   const md = path.join(P.scenes, `${name}.excalidraw.md`);
+   if (fs.existsSync(md)) {
+-    const txt = fs.readFileSync(md, 'utf8');
++    const txt = fs.readFileSync(md, 'utf8').replace(/\r\n/g, '\n');
+     let doc;
+-    const m = txt.match(/```json\s*([\s\S]*?)```/);
+-    const c = txt.match(/```compressed-json\s*([\s\S]*?)```/);
++    // Drawing is the final block; literal markdown fences in Text Elements are data.
++    const drawing = txt.slice(txt.lastIndexOf('\n## Drawing\n'));
++    const m = drawing.match(/^```json\s*\n([\s\S]*?)\n```\s*$/m);
++    const c = drawing.match(/^```compressed-json\s*\n([\s\S]*?)\n```\s*$/m);
+     if (m) doc = JSON.parse(m[1]);
+     else if (c) { const { decompressFromBase64 } = require('lz-string'); doc = JSON.parse(decompressFromBase64(c[1].replace(/\s+/g, ''))); }
+     else throw new Error(`${name}.excalidraw.md 里没找到 Drawing JSON`);
+@@ -82,6 +87,7 @@ function beatsFor(info) {
+ function run(cmd, argv) {
+   return new Promise((res, rej) => {
+     const c = spawn(cmd, argv, { stdio: 'inherit' });
++    c.on('error', rej);
+     c.on('close', (code) => (code === 0 ? res() : rej(new Error(`${cmd} exit ${code}`))));
+   });
+ }
+@@ -90,8 +96,12 @@ function run(cmd, argv) {
+ // 各开各的浏览器才真正并行（4 路约 180 帧/秒）
+ async function openPage() {
+   const browser = await chromium.launch();
++  activeBrowsers.add(browser);
+   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
+-  await page.goto('file://' + path.join(LIB, 'render.html'));
++  // Rendering uses only local fonts, assets and RoughJS, including on Windows.
++  await page.route(/^https?:\/\//, (route) => route.abort('blockedbyclient'));
++  page.on('pageerror', (error) => console.error('Whiteboard browser:', error.message));
++  await page.goto(pathToFileURL(path.join(LIB, 'render.html')).href);
+   await page.evaluate(() => document.fonts.ready);
+   await page.waitForTimeout(300);
+   await page.evaluate((o) => window.setPen(o), { ...(cfg.render.pen || {}), color: BRAND.pen && BRAND.pen.color });
+@@ -109,7 +119,15 @@ async function shot(page, t) {
+ // 各页交错出帧，按帧号顺序写进 ffmpeg；返回 ffmpeg 收尾的 promise（不必等它编完就能开始下一个场景）
+ async function encodeFrames(pages, frames, ff, label) {
+   const ready = new Map(); let next = 0, wake = null, err = null; const t0 = Date.now();
+-  const closed = new Promise((res, rej) => ff.on('close', (c) => (c === 0 ? res() : rej(new Error(`ffmpeg ${label} exit ${c}`)))));
++  const fail = (error) => { if (!err) err = error; if (wake) wake(); };
++  ff.stdin.on('error', fail);
++  const closed = new Promise((res, rej) => {
++    ff.on('error', (error) => { fail(error); rej(error); });
++    ff.on('close', (c) => {
++      if (c === 0) res();
++      else { const error = new Error(`ffmpeg ${label} exit ${c}`); fail(error); rej(error); }
++    });
++  });
+   closed.catch(() => {});   // 由调用方 await；这里只防"还没 await 就先失败"被当成未处理
+   const workers = Promise.all(pages.map(async (page, k) => {
+     for (let i = k; i < frames && !err; i += pages.length) {
+@@ -121,7 +139,7 @@ async function encodeFrames(pages, frames, ff, label) {
+     if (err) { ff.kill(); throw err; }
+     if (!ready.has(next)) { await new Promise((r) => (wake = r)); wake = null; continue; }
+     const buf = ready.get(next); ready.delete(next);
+-    if (!ff.stdin.write(buf)) await new Promise((r) => ff.stdin.once('drain', r));
++    await new Promise((resolve, reject) => ff.stdin.write(buf, (error) => error ? reject(error) : resolve()));
+     if (next % 150 === 0) process.stdout.write(`\r${label}: ${next}/${frames} frames  ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+     next++;
+   }
+@@ -220,11 +238,11 @@ async function main() {
+     if (!isCard && !audio) throw new Error(`缺少旁白音频 audio/${sc.name}.wav，先跑 wb tts`);
+     const outMp4 = path.join(P.out, `${sc.name}.mp4`);
+     const audioIn = isCard ? ['-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=stereo'] : ['-i', audio];
+-    const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-',
++    const ff = spawn(FFMPEG, ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-',
+       ...audioIn,
+       '-filter_complex', `[1:a]adelay=${Math.round(LEAD * 1000)}|${Math.round(LEAD * 1000)},apad,aformat=sample_rates=48000:channel_layouts=stereo[a]`,
+       '-map', '0:v', '-map', '[a]', '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-r', String(FPS),
+-      '-c:a', 'aac', '-b:a', '192k', '-shortest', outMp4], { stdio: ['pipe', 'inherit', 'inherit'] });
++      '-c:a', 'aac', '-b:a', '192k', '-t', String(Math.ceil(total * FPS) / FPS), outMp4], { stdio: ['pipe', 'inherit', 'inherit'] });
+     const frames = Math.ceil(total * FPS);
+     const r = await encodeFrames(pages, frames, ff, sc.name);
+     console.log(`\r${sc.name}: done ${frames} frames in ${r.seconds.toFixed(0)}s  (${total.toFixed(1)}s)`);
+@@ -241,10 +259,13 @@ async function main() {
+     const missing = all.filter((f) => !fs.existsSync(f)).map((f) => path.basename(f));
+     if (missing.length) { console.log(`缺少分段 ${missing.join(', ')}，没拼 master；跑一次完整 wb render`); return; }
+     const list = path.join(P.out, 'list.txt');
+-    fs.writeFileSync(list, all.map((p) => `file '${p}'`).join('\n'));
+-    await run('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', path.join(P.out, 'master.mp4')]);
++    const durations = script.map((sc) => Math.ceil((infoFor(sc).duration + LEAD + HOLD) * FPS) / FPS);
++    if (wantCard) durations.push(Math.ceil((BRAND.endCard.seconds || 5.5) * FPS) / FPS);
++    fs.writeFileSync(list, all.map((p, i) => `file '${p.replace(/\\/g, '/').replace(/'/g, "'\\''")}'\nduration ${durations[i]}`).join('\n'));
++    await run(FFMPEG, ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', list, '-copyts', '-c', 'copy', path.join(P.out, 'master.mp4')]);
+     console.log(`master: ${path.relative(process.cwd(), path.join(P.out, 'master.mp4'))}（无 BGM，下一步 wb mix）`);
+     if (cfg.captions.enabled) { const r = writeSrt(P.project); console.log(`字幕 ${r.count} 条 → ${path.basename(r.file)}`); }
+   }
+ }
+-main().catch((e) => { console.error(e); process.exit(1); });
++main().catch((e) => { console.error(e); process.exitCode = 1; })
++  .finally(async () => { await Promise.allSettled([...activeBrowsers].map((browser) => browser.close())); });

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>配乐与音效 · AI 工作台</title>
+  <link rel="stylesheet" href="/assets/controls.css">
+  <link rel="stylesheet" href="/assets/workbench.css">
+  <style>
+    body{font:16px/1.6 system-ui,"Microsoft YaHei",sans-serif;background:#111820;color:#edf3fa;margin:0}h1{margin-bottom:6px}p{color:#a6b6c8}section{background:#1a2633;border:1px solid #344456;border-radius:12px;padding:24px;margin:22px 0}a{color:#85d9fb}button,input,select,textarea{font:inherit;border-radius:7px;border:1px solid #4f667b;padding:10px;box-sizing:border-box}input,select,textarea{display:block;width:100%;background:#101a24;color:#edf3fa;margin:7px 0 14px}textarea{min-height:160px;resize:vertical}button{background:#82dbc5;color:#10201d;cursor:pointer;margin:4px 6px 4px 0}.small{font-size:13px;color:#a6b6c8}.intro{max-width:850px}.template-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}.template-grid button{text-align:left;background:#172c40;color:#dcebf8;border-color:#42617d;margin:0}.template-grid strong,.template-grid small{display:block}.template-grid small{font-size:12px;margin-top:5px;color:#a6b6c8}.settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.engine-state{border-left:3px solid #669ffa;padding:12px 16px;background:#172c40}.engine-state p{margin:4px 0}.music-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.music-job{border:1px solid #344456;border-radius:9px;padding:18px;margin:18px 0;background:#14212e}.music-job h3{font-size:16px;margin:0 0 6px;overflow-wrap:anywhere}.music-job audio{display:block;width:min(100%,720px);margin:16px 0}.music-job input{font-size:13px}.job-status,.job-error,#result,#jobs-status{white-space:pre-wrap;overflow-wrap:anywhere}.job-error{color:#ffb2b2}.planned{color:#a6b6c8;font-size:13px;border:1px solid #526171;padding:3px 9px;border-radius:5px;margin-left:8px}.music-job label{font-size:13px}.subtle-link{font-size:14px}.engine-details{font-size:13px;overflow-wrap:anywhere}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #a9dfff;outline-offset:3px}@media(max-width:800px){.template-grid,.settings-grid{grid-template-columns:1fr}section{padding:18px}}
+  </style>
+</head>
+<body>
+<main>
+  <h1>配乐与音效</h1>
+  <p class="intro">为解说、调查和科普视频生成纯音乐或短音效。先试听，再下载复用；配乐也可导入长片素材库。</p>
+  <nav aria-label="工作台导航"><a href="/">插画与提示词</a> · <a href="/production">视频制作</a> · <a href="/motion">动态镜头</a> · <a href="/speech">音色克隆与配音</a> · <a href="/subtitles">语音转字幕</a> · <a href="/settings">在线接口设置</a> · <a href="http://127.0.0.1:8188" target="_blank" rel="noopener">ComfyUI</a> · <a href="/plan">部署方案</a> · <a href="/research">文章与项目参考</a> · <a href="/guide">使用说明</a></nav>
+  <p id="services" hidden>检查服务状态…</p>
+
+  <section aria-labelledby="music-heading">
+    <h2 id="music-heading">生成无歌词纯音乐</h2>
+    <label>本地音频引擎<select id="engine" disabled><option value="ace-step-1.5">ACE-Step 1.5 · 正在检查</option></select></label>
+    <div class="engine-state" role="status"><p id="engine-status">正在读取引擎状态…</p><ul id="engine-details" class="engine-details"></ul><button id="refresh-engine" class="secondary" type="button">重新检查</button></div>
+    <p id="mode-note" class="small">配乐模式为无歌词纯音乐，提交时会加入无歌声要求。生成结果仍需试听，确认不会干扰旁白。</p>
+
+    <div id="music-templates" class="template-grid" aria-label="配乐描述模板">
+      <button type="button" data-template="calm"><strong>平静解说</strong><small>柔和钢琴与轻氛围，留出旁白空间 · 72 BPM</small></button>
+      <button type="button" data-template="suspense"><strong>悬疑调查</strong><small>克制脉冲与低音，不使用突发强音 · 68 BPM</small></button>
+      <button type="button" data-template="science"><strong>轻松科普</strong><small>轻巧节奏与柔和拨弦，明快清晰 · 96 BPM</small></button>
+    </div>
+    <div id="sfx-templates" class="template-grid" aria-label="音效描述模板" hidden>
+      <button type="button" data-template="transition"><strong>转场轻响</strong><small>柔和短促的空气轻扫，收尾干净 · 3 秒</small></button>
+      <button type="button" data-template="paper"><strong>纸张翻动</strong><small>近距离翻一页纸，细致纸纤维声 · 5 秒</small></button>
+      <button type="button" data-template="ambience"><strong>环境氛围</strong><small>树叶微风与远处鸟鸣，无人声 · 10 秒</small></button>
+    </div>
+    <p id="template-note" class="small">点击模板会填入音乐描述和节拍速度，可继续编辑。</p>
+    <label id="prompt-label" for="prompt">音乐描述</label>
+    <textarea id="prompt" maxlength="1900" placeholder="描述情绪、乐器与节奏，例如：平静克制的解说背景音乐，轻钢琴和柔和铺底，避免明显的强起伏。"></textarea>
+    <div class="settings-grid">
+      <label id="music-duration-label">配乐时长<select id="duration"><option value="30">30 秒</option><option value="45">45 秒</option><option value="60">60 秒</option></select></label>
+      <label id="sfx-duration-label" hidden>音效时长（1–15 秒）<input id="sfx-duration" type="number" min="1" max="15" step="1" value="5" list="sfx-durations"><datalist id="sfx-durations"><option value="3"></option><option value="5"></option><option value="10"></option></datalist></label>
+      <label id="bpm-label">节拍速度（BPM）<input id="bpm" type="number" min="40" max="180" step="1" value="72"></label>
+      <label>随机种子<input id="seed" type="number" min="0" max="2147483647" step="1" value="42"></label>
+    </div>
+    <button id="generate" type="button" disabled>生成本地配乐</button>
+    <p id="result" role="status"></p>
+  </section>
+
+  <section aria-labelledby="jobs-heading">
+    <h2 id="jobs-heading">音频任务与试听</h2>
+    <p class="small">配乐试听确认后，可复制文件路径，在<a href="/investigation">热点调查长片</a>的素材登记中选择“音频”并导入，再选为背景音乐。短音效可下载保存，按需用于剪辑。</p>
+    <p id="jobs-status" class="small" role="status"></p>
+    <div id="jobs"><p id="jobs-empty" class="small">尚无音频任务。</p></div>
+  </section>
+
+  <section aria-labelledby="sfx-heading">
+    <h2 id="sfx-heading">选择适合用途的引擎</h2>
+    <p>ACE-Step 生成 30–60 秒无歌词配乐；Stable Audio 3 在 CPU 上生成 1–15 秒短音效。每个引擎分别保留本页草稿，未就绪时不会提交任务。</p>
+  </section>
+</main>
+<script src="/assets/music.js"></script>
+<script src="/assets/workbench.js"></script>
+</body>
+</html>

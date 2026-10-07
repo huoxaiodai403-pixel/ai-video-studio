@@ -1,0 +1,10 @@
+{
+  "title": "一杯茶的片刻",
+  "render_mode": "illustrated",
+  "motion_enabled": false,
+  "backends": {"image": "online", "tts": "online", "asr": "online", "video": "online"},
+  "scenes": [
+    {"id": "scene01", "narration": "忙碌的时候，给自己留一杯茶的时间。", "subject": "窗边木桌上的白瓷茶杯，温暖晨光，杯口有少量蒸汽", "style": "温暖自然的电影摄影", "composition": "中景静物，主体在画面中心", "palette": "米白与暖棕", "steps": 28},
+    {"id": "scene02", "narration": "不必急着出发，先感受此刻的平静。", "subject": "同一只白瓷茶杯旁有合上的书和一片绿叶，窗帘微微飘动", "style": "温暖自然的电影摄影", "composition": "静物特写，保留底部字幕空间", "palette": "米白与暖棕", "steps": 28}
+  ]
+}

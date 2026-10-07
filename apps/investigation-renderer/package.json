@@ -1,0 +1,21 @@
+{
+  "name": "ai-video-investigation-renderer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "render": "node render.mjs video",
+    "still": "node render.mjs still",
+    "cover": "node render.mjs cover",
+    "test": "node --test contract.test.mjs"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.508",
+    "@remotion/cli": "4.0.508",
+    "@remotion/media-utils": "4.0.508",
+    "@remotion/renderer": "4.0.508",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "remotion": "4.0.508"
+  }
+}

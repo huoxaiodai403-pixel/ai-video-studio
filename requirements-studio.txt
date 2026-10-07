@@ -1,0 +1,7 @@
+# CPU-only web workbench and media inspection. No torch or model weights.
+requests==2.34.2
+Pillow==12.3.0
+filelock==4.0.4
+markdown-it-py==4.0.0
+imageio-ffmpeg==0.6.0
+av==18.1.0

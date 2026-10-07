@@ -1,0 +1,11 @@
+{
+  "storyboard": {
+    "title": "看见热点，先问三个问题",
+    "scenes": [
+      {"id":"scene01","board_title":"谁最先说的？","board_layout":"opening","board_cards":["找到原始出处","看完整上下文"],"narration":"看到一条消息，先找出最初是谁说的。转发截图可能省略了重要语境，点开原文，看看前后到底在讨论什么。","board_sticker":"reader"},
+      {"id":"scene02","board_title":"证据来自哪里？","board_layout":"compare","board_cards":["多个转发","独立证据"],"narration":"多个账号转发同一句话，不等于多份独立证据。继续追问，它们是否都引用同一个出处，有没有其他独立材料可以相互印证。","board_sticker":"stuck"},
+      {"id":"scene03","board_title":"现在能确认多少？","board_layout":"summary","board_cards":["核对日期","区分事实与推测","保留不确定"],"narration":"最后核对日期，分清已经确认的事实和作者的推测。暂时无法确认的部分，就保留不确定，等待可靠的新信息。","board_sticker":"none"}
+    ]
+  },
+  "backends": {"tts":"local","asr":"local"}
+}

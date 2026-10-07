@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <title>AI 视频工作台</title>
+  <rect x="1" y="1" width="62" height="62" rx="16" fill="#18394B"/>
+  <path d="M20 12H46C51 12 54 15 54 20V37" stroke="#69D4C0" stroke-width="3.5" stroke-linecap="round"/>
+  <rect x="10" y="20" width="36" height="31" rx="6" stroke="#F4F1E8" stroke-width="3.5"/>
+  <path d="M24 28.5C24 27.7 24.8 27.2 25.5 27.7L36 34.5C36.7 35 36.7 36 36 36.5L25.5 43.3C24.8 43.8 24 43.3 24 42.5V28.5Z" fill="#69D4C0"/>
+</svg>
