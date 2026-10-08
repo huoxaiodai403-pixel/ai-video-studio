@@ -1,0 +1,6 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>本地模型 · AI 视频工作台</title><link rel="stylesheet" href="/assets/workbench.css"><link rel="stylesheet" href="/assets/online-services.css"></head><body>
+<main class="services-page"><header class="services-heading"><div><p class="eyebrow">AI VIDEO STUDIO / LOCAL ENGINES</p><h1>在自己的电脑上创作</h1><p>查看本地能力和安装状态，按需要准备模型。基础配音可以从系统语音开始。</p></div><a href="/runtime-settings">运行与高级设置 ↗</a></header>
+<div class="connections-tabs" aria-label="运行方式"><a href="/settings">在线服务</a><a href="/models" aria-current="page">本地模型</a></div>
+<div class="service-overview"><span id="local-count">正在检查本机…</span><span>检查不会加载模型或占用推理显存</span><button class="btn-secondary" id="local-refresh">刷新状态</button></div>
+<p id="local-error" class="service-alert" role="alert" hidden></p><div id="local-models"></div><p class="field-help">“文件齐全”表示检测到组件，实际速度、显存和生成质量需要试运行。已有文件可从高级设置导入；安装过程不会自动触发。</p>
+</main><script src="/assets/workbench.js"></script><script src="/assets/local-models.js"></script></body></html>

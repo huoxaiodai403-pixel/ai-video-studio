@@ -33,7 +33,7 @@ class WhiteboardPipelineTests(unittest.TestCase):
         # locks. These source copies are never imported or executed.
         (self.root/'scripts').mkdir()
         for source in (pipeline.ROOT/'scripts').iterdir():
-            if source.is_file() and source.suffix in ('.py', '.cjs'):
+            if source.is_file() and source.suffix in ('.py', '.cjs', '.ps1'):
                 shutil.copy2(source, self.root/'scripts'/source.name)
         relative = Path('apps/simon-skills/skills/whiteboard-video')
         (self.root/relative).mkdir(parents=True)
@@ -134,6 +134,17 @@ class WhiteboardPipelineTests(unittest.TestCase):
         self.assertEqual(state['completed'], ['tts', 'align', 'render'])
         self.assertIsNone(state['running'])
         self.assertNotIn('error', state)
+
+    def test_cpu_speech_and_synthesis_captions_do_not_reserve_gpu(self):
+        import lightweight_speech
+        self.spec['backends'] = {'tts': 'windows', 'asr': 'synthesis'}
+        (self.project/'storyboard.json').write_text(json.dumps(self.spec), encoding='utf-8')
+        with FileLock(str(self.lock_path), timeout=0), \
+             patch.object(lightweight_speech, 'tts_project', side_effect=lambda *args: (self.fake_stage(['python','tts_batch.py'],None), self.fake_stage(['python','align_batch.py'],None))), \
+             patch.object(lightweight_speech, 'align_project') as align:
+            self.invoke()
+        align.assert_called_once()
+        self.assertTrue((self.project/'video.mp4').is_file())
 
 
 if __name__ == '__main__':

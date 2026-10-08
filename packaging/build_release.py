@@ -4,9 +4,12 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / 'scripts'))
+from simon_source import validate_bundle
 EXCLUDED_SCRIPTS = {
     'benchmark_image.py', 'benchmark_motion.py', 'inspect_wheels.py', 'integrate_director.py',
     'verify_archive.py', 'verify_director_sources.py', 'verify_video.py', 'verify_workbench.py',
@@ -22,6 +25,9 @@ SECRET_PATTERNS = [
 
 def sources(root=ROOT):
     files = set()
+    # Fail the build for absent, unpatched or modified renderer files.
+    bundled_simon = set(validate_bundle(root))
+    files.update(bundled_simon)
     for name in ('.gitignore', '.gitattributes', 'README.md', 'LICENSE', 'NOTICE.md', 'VERSION',
                  'AGENTS.md', 'requirements-studio.txt', 'runtime-dependencies.json', 'Install.cmd', 'Start.cmd'):
         path = root/name
@@ -46,7 +52,8 @@ def sources(root=ROOT):
     for path in files:
         if path.is_symlink() or not path.resolve().is_relative_to(root.resolve()):
             raise ValueError('Source must be a regular file inside the repository: '+str(path))
-        if path.stat().st_size > 10*1024*1024:
+        limit = 30*1024*1024 if path in bundled_simon and path.name == 'Xiaolai-Regular.ttf' else 10*1024*1024
+        if path.stat().st_size > limit:
             raise ValueError('Unexpected large source file: '+str(path.relative_to(root)))
         data=path.read_bytes()
         if any(pattern.search(data) for pattern in SECRET_PATTERNS):
@@ -89,7 +96,7 @@ def main():
     skill={skill_prefix+'/ai-video-studio/'+p.relative_to(skill_root).as_posix():p.read_bytes() for p in files if p.is_relative_to(skill_root)}
     skill[skill_prefix+'/Install-CodexSkill.ps1']=(ROOT/'scripts/Install-CodexSkill.ps1').read_bytes()
     skill[skill_prefix+'/LICENSE']=(ROOT/'LICENSE').read_bytes()
-    skill[skill_prefix+'/INSTALL.txt']=b'Run: powershell -NoProfile -ExecutionPolicy Bypass -File .\\Install-CodexSkill.ps1\r\nStart a new Codex chat and use $ai-video-studio. A running workbench and configured media engines are required.\r\nWorkbench: https://github.com/huoxaiodai403-pixel/ai-video-studio\r\n'
+    skill[skill_prefix+'/INSTALL.txt']=b'Run: powershell -NoProfile -ExecutionPolicy Bypass -File .\\Install-CodexSkill.ps1\r\nStart a new Codex chat and use $ai-video-studio. Install the workbench separately. Codex writes storyboards and can use its built-in image tool when available. CPU whiteboard previews need no media model or API key; Windows CPU speech and Edge online speech can produce narration and subtitles without model weights or API keys. Generative video needs its own service or local model.\r\nWorkbench: https://github.com/huoxaiodai403-pixel/ai-video-studio\r\n'
     reports.append(archive(args.output/(skill_prefix+'.zip'),skill,version))
     (args.output/'SHA256SUMS.txt').write_text(''.join(row['sha256']+'  '+row['file']+'\n' for row in reports),encoding='ascii')
     (args.output/'release-manifest.json').write_text(json.dumps({'version':version,'archives':reports},indent=2),encoding='utf-8')

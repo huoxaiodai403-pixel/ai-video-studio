@@ -80,6 +80,7 @@ class JianyingRoutesTests(unittest.TestCase):
     def test_existing_http_origin_gate_blocks_cross_site_desktop_launch(self):
         from studio import Handler
         handler = Handler.__new__(Handler)
+        handler.server = types.SimpleNamespace(server_port=8189)
         handler.path = '/api/jianying/open'
         body = json.dumps({}).encode()
         handler.headers = {'Origin': 'https://untrusted.example', 'Content-Type': 'application/json',

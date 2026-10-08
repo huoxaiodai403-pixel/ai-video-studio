@@ -1,7 +1,7 @@
 /* Shared navigation only: page controls and their handlers stay in place. */
 (()=>{
  const main=document.querySelector('main');if(!main)return;
- const oldNav=main.querySelector('nav'),heading=main.querySelector('h1');
+ const oldNav=main.querySelector('nav:not(.service-nav)'),heading=main.querySelector('h1');
  const title=({'/':'工作台','/home':'工作台','/workflows':'工作流'})[location.pathname]||heading?.textContent||'工作台';
  const existing=new Map([...(oldNav?.querySelectorAll('a')||[])].map(a=>[a.getAttribute('href'),a]));
  const moduleIcons={
@@ -18,7 +18,7 @@
   {id:'assets',name:'资源库',href:'/assets',icon:'assets',items:[['/gallery','图库'],['/audio-library','音频库'],['/voices','音色库'],['/model-library','模型库']]},
   {id:'workflows',name:'工作流',href:'/workflows',icon:'workflows',items:[['/whiteboard','手绘白板'],['/investigation','热点调查长片'],['/novel','小说转漫剧'],['/production','通用视频制作']]},
   {id:'tools',name:'创作工具',href:'/home#tools',icon:'tools',items:[['/image','图像创作'],['/motion','短镜头'],['/speech','配音与声音设计'],['/music','音乐与音效生成'],['/subtitles','语音转字幕'],['/enhance','视频增强与补帧']]},
-  {id:'settings',name:'设置',href:'/settings',icon:'settings',items:[['/settings','在线接口设置'],['/models','运行与默认参数'],['http://127.0.0.1:8188','ComfyUI'],['/learn','上手教程'],['/guide','使用说明'],['/director','运镜词典与方法'],['/plan','部署方案'],['/research','文章与项目参考']]}
+  {id:'settings',name:'设置',href:'/settings',icon:'settings',items:[['/settings','在线服务'],['/models','本地模型'],['http://127.0.0.1:8188','ComfyUI'],['/learn','上手教程'],['/guide','使用说明'],['/director','运镜词典与方法'],['/plan','部署方案'],['/research','文章与项目参考']]}
  ];
  const sidebar=document.createElement('aside');sidebar.className='sidebar';sidebar.id='workbench-nav';
  sidebar.innerHTML='<a class="brand" href="/home"><img class="brand-mark" src="/assets/brand/studio-mark.svg" width="38" height="38" alt=""><span><strong>AI STUDIO</strong><small>视频创作工作台</small></span></a>';
@@ -66,8 +66,7 @@
  nav.addEventListener('click',e=>{if(e.target.closest('a'))setNav(false)});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('nav-open')){setNav(false);toggle.focus()}});
  const status=document.getElementById('services');
- function health(){const text=status?.textContent||'',ready=text.includes('千问生图：就绪');foot.querySelector('.status-dot').classList.toggle('ready',ready);foot.querySelector('.health').textContent=ready?'图像服务已连接':text.includes('千问生图：未启动')?'图像服务未启动':text.includes('检查')?'正在检查服务':'服务状态暂不可用';foot.title=text}
- if(status)new MutationObserver(health).observe(status,{childList:true,characterData:true,subtree:true});health();
+ let runtimePending=false;async function health(){if(runtimePending)return;runtimePending=true;try{const response=await fetch('/api/runtime');if(!response.ok)throw Error('unavailable');const runtime=await response.json();foot.querySelector('.status-dot').classList.add('ready');foot.querySelector('.health').textContent='工作台已连接';foot.title='工作台 v'+runtime.version+'；各项能力请在在线服务与本地模型中查看。'}catch{foot.querySelector('.status-dot').classList.remove('ready');foot.querySelector('.health').textContent='工作台连接中断'}finally{runtimePending=false}}health();setInterval(health,30000);
  // Overview pages only read service status; this does not load or start a model.
  if(document.body.dataset.workbenchServices==='true'&&status){let pending=false;async function check(){if(pending)return;pending=true;try{const r=await fetch('/api/services');if(!r.ok)throw Error('HTTP '+r.status);const s=await r.json();status.textContent=`千问生图：${s.comfyui?.ready?'就绪':'未启动'} · 配音：${s.tts?.ready?'就绪':s.tts?.starting?'正在加载':'未启动'}`}catch(e){status.textContent='服务状态读取失败：'+e.message}finally{pending=false}}check();setInterval(check,15000)}
  // Keep editor progress local; the catalog owns browsing the complete history.

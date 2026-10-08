@@ -4,7 +4,7 @@
 
 | 项目 | 用途 |
 | --- | --- |
-| [trustfuture/simon-skills](https://github.com/trustfuture/simon-skills) | 手绘白板与调查视频流程参考，MIT |
+| [huoxaiodai403-pixel/simon-skills](https://github.com/huoxaiodai403-pixel/simon-skills) | 随包白板源码的固定版本来源；复刻自 [trustfuture/simon-skills](https://github.com/trustfuture/simon-skills)，MIT |
 | [ComfyUI](https://github.com/Comfy-Org/ComfyUI) | 本地图像与视频工作流 |
 | [ComfyUI-GGUF](https://github.com/city96/ComfyUI-GGUF) | 量化模型节点 |
 | [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) | 固定音色、声音设计与参考克隆 |

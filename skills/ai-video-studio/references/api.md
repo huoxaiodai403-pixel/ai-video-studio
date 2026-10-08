@@ -12,11 +12,23 @@ python CLIENT status JOB_ID
 python CLIENT status JOB_ID --wait 45
 ```
 
-`doctor` 不进行推理；逐项报告服务、白板、配音和配乐的检查结果。一些旧健康检查会同时检查可选的本地编剧和 IndexTTS 环境；Codex 直接写稿不依赖本地编剧就绪。模型文件齐全不代表本轮生成质量已经验证。
+`doctor` 不进行推理；逐项报告服务、白板、配音、配乐和剪映的检查结果。`root_source=running-service` 时根目录来自 `/api/runtime`；旧服务无此端点时回退到本地发现，需要核对实际位置。Codex 直接写稿不依赖本地编剧就绪。白板 `ready` 只表示 CPU 渲染依赖可用，不包含配音和对齐。模型文件齐全不代表本轮生成质量已经验证。
+
+## Codex 内置生图与素材导入
+
+会话中有内置生图工具时，用它生成用户所需图片并保存实际输出文件。不要将网页的 `backend=online` 当成 Codex 内置生图，也不从登录凭据构造接口。
+
+长片先 `investigation-save` 取得工程 ID，再 `submit investigation-media` 导入：
+
+```json
+{"job_id":"实际工程ID","path":"Codex生成图片的本机绝对路径","kind":"image","description":"AI生成的解释性插图，非现场证据"}
+```
+
+将返回的 `item.id` 放入对应镜头的 `media_id` 后保存。示意图片的来源和事实状态应如实记录。没有真实文件路径时先完成保存，不能伪造路径或素材 ID。白板默认用矢量图形；定制贴纸需遵守该工程现有素材路径与名称约定。
 
 ## 白板：Codex 写分镜 → 预览 → 渲染
 
-复制 `whiteboard-request.json` 到任务输出目录，编辑旁白和关键词。示例可直接用于预览；渲染依赖本机已配置的配音和字幕模型。支持的布局为 `opening / compare / steps / summary`。每镜头标题最多 36 字、1–3 条关键词，每条最多 24 字；每镜头旁白最多 600 字，全片最多 3600 字。短卡片承载重点，口播承载完整解释。
+复制 `whiteboard-request.json` 到任务输出目录，编辑旁白和关键词。示例可直接用于预览；有声渲染默认使用 Windows 系统语音；也可显式选择已就绪的 Edge、火山或本地模型。支持的布局为 `opening / compare / steps / summary`。每镜头标题最多 36 字、1–3 条关键词，每条最多 24 字；每镜头旁白最多 600 字，全片最多 3600 字。短卡片承载重点，口播承载完整解释。
 
 ```powershell
 python CLIENT submit whiteboard-preview --json whiteboard-request.json
@@ -24,7 +36,7 @@ python CLIENT status 返回的JOB_ID --wait 45
 python CLIENT submit whiteboard-render --json whiteboard-request.json
 ```
 
-顶层可选 `voice_preset_id` 为 `voices` 返回的实际 ID；`characters` 为 `{"主持人":"实际预设ID","来宾":"另一预设ID"}`，分镜用 `speaker` 指定角色。镜头也可使用独立 `voice_preset_id`。省略时使用本机默认音色。不要把示例机的 ID 分享给其他机器。`voice` 仅接受 `speed / emotion / intensity / online_voice`，本流程配音和字幕当前均为 local。
+顶层可选 `voice_preset_id` 为 `voices` 返回的实际 ID；`characters` 为 `{"主持人":"实际预设ID","来宾":"另一预设ID"}`，分镜用 `speaker` 指定角色。镜头也可使用独立 `voice_preset_id`。省略时使用本机默认音色。不要把示例机的 ID 分享给其他机器。`voice` 接受 `speed / emotion / intensity / online_voice / voice_id`。无角色预设时默认 `backends={"tts":"windows","asr":"synthesis"}`，也支持 `edge / volc / online` 配合 `asr=synthesis`（online 需要额外配置逐词 ASR）。使用角色克隆预设时显式选择 `tts=local, asr=local`；不要将本地预设传给系统或在线音色。
 
 可选 `board_beats` 数量必须与关键词一致，按顺序完整覆盖旁白；改稿后同步调整，或省略让渲染器处理。`board_sticker` 可选 `none / reader / stepper / stuck / panicked`。返回任务中 `previews` 为图片，成片任务还包含 `video / subtitle / sources` 等现存交付 URL。恢复编辑：`/whiteboard?project=JOB_ID`。
 
@@ -74,6 +86,14 @@ python CLIENT project JOB_ID
 
 ## 剪映草稿交接
 
+先读取不带项目 ID 的安装状态。`setup.action=ask_install` 或 `installed=false` 时，询问用户是否安装剪映并桥接；已授权则直接继续。在 doctor 返回的工作台根目录执行：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-JianyingBridge.ps1 -InstallJianying -NonInteractive
+```
+
+`-InstallJianying` 表示用户已同意；脚本使用 winget 的 `ByteDance.JianyingPro` 正式包并检查退出码和实际安装结果。不要把该参数用于未授权安装。已装剪映时只需 `-NonInteractive` 安装桥接；手动运行不带参数的脚本会在缺客户端时提示确认。若 `setup.action=first_launch`，完成剪映首次启动后再检查草稿目录。`ready` 代表可尝试交接，不能替代真实草稿打开验证。
+
 作品需已完成渲染，且工程内有最终视频。先读取状态，不能把音频任务、空草稿或只有预览图的任务直接当作视频工程：
 
 ```powershell
@@ -101,6 +121,16 @@ python CLIENT jianying open --project JOB_ID
 
 ## 音色与单项素材
 
+轻量配音不需要参考音频，最长 4000 字。先 GET `/api/speech/options` 读取当前系统 / Edge 音色，再提交，例如：
+
+```json
+{"backend":"windows","text":"先核对信息来源，再查看完整上下文。","speed":1,"subtitles":true}
+```
+
+`backend` 可为 `windows / edge / volc / online`；可传实际 `voice_id`。结果在 jobs 中返回 `audio / subtitle / alignment / speech`，失败时保留具体原因，不自动换付费服务。Edge 会将文稿发往微软服务；火山与兼容接口按用户账号计费。
+
+在线连接页 `/settings` 与本地模型页 `/models` 分开管理。ChatGPT 账号授权入口仅用于网页编剧；Skill 写稿仍直接使用当前 Codex 对话。不要自动代替用户完成账号登录或同意授权。
+
 `voices` 返回 `presets / default_preset_id / default_voice / references`。预设内 `voice` 为完整配置。独立配音请求：
 
 ```json
@@ -117,7 +147,7 @@ python CLIENT jianying open --project JOB_ID
 
 音效同一端点，`engine=stable-audio-3-sfx`、1–15 秒、不要传 bpm。ACE-Step 为 30–60 秒，BPM 40–180。先用 `models` 确认模块安装状态，缺模型不会自动替换到付费服务。
 
-`submit image / motion / transcribe / produce` 可提交工作台对应 API 的请求；这些独立模块参数随版本演进，使用前读取当前 `/api/creation`（`models` 命令输出）和仓库 `scripts/creation_settings.py`、`studio_extensions.py`、`studio.py`。素材路径必须属于当前机器，`backend` 显式选择 `local`。`produce` 的普通分镜模式与上述白板/长片 schema 不同，不混用。
+`submit image / motion / transcribe / produce` 可提交工作台对应 API 的请求；这些独立模块参数随版本演进，使用前读取当前 `/api/creation`（`models` 命令输出）和仓库 `scripts/creation_settings.py`、`studio_extensions.py`、`studio.py`。素材路径必须属于当前机器，`backend` 显式选择 `local` 或 `online`，先确认对应能力就绪。`produce` 的普通分镜模式与上述白板/长片 schema 不同，不混用。
 
 ## 状态、交付与复用
 

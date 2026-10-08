@@ -5,10 +5,11 @@
 
 ## 渲染器
 
-`scripts/Install-Renderers.ps1` 是可选的渲染依赖安装入口，安装脚本会输出实际
-下载内容。它准备 Node、Simon 白板源码与 Windows 适配、浏览器渲染依赖和
-调查视频渲染器，不下载 AI 模型权重。基础安装器会通过 imageio-ffmpeg 准备
-本地 FFmpeg；安装渲染器前需要 Git，且应先完成基础安装。
+`scripts/Install-Renderers.ps1` 安装 Node、npm 依赖、Chromium 和调查视频渲染器，
+由基础安装器默认调用，不下载 AI 模型权重。Simon 白板源码从本账号复刻仓库
+固定版本提取，已应用 Windows 补丁；源码、字体、公开贴纸及许可证随 ZIP 附带，
+安装时验证 SHA-256，不需要 Git。基础安装器通过 imageio-ffmpeg 准备本地 FFmpeg。
+若此前用了 `-SkipRenderers`，可在完成基础安装后补装：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Renderers.ps1

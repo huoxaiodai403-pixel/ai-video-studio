@@ -1,7 +1,12 @@
 [CmdletBinding()]
 param()
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Initialize-StudioEnvironment.ps1')
 $studioRoot = Split-Path $PSScriptRoot -Parent
+$studioPython = Join-Path $studioRoot 'tools/.venv/Scripts/python.exe'
+if (-not (Test-Path -LiteralPath $studioPython)) { throw 'Run Install-Studio.ps1 first.' }
+& $studioPython (Join-Path $PSScriptRoot 'simon_source.py')
+if ($LASTEXITCODE -ne 0) { throw 'The bundled Simon runtime is missing or modified. Restore it from the matching release; existing files were preserved.' }
 $nodeRoot = Join-Path $studioRoot 'tools/node'
 $nodeExe = Join-Path $nodeRoot 'node.exe'
 $cacheRoot = Join-Path $studioRoot 'cache/setup'
@@ -27,24 +32,8 @@ $env:PATH = $nodeRoot + ';' + (Join-Path $studioRoot 'tools') + ';' + $env:PATH
 $env:PLAYWRIGHT_BROWSERS_PATH = Join-Path $studioRoot 'cache/ms-playwright'
 $npm = Join-Path $nodeRoot 'npm.cmd'
 $simonRoot = Join-Path $studioRoot 'apps/simon-skills'
-$simonRevision = '3ad0a25127c17da48a0e869c9efbf4136c40848b'
-if (-not (Get-Command git.exe -ErrorAction SilentlyContinue)) { throw 'Install Git for Windows, then run this script again.' }
-if (-not (Test-Path -LiteralPath $simonRoot)) {
-    & git.exe clone --no-checkout https://github.com/trustfuture/simon-skills.git $simonRoot
-    if ($LASTEXITCODE -ne 0) { throw 'Could not download the Simon source.' }
-    & git.exe -C $simonRoot checkout --detach $simonRevision
-    if ($LASTEXITCODE -ne 0) { throw 'Could not check out the tested Simon revision.' }
-}
-$actualRevision = & git.exe -C $simonRoot rev-parse HEAD
-if ($LASTEXITCODE -ne 0 -or $actualRevision -ne $simonRevision) { throw 'The existing Simon checkout has a different revision. Existing files were preserved.' }
-$patch = Join-Path $studioRoot 'workflows/simon-windows.patch'
-$patchProbe = Start-Process -FilePath (Get-Command git.exe).Source -ArgumentList @('-C', ('"'+$simonRoot+'"'), 'apply', '--reverse', '--check', ('"'+$patch+'"')) -WindowStyle Hidden -PassThru -Wait -RedirectStandardError (Join-Path $cacheRoot 'simon-patch-check.log')
-if ($patchProbe.ExitCode -ne 0) {
-    & git.exe -C $simonRoot apply --check $patch
-    if ($LASTEXITCODE -ne 0) { throw 'The Windows patch conflicts with local changes; existing files were preserved.' }
-    & git.exe -C $simonRoot apply $patch
-    if ($LASTEXITCODE -ne 0) { throw 'Could not apply the Windows compatibility patch.' }
-}
+# The tested fork, Windows patch, font and public stickers ship in the ZIP.
+# End users do not need Git, repository access, or a second source download.
 $whiteboard = Join-Path $simonRoot 'skills/whiteboard-video'
 Push-Location $whiteboard
 try {
@@ -52,6 +41,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Whiteboard dependencies failed to install.' }
     & $nodeExe (Join-Path $whiteboard 'node_modules/playwright/cli.js') install chromium
     if ($LASTEXITCODE -ne 0) { throw 'Chromium download failed; rerun this script to retry.' }
+    & $nodeExe (Join-Path $PSScriptRoot 'check_renderers.cjs')
+    if ($LASTEXITCODE -ne 0) { throw 'Chromium could not launch; the renderer is not ready.' }
 } finally { Pop-Location }
 $renderer = Join-Path $studioRoot 'apps/investigation-renderer'
 Push-Location $renderer

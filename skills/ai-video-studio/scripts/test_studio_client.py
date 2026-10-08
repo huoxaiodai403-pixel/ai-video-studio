@@ -132,6 +132,29 @@ class ClientTests(unittest.TestCase):
         with self.assertRaises(cli.StudioError):
             self.client.job('whiteboard-0000000000')
 
+    def test_doctor_prefers_running_service_root_and_includes_editor_setup(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root/'scripts').mkdir()
+            (root/'scripts/studio.py').write_text('# service', encoding='utf-8')
+            def response(path):
+                if path == '/api/runtime':
+                    return {'root': str(root)}
+                if path == '/api/jianying/status':
+                    return {'installed': False, 'setup': {'action': 'ask_install'}}
+                return {}
+            with patch.object(cli, 'find_root', return_value=root/'another-checkout'), patch.object(self.client, 'json', side_effect=response):
+                result = cli.doctor(self.client)
+            self.assertEqual(result['root'], str(root.resolve()))
+            self.assertEqual(result['root_source'], 'running-service')
+            self.assertEqual(result['checks']['jianying']['setup']['action'], 'ask_install')
+
+    def test_doctor_retains_local_root_when_old_server_has_no_runtime_endpoint(self):
+        with patch.object(cli, 'find_root', return_value=Path.cwd()):
+            result = cli.doctor(self.client)
+        self.assertTrue(result['service_available'])
+        self.assertEqual(result['root_source'], 'local-discovery')
+
     def invoke(self, *arguments):
         with patch.object(cli, 'output') as captured:
             code = cli.main(['--url', self.client.base, *arguments])

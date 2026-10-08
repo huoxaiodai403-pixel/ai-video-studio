@@ -5,20 +5,26 @@ description: 用 Codex 编写口播和分镜，通过本机 AI 视频工作台�
 
 # AI 视频工作台
 
-Codex 负责理解需求、查资料、写口播、设计分镜和检查成片。工作台负责素材、音色、模型、渲染与统一作品管理。默认直接提交 Codex 编写的 JSON，不要求另装本地大语言模型来重复写稿。
+Codex 负责理解需求、查资料、写口播、设计分镜和检查成片。工作台负责素材、音色、渲染与统一作品管理。默认直接提交 Codex 编写的 JSON，不要求另装本地大语言模型来重复写稿。需要插图、封面或角色图时，优先用当前会话实际可用的 Codex 内置生图工具；得到真实本地文件后导入工作台，不要求用户先安装图像模型或填写图像 API 密钥。
 
 ## 开始创作
 
 运行本 Skill 的 `scripts/studio_client.py doctor` 检查当前服务和依赖。脚本只使用 Python 3.10+ 标准库；优先使用工作台 `tools/.venv/Scripts/python.exe`，否则使用有效的 `python` 或 `py -3`。`AI_VIDEO_STUDIO_URL` 默认为 `http://127.0.0.1:8189`，仅接受本机地址。可设置 `AI_VIDEO_STUDIO_ROOT`，也会从当前目录和 Skill 位置向上发现工作台；不依赖固定盘符。
 
-服务未启动时，在已找到的工作台根目录使用 `scripts/Start-Studio.ps1`。诊断命令不会启动服务、下载模型或生成内容。依赖未齐时先按用户任务补足对应模块，不默认安装全部大模型。
+服务未启动时，在已找到的工作台根目录使用 `scripts/Start-Studio.ps1`。服务可用时以 doctor 的 `root_source=running-service` 和 `root` 为准，避免把源码目录当成正在运行的解压目录。诊断命令不会启动服务、下载模型或生成内容。v0.2.1 起工作台包内包含 Simon 白板源码、Windows 补丁、中文字体及公开贴纸；Node/npm/Chromium 由 `scripts/Install-Renderers.ps1` 安装。依赖未齐时先按用户任务补足对应模块，不默认安装全部大模型。
+
+## 优先使用 Codex 与现有素材
+
+文稿、分镜直接在对话中完成；白板图形与预览用 CPU 渲染器即可，不依赖生图模型、配音或密钥。内置生图可用性以朋友的当前会话工具为准，计入其 Codex 使用额度；工作台网页无法自行调用桌面聊天工具。需要图片时由 Codex 生成并交接本地文件，具体导入方式见 [API 与创作流程](references/api.md#codex-内置生图与素材导入)。
+
+先检查当前会话的实际媒体工具与 doctor 返回的 checks.speech。v0.2.2 起基础配音与有声白板优先使用 Windows 系统语音（CPU、离线、无需模型权重）；想要在线音色时可选择 Edge（联网、免密钥），或用户已配置的火山语音。三者复用同次合成的时间戳，无需另装 Whisper。Windows 记录词起点，词尾取下一词起点，不能称为声学强制对齐。OpenAI 兼容 TTS 若要字幕，还需支持逐词时间戳的 ASR；本地高级声线保留独立模型流程。详见 API 说明，不用估计时间冒充真实对齐。网页编剧可用工作台自己的官方 ChatGPT 授权，仅用于文稿与分镜；不读取 Codex 或其他插件凭证。
 
 依据用户要做的内容选择流程，详细字段和可执行命令见 [API 与创作流程](references/api.md)：
 
 - **手绘白板**：短知识讲解、步骤对比；1–8 个镜头，直接写 `storyboard`，先预览再渲染。参考 [白板请求示例](references/whiteboard-request.json)。
 - **资料长片 / 机制讲解**：章节、来源台账、证据或动态素材；先保存项目，再导入素材、补齐覆盖、预览、渲染。参考 [讲解请求示例](references/investigation-request.json)。该示例约一分钟，仅用于验证流程；十分钟成片需要实际足量的口播、素材和音轨验证。
 - **素材 / 角色声音**：从 `list --view assets` 和 `voices` 读取现有内容。选本机实际返回的音色 ID；按角色映射，而非每句重新设计声音。需要独立生图、动态镜头、配乐或音效时按 API 指南单独提交，再复用到工程中。
-- **剪映精修**：先 `jianying status --project 工程ID`，再按可用模式 `jianying export --project 工程ID`，最后 `jianying open --project 工程ID`。从“我的作品”的工程详情也能生成草稿和打开剪映。具体模式和响应见 [剪映草稿交接](references/api.md#剪映草稿交接)。
+- **剪映精修**：先 `jianying status`。`installed=false` 时主动询问“是否现在安装剪映专业版并配置桥接”；用户已同意则继续，不重复确认。获准后在实际工作台根目录运行 `scripts/Install-JianyingBridge.ps1 -InstallJianying -NonInteractive`；若已安装但 `bridge_ready=false`，直接运行同一脚本的 `-NonInteractive` 模式补桥接。用户拒绝安装则保留工作台交付物。检查首次启动和草稿目录，再 `jianying status --project 工程ID`，按可用模式 `jianying export`、`jianying open`。详见 [剪映草稿交接](references/api.md#剪映草稿交接)。
 
 创作时保留用户选定的题材、音色和模型。没有明确风格偏好时采用自然、清楚的表达。把要呈现的事实与自己的解释分开；真实事件用实际查看过的来源，不能把抓取成功或模型生成视为事实核查。虚构教学例子需在稿件和画面明确标注。
 

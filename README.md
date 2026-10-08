@@ -12,8 +12,8 @@ Codex 负责选题、文稿、分镜和审阅；工作台负责可重复执行�
 
 在 [Releases](https://github.com/huoxaiodai403-pixel/ai-video-studio/releases) 下载：
 
-- `ai-video-studio-0.2.0-windows.zip`：工作台源码、安装/启动脚本、Codex skill、公共示例与文档。
-- `ai-video-studio-skill-0.2.0.zip`：单独分享的 Codex skill；需要连接已安装的工作台。
+- `ai-video-studio-0.2.2-windows.zip`：工作台源码、已适配 Windows 的 Simon 白板源码、中文字体、公开贴纸、安装/启动脚本、Codex skill 与文档。
+- `ai-video-studio-skill-0.2.2.zip`：单独分享的 Codex skill；需要连接已安装的工作台。
 - `SHA256SUMS.txt`：下载校验值。
 
 解压到可写目录，在 PowerShell 中运行：
@@ -23,9 +23,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Studio.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Open-Studio.ps1
 ```
 
-默认页面：<http://127.0.0.1:8189/home>。安装器先准备轻量网页环境，**不会默认下载模型权重**。第一次生成前按 [快速上手](docs/getting-started.md) 配置在线接口，或按 [本地模型说明](docs/local-models.md) 准备对应引擎。
+默认页面：<http://127.0.0.1:8189/home>。安装器准备网页环境及 CPU 渲染器（Node、npm 依赖、Chromium），**不会默认下载模型权重**。Simon 来自本账号复刻仓库的固定版本，源码、Windows 补丁与字体直接随包分发，朋友无需安装 Git 或另行拉取仓库。只需网页环境时可加 `-SkipRenderers`。
+
+在 Codex 桌面端直接写口播和分镜；当前会话有内置生图工具时，可生成插图后导入工作台，无需另配图像接口。白板预览只需 CPU 渲染器。基础配音与字幕可用 Windows 系统语音离线完成，Edge 可免密钥在线配音；生成式视频和配乐仍需对应工具或已有素材，详见 [快速上手](docs/getting-started.md)。
 
 此包是可安装的源码发行包，不是包含全部模型的离线整合包。空环境能启动工作台，不代表所有媒体引擎已经就绪。
+
+新版连接、配音与账号授权说明见 [v0.2.2](docs/releases/v0.2.2.md)。
 
 ## 在 Codex 中使用
 
@@ -41,7 +45,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-CodexSkill
 
 > 使用 $ai-video-studio，把刚才的作品送到剪映，保留可编辑轨道，检查后将精修成片放回原作品。
 
-完整入口见 [Skill](skills/ai-video-studio/SKILL.md)。分享单独 skill 时，朋友还需安装工作台和实际使用的媒体引擎。
+完整入口见 [Skill](skills/ai-video-studio/SKILL.md)。分享单独 skill 时，朋友还需安装工作台；只为文稿、Codex 生图和白板预览，不必安装本地大模型。
 
 ## 模块
 
@@ -52,7 +56,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-CodexSkill
 | 资源库 | 图库与视频素材、音频库、音色库、模型库 |
 | 工作流 | 手绘白板、热点长片、小说转漫剧、通用视频制作 |
 | 创作工具 | 图像、动态镜头、配音、音乐音效、字幕、画质增强 |
-| 设置 | 在线提供方、运行状态和模型默认参数 |
+| 在线服务 / 本地模型 | 分开管理账号、接口与本机引擎；实际输出验证和预览 |
 
 成果自动进入统一作品管理；可复用画面和音频进入资源库。选择图片可带入参考生图、动态镜头或调查长片；长片可按全片、角色和镜头设置音色。
 
@@ -62,10 +66,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-CodexSkill
 | --- | --- |
 | 图像 | Qwen-Image 2512、FLUX.2 klein 4B 参考图编辑 |
 | 动态镜头 | Wan2.2 5B、Wan2.2 A14B |
-| 配音 | Qwen3-TTS CustomVoice / VoiceDesign / Base、IndexTTS |
+| 配音 | Windows CPU 系统语音；Edge、火山及兼容在线语音；可选 Qwen3-TTS / IndexTTS |
 | 字幕 | Qwen3-ASR、Qwen3 ForcedAligner |
 | 音乐与音效 | ACE-Step 1.5、Stable Audio 3 |
-| 文稿辅助 | Codex；也保留可选 Ollama 编剧和原文分段 |
+| 文稿辅助 | Codex 对话；ChatGPT 官方账号授权或 API Key；可选 Ollama 与原文分段 |
 | 合成 | Simon 白板适配、Remotion 调查片、FFmpeg |
 
 图像、视频、配音、识别工具也可配置兼容在线接口。具体能力取决于提供方，配置会保存在朋友自己的电脑；本仓库没有 API 密钥。
@@ -76,7 +80,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-CodexSkill
 - 需要对事实来源、人物一致性、配音听感和字幕进行实际审阅。
 - 分享包不带原作者个人作品、参考照片、克隆录音、凭据、模型权重或私人笔记。
 - 不自动公开发布视频。工作台默认仅绑定本机环回地址，不应直接暴露到公网。
-- v0.2.0 提供剪映草稿交接与成片回收。在“我的作品 → 送到剪映精修”生成草稿；剪映内的编辑、导出由用户或具备桌面工具的 Codex 完成。首次使用先运行 `scripts/Install-JianyingBridge.ps1`，剪映应用需另行安装。见 [剪映接入说明](docs/jianying-windows.md)。
+- 剪映草稿交接与成片回收：在“我的作品 → 送到剪映精修”生成草稿；剪映内的编辑、导出由用户或具备桌面工具的 Codex 完成。首次交接若缺剪映，Skill 会先询问是否安装，同意后安装官方客户端及桥接。手动运行 `scripts/Install-JianyingBridge.ps1` 也会在缺客户端时提示。见 [剪映接入说明](docs/jianying-windows.md)。
 
 ## 文档与开发
 

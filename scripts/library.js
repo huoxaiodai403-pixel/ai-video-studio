@@ -28,7 +28,7 @@
     function updateButtons(){
       let reason='';const project=installation?.project,reasons=project?.mode_reasons||{};
       if(!installation)reason=busy?'正在检查工程是否可交接…':'尚未获得工程状态，请刷新后再生成草稿。';
-      else if(!installation.installed)reason='尚未检测到剪映，请安装官方桌面版后刷新状态。';
+      else if(!installation.installed)reason='尚未检测到剪映。可让 Codex 询问并协助安装官方桌面版与桥接，完成后刷新状态。';
       else if(!installation.bridge_ready)reason='草稿组件未就绪，请先按工作台安装说明准备组件。';
       else if(!installation.editable_available)reason='尚未找到剪映草稿目录，请先打开剪映完成首次设置，再刷新状态。';
       else if(!project?.can_export)reason='当前工程还没有可交接的镜头素材或成片。'+[...new Set(Object.values(reasons).flat().filter(v=>typeof v==='string'))].join('；');
@@ -67,7 +67,7 @@
       try{const data=await api('/api/jianying/status?'+new URLSearchParams({project_id:row.project_id}));if(!panel.isConnected)return;installation=data;
         const ready=!!data.bridge_ready;state.textContent=(data.installed?'已检测到剪映':'尚未检测到剪映')+' · '+(ready?'草稿组件已就绪':'草稿组件未就绪');
         if(!data.installed){const link=element('a','下载剪映官方桌面版');link.href='https://www.capcut.cn/';link.target='_blank';link.rel='noopener noreferrer';state.append(' · ',link);}
-        if(!ready)state.append('。请先按工作台安装说明准备剪映草稿组件。');
+        if(!ready)state.append('。可对 Codex 说“安装剪映并配置桥接”；缺少客户端时会先征求你的同意。');
         showExport(data.last_export||data.project?.last_export);
       }catch(error){if(panel.isConnected){state.textContent=error.message;installation=null;}}finally{busy=false;updateButtons();}
     }

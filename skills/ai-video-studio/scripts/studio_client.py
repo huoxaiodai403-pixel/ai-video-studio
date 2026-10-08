@@ -221,15 +221,21 @@ def save_download(client, path, destination, max_bytes):
 
 def doctor(client):
     root = find_root()
+    discovered_root = root
     checks = {}
     for name, route in (
+        ('runtime', '/api/runtime'), ('jianying', '/api/jianying/status'),
         ('services', '/api/services'), ('whiteboard', '/api/whiteboard/status'),
         ('qwen_tts', '/api/voice-library/qwen-status'), ('music', '/api/music'),
+        ('speech', '/api/speech/options'),
     ):
         try:
             checks[name] = client.json(route)
         except StudioError as exc:
             checks[name] = {'reachable': False, 'error': str(exc), 'detail': exc.detail}
+    server_root = checks.get('runtime', {}).get('root')
+    if isinstance(server_root, str) and (Path(server_root) / 'scripts/studio.py').is_file():
+        root = Path(server_root).resolve()
     try:
         jobs = client.json('/api/jobs')
         service_available = isinstance(jobs, dict)
@@ -241,8 +247,17 @@ def doctor(client):
         checks['jobs'] = {'error': str(exc)}
     return {'url': client.base, 'service_available': service_available,
             'root': str(root) if root else None, 'python': sys.executable,
+            'discovered_root': str(discovered_root) if discovered_root else None,
+            'root_source': 'running-service' if isinstance(server_root, str) and root == Path(server_root).resolve() else 'local-discovery',
             'start_script': str(root / 'scripts/Start-Studio.ps1') if root else None,
             'active_jobs': active, 'checks': checks,
+            'creation_options': {
+                'writing': 'Codex writes the storyboard directly; no local LLM required',
+                'images': 'Use the current Codex built-in image tool when available; import its actual saved file',
+                'whiteboard_preview': 'CPU renderer; no image model, speech model or API key required',
+                'narration_and_alignment': 'Windows CPU speech works offline; Edge and Volc return synthesis timestamps. See checks.speech. Online and local settings are separate.',
+                'video_music_sfx': 'Use available tools or imported media; not implied by Codex sign-in',
+            },
             'note': '只读检查；未启动服务、下载模型或执行生成。Codex 写稿无需本地编剧模型。'}
 
 
@@ -331,10 +346,10 @@ def main(argv=None):
             time.sleep(min(args.interval, remaining))
     elif args.command == 'submit':
         payload = load_payload(args.json_file)
-        if args.action in ('speech', 'image', 'motion', 'transcribe') and payload.get('backend') != 'local':
-            raise StudioError('此分享客户端单项生成要求显式 backend=local，在线提供商请在工作台中按用户选择操作。')
-        if args.action == 'produce' and any(value != 'local' for value in payload.get('storyboard', {}).get('backends', {}).values()):
-            raise StudioError('此分享客户端不提交在线流水线。')
+        if args.action in ('speech', 'image', 'motion', 'transcribe'):
+            allowed = ('local', 'windows', 'edge', 'volc', 'online') if args.action == 'speech' else ('local', 'online')
+            if payload.get('backend') not in allowed:
+                raise StudioError('请显式选择 backend；配音支持 windows/edge/volc/online/local，其他单项支持 local/online。')
         result = client.json(ACTIONS[args.action], payload)
     elif args.command == 'jianying':
         project_id = identifier(args.project, PROJECT_PATTERN, '工程 ID') if args.project else None

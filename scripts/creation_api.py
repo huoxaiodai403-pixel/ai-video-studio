@@ -108,12 +108,13 @@ def adapt(data):
     system+=director.method_context(data.get('director_method',''))
     body={'messages':[{'role':'system','content':system},{'role':'user','content':f'最多 {limit} 镜头；画风：{style}\n小说素材：\n{text}'}],'temperature':.5}
     if mode=='online':
-        row,_=providers.configured('story');body['model']=row['model'];response=providers.request('story','POST','/chat/completions',json=body).json()
+        raw=providers.story(body['messages'],temperature=body['temperature'])
     else:
         c=settings.load()['story']
         from local_story import complete
         response=complete(c,body)
-    raw=response['choices'][0]['message']['content'].strip();raw=re.sub(r'^```(?:json)?\s*|\s*```$','',raw)
+        raw=response['choices'][0]['message']['content']
+    raw=raw.strip();raw=re.sub(r'^```(?:json)?\s*|\s*```$','',raw)
     result=json.loads(raw)
     if not isinstance(result,dict) or not isinstance(result.get('scenes'),list) or not 1<=len(result['scenes'])<=limit:raise ValueError('编剧模型返回的分镜数量或格式不正确，请重试')
     for i,s in enumerate(result['scenes'],1):

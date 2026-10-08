@@ -15,6 +15,7 @@
 !/assets/brand/
 /apps/*
 !/apps/investigation-renderer/
+!/apps/simon-skills/
 **/node_modules/
 **/.cache/
 **/__pycache__/

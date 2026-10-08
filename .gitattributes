@@ -16,4 +16,7 @@
 *.png binary
 *.ico binary
 *.woff2 binary
+*.ttf binary
+# The vendored source is hashed byte-for-byte on every platform.
+/apps/simon-skills/** -text -whitespace
 *.zip binary

@@ -57,10 +57,12 @@ class WhiteboardTests(unittest.TestCase):
         self.assertEqual(result['settings']['output']['height'], 1080)
         self.assertEqual(result['settings']['output']['fps'], 30)
 
-    def test_online_media_rejected_before_launch(self):
-        for kind in ('tts', 'asr'):
-            with self.subTest(kind=kind), self.assertRaisesRegex(ValueError, '本地'):
-                api.snapshot({'storyboard': self.spec, 'backends': {kind: 'online'}})
+    def test_synthesis_backends_keep_their_own_timestamps(self):
+        for backend in ('windows', 'edge', 'volc', 'online'):
+            result = api.snapshot({'storyboard': self.spec, 'backends': {'tts': backend}})
+            self.assertEqual(result['backends'], {'tts': backend, 'asr': 'synthesis'})
+        with self.assertRaisesRegex(ValueError, 'asr=synthesis'):
+            api.snapshot({'storyboard': self.spec, 'backends': {'tts': 'edge', 'asr': 'local'}})
 
     def test_llm_invalid_json_reports_error_without_example_fallback(self):
         with patch('local_story.complete', return_value={'choices': [{'message': {'content': 'not json'}}]}) as complete, patch.object(api, 'example') as example:
@@ -96,6 +98,15 @@ class WhiteboardTests(unittest.TestCase):
         complete.assert_called_once()
         self.assertEqual(result['source_topic'], '讲白板视频')
         self.assertEqual(result['render_mode'], 'excalidraw')
+
+    def test_online_story_uses_selected_account_and_does_not_repeat_invalid_paid_request(self):
+        with patch('providers.story',return_value=json.dumps(self.spec)) as complete,patch('local_story.complete') as local:
+            result=api.draft('讲白板视频',4,backend='online')
+        self.assertIn('在线',result['draft_method'])
+        complete.assert_called_once();local.assert_not_called()
+        with patch('providers.story',return_value='not-json') as complete:
+            with self.assertRaisesRegex(ValueError,'未自动重复'):api.draft('讲白板视频',4,backend='online')
+        complete.assert_called_once()
 
     def test_job_failure_is_persisted(self):
         with tempfile.TemporaryDirectory() as folder:

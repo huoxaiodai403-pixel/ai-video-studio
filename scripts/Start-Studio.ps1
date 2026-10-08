@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param([switch]$WorkbenchOnly)
 $ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'Initialize-StudioEnvironment.ps1')
 $root=Split-Path $PSScriptRoot -Parent
 foreach ($folder in @('logs','manifests','config','projects/studio','projects/drafts','assets/voices')) {
     New-Item -ItemType Directory -Path (Join-Path $root $folder) -Force | Out-Null

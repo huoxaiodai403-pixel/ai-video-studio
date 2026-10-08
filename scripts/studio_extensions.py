@@ -16,6 +16,7 @@ import enhancement
 import whiteboard_api
 import investigation_api
 import library_api
+import online_services
 
 SERVICES = {}
 CONTROL = threading.Lock()
@@ -40,6 +41,7 @@ def launch(name, command, cwd=ROOT):
 
 
 def handle_get(handler, route, jobs=None):
+    if online_services.get(handler, route):return True
     if route.path == '/api/jianying/status':
         import jianying_bridge
         try:
@@ -62,6 +64,10 @@ def handle_get(handler, route, jobs=None):
     if creation_api.get(handler,route):return True
     if route.path == '/api/providers':
         handler.reply(providers.load(public=True))
+        return True
+    if route.path == '/api/runtime':
+        handler.reply({'root': str(ROOT.resolve()), 'python': str(PYTHON),
+                       'version': (ROOT/'VERSION').read_text(encoding='utf-8').strip()})
         return True
     if route.path == '/api/services':
         handler.reply({key: {'ready': listening(port), 'starting': key in SERVICES and SERVICES[key].poll() is None}
@@ -108,25 +114,11 @@ def handle_post(handler, data, jobs):
     if investigation_api.post(handler,data,jobs):return True
     if whiteboard_api.post(handler,data,jobs):return True
     if enhancement.post(handler,data,jobs):return True
+    if online_services.post(handler,data,jobs):return True
     if creation_api.post(handler,data,jobs):return True
     if handler.path == '/api/providers':
         providers.save(data)
         handler.reply({'message':'在线接口配置已保存；密钥已在本机加密。'})
-        return True
-    if handler.path == '/api/speech':
-        providers.configured('tts')
-        voice=creation_settings.validate_voice(creation_settings.merge(creation_settings.load()['voice'],data.get('settings',{}).get('voice',{})))
-        text=data.get('text','').strip()
-        if not 1<=len(text)<=4000:raise ValueError('请输入 1–4000 字的配音文本。')
-        job='speech-'+uuid.uuid4().hex[:10];dest=ROOT/'projects/studio'/job;dest.mkdir(parents=True)
-        jobs[job]={'status':'queued','kind':'speech','backend':'online'}
-        def speak():
-            try:
-                jobs[job]['status']='running';providers.tts(text,dest/'audio.wav',voice['online_voice'],voice['speed'])
-                jobs[job].update(status='done',audio=f'/outputs/{job}/audio.wav')
-            except Exception as exc:jobs[job].update(status='error',error=str(exc))
-            finally:(dest/'status.json').write_text(json.dumps(jobs[job],ensure_ascii=False),encoding='utf-8')
-        threading.Thread(target=speak,daemon=True).start();handler.reply({'job_id':job},202)
         return True
     if handler.path == '/api/motion':
         creation=creation_settings.validate(data.get('settings',{}),check_models=False,check_voice=False)
@@ -303,6 +295,7 @@ PAGES = {
     '/voices': ROOT/'scripts/voices.html',
     '/assets/voices.js': ROOT/'scripts/voices.js',
     '/assets/speech_voices.js': ROOT/'scripts/speech_voices.js',
+    '/assets/speech-picker.js': ROOT/'scripts/speech-picker.js',
     '/whiteboard': ROOT/'scripts/whiteboard.html',
     '/assets/whiteboard.js': ROOT/'scripts/whiteboard.js',
     '/assets/documents.css': ROOT/'scripts/documents.css',
@@ -310,7 +303,9 @@ PAGES = {
     '/enhance': ROOT/'scripts/enhance.html',
     '/qwen-starter.json': ROOT/'workflows/qwen-starter-ui.json',
     '/tutorial-note': ROOT/'docs/getting-started.md',
-    '/models': ROOT/'scripts/models.html',
+    '/models': ROOT/'scripts/local-models.html',
+    '/runtime-settings': ROOT/'scripts/models.html',
+    '/assets/local-models.js': ROOT/'scripts/local-models.js',
     '/novel': ROOT/'scripts/novel.html',
     '/director': ROOT/'scripts/director.html',
     '/assets/director.js': ROOT/'scripts/director.js',
@@ -320,7 +315,10 @@ PAGES = {
     '/assets/controls.css': ROOT/'scripts/controls.css',
     '/assets/workbench.css': ROOT/'scripts/workbench.css',
     '/assets/workbench.js': ROOT/'scripts/workbench.js',
-    '/settings': ROOT/'scripts/settings.html',
+    '/settings': ROOT/'scripts/online-services.html',
+    '/assets/online-services.css': ROOT/'scripts/online-services.css',
+    '/assets/chatgpt-account.js': ROOT/'scripts/chatgpt-account.js',
+    '/assets/online-services.js': ROOT/'scripts/online-services.js',
     '/speech': ROOT/'scripts/speech.html',
     '/motion': ROOT/'scripts/motion.html',
     '/whiteboard.mp4': ROOT/'projects/whiteboard-demo/video.mp4',

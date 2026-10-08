@@ -28,6 +28,10 @@ GPU_LOCK = threading.Lock()
 
 
 class Handler(BaseHTTPRequestHandler):
+    def log_request(self, code='-', size='-'):
+        # Never log OAuth codes or state from a loopback callback URL.
+        self.log_message('"%s %s %s" %s %s', self.command, urlparse(self.path).path, self.request_version, str(code), str(size))
+
     def send_file(self, path):
         """Stream media and support seeking without loading a full film in RAM."""
         length = path.stat().st_size
@@ -82,6 +86,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Content-Length', str(len(body)))
+        self.send_header('Cache-Control', 'no-store')
         self.end_headers()
         if self.command != 'HEAD':
             self.wfile.write(body)
@@ -122,7 +127,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_file(path)
 
     def do_POST(self):
-        if self.headers.get('Origin') not in (None, 'http://127.0.0.1:8189', 'http://localhost:8189'):
+        if self.headers.get('Origin') not in (None, f'http://127.0.0.1:{self.server.server_port}', f'http://localhost:{self.server.server_port}'):
             return self.reply({'error': 'origin rejected'}, 403)
         try:
             size = int(self.headers.get('Content-Length', '0'))
