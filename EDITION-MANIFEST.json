@@ -1,0 +1,664 @@
+{
+  "schema": 1,
+  "edition": "friend",
+  "version": "0.3.0",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "sha256": "909ffbe5f4490bf50481dff07bc63010a93ce9c161606364c2d69284eb23d779"
+    },
+    {
+      "path": ".github/workflows/release-assets.yml",
+      "sha256": "198c8c2f26526ec3239dce72a8cf7748b07b51c80af8b299418f1e6b05183ae1"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "72b5017fd64c62a09fa06cadc5ada5f7e06449484ea6b18a4805658399ef8144"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "c4d010d60fe34f3cbec846dd51d549581e0fac321d230eb5a7366c9d425a1c78"
+    },
+    {
+      "path": "EDITION",
+      "sha256": "8e8b4d64f704c7a6aa632a7e6c2024e4f9fed79caac319e6bb7754db587e6f58"
+    },
+    {
+      "path": "Install.cmd",
+      "sha256": "35896425d5845ac3b07599aed72e74d7bed7eedd9407bc73a3c2917893ff5e77"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "c4c8c9b79ef1361639e6dc39527e8ca90d82fda4f82e57d14e4d5f9643c7095a"
+    },
+    {
+      "path": "NOTICE.md",
+      "sha256": "48664e9d4c4b17409a7ebb265486ada9179eafbf01ceab4e836c9788396bdc8d"
+    },
+    {
+      "path": "README.md",
+      "sha256": "6a6e3d002a18e5f76753c4350be2fc03d3668104291a205e4c39cb820bbb7415"
+    },
+    {
+      "path": "Start.cmd",
+      "sha256": "508939db41c69739771374757e1d1c5e3e27b5cbddb1c88077a4b00be27c425b"
+    },
+    {
+      "path": "VERSION",
+      "sha256": "c3e6947edad6581d229209ce319ce4498a03f3ed0846b74bb647247a749c1e46"
+    },
+    {
+      "path": "apps/simon-skills/LICENSE",
+      "sha256": "f833a14653a0a090490e7d17c673f5459ac98c600aa041b628c9a10c7525994d"
+    },
+    {
+      "path": "apps/simon-skills/SOURCE-MANIFEST.json",
+      "sha256": "c2a141aad2d9ee7c1cc2561a5e9aeb0b3768e2dd1aade0a6f6c09d92bdfd6b12"
+    },
+    {
+      "path": "apps/simon-skills/skills/whiteboard-video/assets/fonts/OFL.txt",
+      "sha256": "0df7e09be4c2c850a48bd8beb9cd64b343aad49cd5d3f6cfb2ad2e3d28a56ca4"
+    },
+    {
+      "path": "apps/simon-skills/skills/whiteboard-video/assets/fonts/Xiaolai-Regular.ttf",
+      "sha256": "e2f68daf0e72777a8cf58bc83de1b98634b251e537ddbfca24b0ae50d1802da2"
+    },
+    {
+      "path": "apps/simon-skills/skills/whiteboard-video/config.json",
+      "sha256": "f4e91431eb2589b1e0fe6f297aac544c4f03aeaf7ca39a0892c04087c6086d80"
+    },
+    {
+      "path": "apps/simon-skills/skills/whiteboard-video/examples/2026-09-08 为什么懂很多道理还是没变化/assets/panicked.png",
+      "sha256": "3e5a695b2969d8c89f58e9fddcd2a0f066e54b2e66da91b0e52c5baaee6ec6cf"
+    },
+    {
+      "path": "apps/simon-skills/skills/whiteboard-video/examples/2026-09-08 为什么懂很多道理还是没变化/assets/reader.png",
+      "sha256": "a8e2d7230a8bc97ba7c9a4844c2a5dfa493bf5cc2a4920ad268b25345b2f86ce"
+    },
+    {
+      "path": "apps/simon-skills/skills/whiteboard-video/examples/2026-09-08 为什么懂很多道理还是没变化/assets/stepper.png",
+      "sha256": "4f391938e0039c0b67812ade04927fbf493c3588edb78a6019d3c503ce20c3c5"
+    },
+    {
+      "path": "apps/simon-skills/skills/whiteboard-video/examples/2026-09-08 为什么懂很多道理还是没变化/assets/stuck.png",
+      "sha256": "9c1d8c141c96c5a121ea8e966898bd034e1f9478b7191498f568e2460ddde07b"
+    },
+    {
+      "path": "apps/simon-skills/skills/whiteboard-video/lib/captions.cjs",
+      "sha256": "df2045579a366c9166126f8c6fd2f250d6c202d2657ecfd4d45944744874e550"
+    },
+    {
+      "path": "apps/simon-skills/skills/whiteboard-video/lib/paths.cjs",
+      "sha256": "2fec38081ae65d56063c737bd37f7dda72366a0e9e7441737090aa011bd27b4b"
+    },
+    {
+      "path": "apps/simon-skills/skills/whiteboard-video/lib/render.html",
+      "sha256": "6a585e53dd58b673660687033cb336567cee027e839063574c20107d22f23475"
+    },
+    {
+      "path": "apps/simon-skills/skills/whiteboard-video/lib/render.js",
+      "sha256": "2033696f3aeb9dfdf95d7e44a246ef5206d0a98003ee4d6bc4498a7c0cf3c231"
+    },
+    {
+      "path": "apps/simon-skills/skills/whiteboard-video/lib/scene-dsl.js",
+      "sha256": "c446148672b2470f350c17726e82e84fc231af1507827c5c25c92c297d867a3d"
+    },
+    {
+      "path": "apps/simon-skills/skills/whiteboard-video/package-lock.json",
+      "sha256": "5e9ef187d4a4ecc8189ab8b9f4571f5195c6dee8ec2b9b9a2ff3b2e9e2c5c092"
+    },
+    {
+      "path": "apps/simon-skills/skills/whiteboard-video/package.json",
+      "sha256": "86d2777878d623c61e1c0678b7477afc574c4daa49a784c86e049c20d32245e6"
+    },
+    {
+      "path": "assets/brand/studio-mark.ico",
+      "sha256": "5d04813220bd78fa04ecce06754552c3e39c7d709b01d59b0acb96d1eb0a2476"
+    },
+    {
+      "path": "assets/brand/studio-mark.png",
+      "sha256": "24f5a7c1221f8f1249a8d741e79bf4468c1652b4e101f11ac82c74d16ad811fe"
+    },
+    {
+      "path": "assets/brand/studio-mark.svg",
+      "sha256": "f7219110dacbf38e5edb094db5a3adf195d4f6697b9254c1f5005270c8115af0"
+    },
+    {
+      "path": "docs/architecture.md",
+      "sha256": "b2f6001a92df831e4964908e804c6c9ed3a94535a755d1afe322034ab34978fc"
+    },
+    {
+      "path": "docs/editions.md",
+      "sha256": "29075c7a6ccae2b293bb2651646669f2a0e1381ddd53ceea079865e416b2ce17"
+    },
+    {
+      "path": "docs/generation-workshop.md",
+      "sha256": "3c44fd2c081159cf447cc47212c42c8d0d0b8eb134b029310e795f44c7e66b0d"
+    },
+    {
+      "path": "docs/getting-started.md",
+      "sha256": "d0e945dd9c6d0e38a5a0a5ed3451883dec172695bf5a93548ea9818b4159f2bd"
+    },
+    {
+      "path": "docs/jianying-windows.md",
+      "sha256": "cb19dcbb9b19b437e9812d57602b5bd8aeb938e3c771cfbfebb268f46af8bf67"
+    },
+    {
+      "path": "docs/local-models.md",
+      "sha256": "f250d4bd8ee1b901883207b09f2acf6615ed50a35ec6b3b34b3cffb45ea8afe2"
+    },
+    {
+      "path": "docs/references.md",
+      "sha256": "c4475104d5121db8f1d3f8821eda9836b0efe0fbeeeb680de26b9d00594c8c6d"
+    },
+    {
+      "path": "docs/releases/v0.2.0.md",
+      "sha256": "46afb9639ab2f5766fc5aabd63067d2a33dc24a9c1a5348dd759714983abe632"
+    },
+    {
+      "path": "docs/releases/v0.2.1.md",
+      "sha256": "3cac1078e8de64878d2f97fb3f64394755e24b58252110813285df8a0a3842fd"
+    },
+    {
+      "path": "docs/releases/v0.2.2.md",
+      "sha256": "2459e98f570ad0aac99c8a264755f7cad41a5cdee1bf33b3b3cf406504c9efcc"
+    },
+    {
+      "path": "docs/releases/v0.3.0.md",
+      "sha256": "c166307d39d59cf4ead08ab6e6bb7c36c3554745511c8f29ae09cf33e1d6fd4b"
+    },
+    {
+      "path": "examples/code-animation.html",
+      "sha256": "4036be37196e95445501f128c172308364e9fc48c1b26910dad741d802e18f26"
+    },
+    {
+      "path": "examples/news-reliability-animation.html",
+      "sha256": "69985524ea015900fbbb3db62ba1f3330c15c0da8c7a08917dbb9e3020b4b282"
+    },
+    {
+      "path": "examples/storyboard.json",
+      "sha256": "cb115d378a303c060c6a413dedb01e775070beb3118fd5e01f55bdc37093d8d7"
+    },
+    {
+      "path": "packaging/build_release.py",
+      "sha256": "bc8292ef2d9a921791d1d39efcc89e066154f39d802a7f424869c97be96862c5"
+    },
+    {
+      "path": "packaging/friend-profile.json",
+      "sha256": "7c6fb44f6e2529c7800abd05a61f0c0cd0bd468ab8cee0cc98b91b1fa55263e1"
+    },
+    {
+      "path": "packaging/vendor_simon.py",
+      "sha256": "7d84807be14e911efa158f45f7f0efb2b61af06110260f0d035246926d3cfb3c"
+    },
+    {
+      "path": "requirements-studio.txt",
+      "sha256": "5997709201780628040c6b0d7ec3fb4167a649f80cf5a1952927ad6913f8707c"
+    },
+    {
+      "path": "runtime-dependencies.json",
+      "sha256": "c7e7cec4b9239be1511d423d29149d24f47798f416f105c2f0e74af108759382"
+    },
+    {
+      "path": "scripts/Initialize-StudioEnvironment.ps1",
+      "sha256": "c17bb704f5d242af44851220e97436807fba19fb6bcffb26853784695baff9df"
+    },
+    {
+      "path": "scripts/Install-CodexSkill.ps1",
+      "sha256": "09e33ef6f208cfdfbea6bb9d7e8114dfb8efa1d1b4abbecc2e9a9e0ae2f0f66c"
+    },
+    {
+      "path": "scripts/Install-JianyingBridge.ps1",
+      "sha256": "4198857712fa562fa8919866ab77f1398ada4a24b27006ba5f1bede6d2d0248f"
+    },
+    {
+      "path": "scripts/Install-Renderers.ps1",
+      "sha256": "feb6387414e168859c4a0c3fe748c30a0bcb1e2a889f45f2b9f68d36d82348fd"
+    },
+    {
+      "path": "scripts/Install-Studio.ps1",
+      "sha256": "818b769e36d269c4ddc08895a0e56600776a19ad64f5a2e0265e95ab128d0d26"
+    },
+    {
+      "path": "scripts/Open-Studio.ps1",
+      "sha256": "296cba286b5a18d3c7483f4fceb01b78c24daaa8d6c814bc6ef80c915870639f"
+    },
+    {
+      "path": "scripts/Run-Video.ps1",
+      "sha256": "7ec8f11b89ddff8b569954cf30c0d8f82e894161d1fa9976c52516a631e5e633"
+    },
+    {
+      "path": "scripts/Start-LLM.ps1",
+      "sha256": "1063074e77d9eade7b934bc61c48ac4bdbee3d2cd1129c5df355af6e01531470"
+    },
+    {
+      "path": "scripts/Start-Studio.ps1",
+      "sha256": "72b9faa5cb5575e9d3e914d892a8c40a5c0b073be1762211067dba8b4fef3ef1"
+    },
+    {
+      "path": "scripts/Start-TTS.ps1",
+      "sha256": "5d71a0d50921c88c9001665889a77b94bc21fe9b02e9d779dcac2d005c4ee1ad"
+    },
+    {
+      "path": "scripts/Transcribe.ps1",
+      "sha256": "4a4552fbf867dff0adb620a48053bbc00c8be2551e93d958601ca583621e73d2"
+    },
+    {
+      "path": "scripts/align_batch.py",
+      "sha256": "3a63aa8676ab10f29ee8da653733b2b3bf16d45cf309202b8659179480b581bd"
+    },
+    {
+      "path": "scripts/assets.html",
+      "sha256": "259923a5726da86f9ace5d844d59d420d96a0825ff5bfe40127b2718d765e14f"
+    },
+    {
+      "path": "scripts/bootstrap_studio.py",
+      "sha256": "e79a95bd8ba9a5391052331b95930ef1ab499b9e2bfd20879b18675b0d75152f"
+    },
+    {
+      "path": "scripts/chatgpt-account.js",
+      "sha256": "15c88617bda04d17ff5e18797bb83755bccf17d68778c80c928fbddd12acf1b3"
+    },
+    {
+      "path": "scripts/chatgpt_auth.py",
+      "sha256": "869adc40305fe4adc7287fbd4996b179f4656b609c8b08dc6e5d3cc2e8af1bfa"
+    },
+    {
+      "path": "scripts/check_renderers.cjs",
+      "sha256": "eba39d5f5534c4fde434b2565bd16a139873b76e3f931bf8a4840a531d330356"
+    },
+    {
+      "path": "scripts/code_animation.py",
+      "sha256": "daf1d193b60733cf85f4be8299f0bbd9731d90b5650ab84ffd44b8df75677e1b"
+    },
+    {
+      "path": "scripts/comfy_client.py",
+      "sha256": "df0e4995169ff170b631eb847bfe2f056084b706c1add24fb362f215a6b2cfe7"
+    },
+    {
+      "path": "scripts/controls.css",
+      "sha256": "941e98ab3485a6b3beb387aa0826c3f183ac72c1d9e8284a5b4d10900f0fc785"
+    },
+    {
+      "path": "scripts/creation.js",
+      "sha256": "266cb1d978a29f9b17b30292d59d64e31456bf064dd90f374576399b66be7e1e"
+    },
+    {
+      "path": "scripts/creation_api.py",
+      "sha256": "4fddf40641df8000e7517ef4558e4965fa9f60bd8c15b779d7413f8b81346434"
+    },
+    {
+      "path": "scripts/creation_settings.py",
+      "sha256": "bf1bad2d8d7df3ff976ee8e8759ea371ebb4d21fe59e3c2370e62fe6b62ccf6e"
+    },
+    {
+      "path": "scripts/director.py",
+      "sha256": "f1a3a8c206adbb336550b6dc5e0a040359f8d3c52596d5808adb2f8fec3bab05"
+    },
+    {
+      "path": "scripts/document.js",
+      "sha256": "cf4e1097fe34e05d6cd640a386ac7db49d41b12ea473d581f44e1126c7e05c4f"
+    },
+    {
+      "path": "scripts/document_pages.py",
+      "sha256": "30ebbf43d59856d04809c3c2254976eada6eca5df8c7599d9dd366b001b73d2c"
+    },
+    {
+      "path": "scripts/documents.css",
+      "sha256": "d259181a452508b13dd964aabdff02386041b4c0ed8f566661be22756a7d54f3"
+    },
+    {
+      "path": "scripts/flux_klein.py",
+      "sha256": "990a2e52918f51dbda4008cdda0a167fc92373246284cf9741cc689ad68fe8fc"
+    },
+    {
+      "path": "scripts/generation.css",
+      "sha256": "fad06bf0f7c1820aa363e25920f0d171835677642616f930869bced09010dd0c"
+    },
+    {
+      "path": "scripts/generation.html",
+      "sha256": "2ecce07625c9faee59c50f1d93b28abfbf64a5e6b0d13768f665b7fd5f865cde"
+    },
+    {
+      "path": "scripts/generation.js",
+      "sha256": "11d2130d176609a6c846221193da5dc09adc1198165c983297b95f759580908a"
+    },
+    {
+      "path": "scripts/generation_api.py",
+      "sha256": "3bdb0f6129b8aa22ad57348c1cd186be6b263a0b83b24b355a285da50cb6312f"
+    },
+    {
+      "path": "scripts/generation_automation.py",
+      "sha256": "b02e19187f80cc666282956672c427b1436e1c41003783ac93eeea6a3b769d5a"
+    },
+    {
+      "path": "scripts/generation_plans.py",
+      "sha256": "3087a56f18ecc9e69c70880eca436b36edea0c9567d5b04d80fe55851af9babc"
+    },
+    {
+      "path": "scripts/generation_workers.py",
+      "sha256": "b3586eb9c9e1a3693e2fbfeca0c0b61eb2e543a7df2d7242f4e24c4f96cdabe8"
+    },
+    {
+      "path": "scripts/home.html",
+      "sha256": "097f4f938da39ed32e51cf5640f654197063311ccf7fa2192a16931e6d7d3299"
+    },
+    {
+      "path": "scripts/home.js",
+      "sha256": "35cacbc79b0db0b3ee859a5ef7432434fa356f6bd6c8b9aeb0034a6ab488802d"
+    },
+    {
+      "path": "scripts/hub.css",
+      "sha256": "3d0d89a26400e9686c2ac3aa2b0f4fbb0ae84148ed07116c80d7b460591a0e8d"
+    },
+    {
+      "path": "scripts/image_references.js",
+      "sha256": "0285e789f0fbcec73b53ab11db08b8f0f7c6e978f55c79e89e8f941ca006bbfd"
+    },
+    {
+      "path": "scripts/image_references.py",
+      "sha256": "a12f4dc1e2c27a2f5c497c05034a21d7b69baaa1f69b3f7bacba67d174cf3ea4"
+    },
+    {
+      "path": "scripts/jianying_bridge.py",
+      "sha256": "95a6b79c140bc1ff6d7509f41f7966eb0a8d68070578476c91724b3e1ea38578"
+    },
+    {
+      "path": "scripts/learn.html",
+      "sha256": "b326d953d7ef085b06956c47740af3810eeb9fe9e939af58ff8f2888086da5cb"
+    },
+    {
+      "path": "scripts/library.css",
+      "sha256": "50ddf82054d7b6d021a52faaba9b4cde18df78b01505abb6123a84558324a0a8"
+    },
+    {
+      "path": "scripts/library.html",
+      "sha256": "72af7c88efb8caa140347e45c1bebc0b5ef51da6a3351891a3eb6f44f8917c73"
+    },
+    {
+      "path": "scripts/library.js",
+      "sha256": "5e347d6b25917a1bcbdc8ac80c13026af1f1a25412c097b05fd758469bd5a39f"
+    },
+    {
+      "path": "scripts/library_api.py",
+      "sha256": "169591f564e0d54183493a7f796995afce844e528f82924bd25a4a3bd436472c"
+    },
+    {
+      "path": "scripts/lightweight_speech.py",
+      "sha256": "71306f229a1df939d9a1f37b9d00a96c8f37a696119ac372376240d56c73e73c"
+    },
+    {
+      "path": "scripts/local_story.py",
+      "sha256": "c482c8d7d2b0e73cfa1a1ee1a25ab72d7002d8a8e6cfb25ead7d12b2e1e7b88a"
+    },
+    {
+      "path": "scripts/model_profiles.py",
+      "sha256": "5d37e34fc13b88d05a31daa2a5d43edb6dc25b27982855c1a65e530df5ad371a"
+    },
+    {
+      "path": "scripts/online-services.css",
+      "sha256": "8d86c3ae0862a03ea39c096a8ea8b867658ee9c723ea09e91f5d84dac20965b7"
+    },
+    {
+      "path": "scripts/online-services.html",
+      "sha256": "183091d3a7bb120709f289c13c08a9763ac72b83073b960412572ce3966a4a84"
+    },
+    {
+      "path": "scripts/online-services.js",
+      "sha256": "4f4edc9f22179e3e78d443014de02a0e218cdb43d1049c811b1c7e54ee7703cf"
+    },
+    {
+      "path": "scripts/online_pipeline.py",
+      "sha256": "7a7df4a535a1bd433a4ae8fd7cb9fe8126bd4b8e5ccbd029e1349526ed1035b8"
+    },
+    {
+      "path": "scripts/online_services.py",
+      "sha256": "82f2b45e12e68ef0fdfdff0020ecb34540ca2e4c276e86afad8446b66d243791"
+    },
+    {
+      "path": "scripts/pipeline.py",
+      "sha256": "a9a56b9008f183a95f9375f9ac8353bcc0869545df4c6540e1a073a296b70115"
+    },
+    {
+      "path": "scripts/prompt_library.py",
+      "sha256": "1ae3f773b437cb9006d8520b3af4731f790fd77fe876cc315f4b7590c93840a0"
+    },
+    {
+      "path": "scripts/providers.py",
+      "sha256": "ef1be64a4419f157587ba5c6b773d895996548d12031e8de416620c5f7d4f3ba"
+    },
+    {
+      "path": "scripts/qwen_tts_batch.py",
+      "sha256": "f99fe08ed8c2a53c89ba8ce667e027c4aae9a1f0da3b9ff1c50d1bd36c776b74"
+    },
+    {
+      "path": "scripts/redecode_video.py",
+      "sha256": "052e02928e01e93bd26d6373c7dd624eb6edb9b259649c237d97f15b877b7dee"
+    },
+    {
+      "path": "scripts/render_code_animation.cjs",
+      "sha256": "140be7029bab1a7d09130b0feee7ac44ed3bbecca578b52586b6f5d6c680d17a"
+    },
+    {
+      "path": "scripts/render_whiteboard.py",
+      "sha256": "cdeb007ea08fc8c5615e4a5fce023f4c7f0bb3d4b6c7b2c7eba2d0862f6c369d"
+    },
+    {
+      "path": "scripts/requirements-jianying.txt",
+      "sha256": "a72f548f7feec94f8c145c67f726e87ece5695b7cc966396e3f11ed34550a402"
+    },
+    {
+      "path": "scripts/runtime_paths.py",
+      "sha256": "9e35ecde5f6ef1495f805d1ce0fbf17c69c89e80aefd3938f5dc35e4147471ff"
+    },
+    {
+      "path": "scripts/settings.html",
+      "sha256": "ace34428a7e4772dff994f335d1c0de011ab0ef8d9cbb6e9f6f925f4bb00a01c"
+    },
+    {
+      "path": "scripts/simon_bridge.cjs",
+      "sha256": "d5b9da52bff8c53f6527e510d4a9e4c15b3dc3fda2c91f37cf03a2dcd809e5ce"
+    },
+    {
+      "path": "scripts/simon_caption_timing.cjs",
+      "sha256": "405484036973d8d4fd846f9fec152526bc9790ab303f9c644abef988b1995395"
+    },
+    {
+      "path": "scripts/simon_source.py",
+      "sha256": "bd828b17f89dda89acc42a2f16068c8454edb2eacdbe14e9c1cbc0e2e949e96d"
+    },
+    {
+      "path": "scripts/simon_whiteboard.py",
+      "sha256": "eb345c15bdd21a3882bdf3f7afb64c65fbc679405f3f99ac31907c15106f0d1e"
+    },
+    {
+      "path": "scripts/speech-picker.js",
+      "sha256": "ceb0907c45f9503d7cfa01713682735a1e8b2639477d1bbd34fcc0b0529ccd85"
+    },
+    {
+      "path": "scripts/speech.html",
+      "sha256": "3fa46c3cab80931aa37bca0f568af3bcd67be417ec58feb658f98325da5edce1"
+    },
+    {
+      "path": "scripts/speech_voices.js",
+      "sha256": "3e7f8bb4daf83cc367b2120df0782cc304c35a81cda85feb3738de5386c84d36"
+    },
+    {
+      "path": "scripts/studio.py",
+      "sha256": "ea3f758bfc934692830159e3ca6a5de11615fe77888415d99ae07aa16b09bd19"
+    },
+    {
+      "path": "scripts/studio_edition.py",
+      "sha256": "3a2199fe80d354414bb8c46ba27607467c2d0c58a2e89ab5a65c8f69d47e609d"
+    },
+    {
+      "path": "scripts/studio_extensions.py",
+      "sha256": "518b119baee961642f0a79c71fabd4476b030178beae0b2a53dea4820c0f5f73"
+    },
+    {
+      "path": "scripts/transcribe.py",
+      "sha256": "70be8bf9a1ce13ced8e4dca546551e2113114a7b4478806867646ebce0e74c29"
+    },
+    {
+      "path": "scripts/tts_batch.py",
+      "sha256": "364a6f2e91071f888614842c275cac1361de43b33cf6a6b053252aff751dee05"
+    },
+    {
+      "path": "scripts/voice_api.py",
+      "sha256": "bd46240a850db2eeccf4bff6dc6dc5fae75f1571d13b214b05d15e9b95ef8657"
+    },
+    {
+      "path": "scripts/voice_cache.py",
+      "sha256": "810e185c8ff73ee298c2c33b74ab17e575d3cf3179a0ef29e513097fe517c5c7"
+    },
+    {
+      "path": "scripts/voice_library.py",
+      "sha256": "7c4711a23476b0f8679792c06928293b39ff924ac42f5165edbb9ed9efa02ce3"
+    },
+    {
+      "path": "scripts/voices.html",
+      "sha256": "cdeaa2997b9f2800cf5f0dbf9207c392164f1bb870be98336ebbdc6507cb2143"
+    },
+    {
+      "path": "scripts/voices.js",
+      "sha256": "fb72f4a0e82b708559687f3805992e7292ecedc730732f7b2318cd9cf31e9dd5"
+    },
+    {
+      "path": "scripts/volc_speech.py",
+      "sha256": "71df60e60b9d46342f320f883eb7266898225c6073166be73195d4df7ee2de68"
+    },
+    {
+      "path": "scripts/wan_a14b.py",
+      "sha256": "e3fc2e9a472c38d2be07eb5f0b9253d282ccb52fafaa0fc4c4d1e582b14ac0e4"
+    },
+    {
+      "path": "scripts/wan_client.py",
+      "sha256": "32a97b11b76b21ee0516b0a1e6eb094fe31f4da152937965ebc9aa42cfd7b9f5"
+    },
+    {
+      "path": "scripts/web_shell.py",
+      "sha256": "4e45dd74df3a7a727ba6cff205ce5f0700fb8201fb0ed3f698479292047f986e"
+    },
+    {
+      "path": "scripts/whiteboard.html",
+      "sha256": "886ec1fb2ce20dec403c621a458338b18b1eab68e9b2b1e4d963247dc24d73d5"
+    },
+    {
+      "path": "scripts/whiteboard.js",
+      "sha256": "35fe82101232c276c0e87800d2c066653adf299b3fd377dcb64b971c2e2727e3"
+    },
+    {
+      "path": "scripts/whiteboard_api.py",
+      "sha256": "75ea0e65812d862073b5b9ea4ee951eb07a0051ec7701ce6ae11266d42912036"
+    },
+    {
+      "path": "scripts/whiteboard_scene.py",
+      "sha256": "8e4981edc5b1c6713ef6baac0009e6fb35f51b3894fa6bb27ffe86ec529a542a"
+    },
+    {
+      "path": "scripts/windows_speech.ps1",
+      "sha256": "16f138d3d6946c4f3ead636adc949e4434d61d5192f8319fa4d8d02a908befb9"
+    },
+    {
+      "path": "scripts/with_gpu.py",
+      "sha256": "7c9b0449b6a7d12b636c920b2a197c0c016abb9ca3979f2cbd5dad79c8905080"
+    },
+    {
+      "path": "scripts/workbench.css",
+      "sha256": "334ad658b0c361663ce5b3e4e58d47f6dfb81b214dd2f514e83be974dbc6c469"
+    },
+    {
+      "path": "scripts/workbench.js",
+      "sha256": "18966a36b26b21c765ca7e09b6df94ea25b4b3de3a6ee37a80be1551c5028e14"
+    },
+    {
+      "path": "scripts/workflows.html",
+      "sha256": "355e609ca3adbf2bf3eebcb8ee016b1992df17300cbdffcef9908d65e5f61a56"
+    },
+    {
+      "path": "scripts/workflows.js",
+      "sha256": "a2f8f873233f787be108a0fd29c5727b624719585d58317618ccdb8b862ebfe0"
+    },
+    {
+      "path": "skills/ai-video-studio/EDITION",
+      "sha256": "8e8b4d64f704c7a6aa632a7e6c2024e4f9fed79caac319e6bb7754db587e6f58"
+    },
+    {
+      "path": "skills/ai-video-studio/SKILL.md",
+      "sha256": "581443756db8208d44f68180c4d8c0e70877dfa8641f20788723a28f82000eec"
+    },
+    {
+      "path": "skills/ai-video-studio/agents/openai.yaml",
+      "sha256": "5bc91fec77bd5a603010d6e7b564929b329cc8c129c359d99adb7c8cd7c22edb"
+    },
+    {
+      "path": "skills/ai-video-studio/references/api.md",
+      "sha256": "660e343f84e5403ea33e51dcb876a2bf4c10a1c35b522fecb333e83b5d92023e"
+    },
+    {
+      "path": "skills/ai-video-studio/references/generation.md",
+      "sha256": "af1a836af181b5313df1c4a59c34b3d66c16bc2b8ed5d55250749ae29eb42ccc"
+    },
+    {
+      "path": "skills/ai-video-studio/references/whiteboard-request.json",
+      "sha256": "5023e46af2c3ef15a293590e2269997e30607f39583648db7ce0b69d15e7e75c"
+    },
+    {
+      "path": "skills/ai-video-studio/scripts/studio_client.py",
+      "sha256": "fa81b94ea2f6672d66a6fca03f80e33ba428a7baf0fef52a5893b47d92f21980"
+    },
+    {
+      "path": "workflows/generation-routes.json",
+      "sha256": "a3f1891fa58b48022f2a4c4defa2334e21722cc638d951ed16f8fb163da27f1b"
+    },
+    {
+      "path": "workflows/qwen-image-api.json",
+      "sha256": "6c2cd17cb39b2b098bfc31a961f8c8c81e66c8fb04795b73c6bbcc63e7ca8bb7"
+    },
+    {
+      "path": "workflows/qwen-starter-api.json",
+      "sha256": "304b74969763bddf7bb67f1c46be60a68450d7a492fc60fd06815ce4d13478fe"
+    },
+    {
+      "path": "workflows/qwen-starter-ui.json",
+      "sha256": "fa22c61be0234fd833c78535f07cba321359788b78410a762ef4874cc66a4bf1"
+    },
+    {
+      "path": "workflows/simon-windows.patch",
+      "sha256": "a7ad8960acff50ebbcddd2e82351cd7d10595dfe61a0d50b83bd04910a1ce5ce"
+    },
+    {
+      "path": "workflows/wan22-official.json",
+      "sha256": "5ce37ca5037c02ab49ef3278e0bdf96b43e7feaa2bc97f84a61d76fb90ffc5f6"
+    }
+  ],
+  "privacy_excludes": [
+    "models",
+    "private config",
+    "projects",
+    "voice recordings",
+    "reference media",
+    "logs",
+    "caches"
+  ],
+  "profile_sha256": "0fccf174c7180d34bc39cdd99e542fa32b833b7265bf695b6c92d130bb469a3e",
+  "overridden_paths": [
+    "README.md",
+    "docs/architecture.md",
+    "docs/generation-workshop.md",
+    "docs/getting-started.md",
+    "docs/local-models.md",
+    "docs/references.md",
+    "scripts/assets.html",
+    "scripts/generation_workers.py",
+    "scripts/home.html",
+    "scripts/learn.html",
+    "scripts/workflows.html",
+    "skills/ai-video-studio/EDITION",
+    "skills/ai-video-studio/SKILL.md",
+    "skills/ai-video-studio/agents/openai.yaml",
+    "skills/ai-video-studio/references/api.md",
+    "skills/ai-video-studio/references/generation.md",
+    "skills/ai-video-studio/references/whiteboard-request.json"
+  ]
+}

@@ -7,5 +7,5 @@
       {"id":"scene03","board_title":"现在能确认多少？","board_layout":"summary","board_cards":["核对日期","区分事实与推测","保留不确定"],"narration":"最后核对日期，分清已经确认的事实和作者的推测。暂时无法确认的部分，就保留不确定，等待可靠的新信息。","board_sticker":"none"}
     ]
   },
-  "backends": {"tts":"local","asr":"local"}
+  "backends": {"tts":"windows","asr":"synthesis"}
 }

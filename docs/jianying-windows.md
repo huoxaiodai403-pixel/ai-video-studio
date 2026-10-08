@@ -1,6 +1,6 @@
 # Codex 与 Windows 版剪映
 
-核对日期：2026-10-07。
+核对日期：2026-10-08。
 
 v0.2.0 起提供“工作台作品 → 剪映草稿 → 打开剪映”的桥接。Codex 继续负责脚本、分镜、生成与检查；剪映用于时间线精修和最终导出。早期 v0.1.0 分享包没有这些入口，需要更新工作台和 skill。
 
@@ -13,7 +13,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-JianyingBr
 ```
 
 该脚本使用工作台现有 Python，在 `apps/jianying-bridge/.venv` 安装固定版本的社区库，
-依赖清单为 `scripts/requirements-jianying.txt`；它不安装剪映本体，也不下载模型。
+依赖清单为 `scripts/requirements-jianying.txt`。v0.2.1 起，未检测到剪映时脚本会先询问是否安装；同意后通过 winget 的 `ByteDance.JianyingPro` 安装官方客户端，检查实际程序存在，再继续配置桥接。不下载模型。
+
+在 Codex 中，由 Skill 先询问用户。已获同意后加 `-InstallJianying -NonInteractive`；
+没有同意时不能传 `-InstallJianying`。无人值守的 `-NonInteractive` 模式遇到缺客户端会退出并要求先取得安装同意。用户拒绝安装时不安装桥接，保留已有作品。已装客户端则不重复询问或重装。
 如工作台尚未安装，先按 [快速上手](getting-started.md) 准备基础运行环境。
 
 剪映组件的固定依赖要求 **64 位 Python 3.12–3.14**；基础工作台可以使用 3.11，但剪映组件不能沿用 3.11。
@@ -53,7 +56,7 @@ python CLIENT jianying export --project 工程ID --mode auto
 python CLIENT jianying open --project 工程ID
 ```
 
-CLI 的 `export` 表示“生成剪映草稿”。`open` 只启动检测到的剪映，并提供草稿信息；不会声称已经打开指定工程，也没有调用社区库的旧版自动导出控制器。详细字段见 [Skill API 文档](../skills/ai-video-studio/references/api.md#剪映草稿交接)。
+CLI 的 `export` 表示“生成剪映草稿”。`open` 只启动检测到的剪映，并提供草稿信息；不会声称已经打开指定工程，也没有调用社区库的旧版自动导出控制器。详细字段见 [Skill API 文档](https://github.com/huoxaiodai403-pixel/ai-video-studio/blob/main/skills/ai-video-studio/references/api.md#剪映草稿交接)。
 
 ## 三种接入方式
 

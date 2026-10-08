@@ -1,76 +1,16 @@
 <!doctype html>
-<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>创作入门 · AI 视频工作台</title>
-<style>body{font:16px system-ui;background:#111820;color:#edf3fa;margin:0}main{max-width:1250px;margin:auto;padding:32px}h1{margin-bottom:6px}p{color:#a6b6c8}section{background:#1a2633;border:1px solid #344456;border-radius:12px;padding:22px;margin:20px 0}.grid{display:grid;grid-template-columns:1fr 1.25fr;gap:22px}input,textarea,select,button{font:inherit;border-radius:7px;border:1px solid #4f667b;padding:10px;box-sizing:border-box}input,textarea,select{width:100%;background:#101a24;color:white;margin:7px 0 14px}textarea{min-height:120px}button{background:#82dbc5;color:#10201d;cursor:pointer;margin:5px 5px 5px 0}.case{display:block;width:100%;text-align:left;background:#24384b;color:white}.list{max-height:430px;overflow:auto}a{color:#85d9fb}.small{font-size:13px;color:#a6b6c8}img{max-width:100%;border-radius:8px}pre{white-space:pre-wrap}@media(max-width:800px){.grid{grid-template-columns:1fr}}</style><link rel="stylesheet" href="/assets/workbench.css">
-<link rel="stylesheet" href="/assets/controls.css">
-<main>
-<h1>创作入门</h1>
-<p>用 Codex 写好内容，再让工作台完成素材生成与视频制作。从一个短样片开始。</p>
-<nav aria-label="工作台导航"><a href="/home">工作台</a> · <a href="/library">我的作品</a> · <a href="/assets">资源库</a> · <a href="/workflows">工作流</a> · <a href="/image">创作工具</a> · <a href="/settings">设置</a></nav>
-<p id="services" hidden>检查服务状态…</p>
-<section>
-<h2>先把环境准备好</h2>
-<p>在解压后的工作台目录运行 <code>Install.cmd</code> 安装轻量网页环境，再运行 <code>Start.cmd</code> 打开工作台。模型权重需按任务单独准备；网页打开不代表所有引擎已安装。</p>
-<p>通过 <a href="/model-library">模型库</a> 查看组件状态。本地图像与动态镜头需要 ComfyUI；配音、字幕、配乐各自使用对应引擎。白板和资料长片还需要浏览器渲染器。</p>
-<p>完整安装步骤见 <a href="/guide">快速上手</a>，本地引擎说明见 <a href="/plan">本地模型准备</a>。在线接口在 <a href="/settings">设置</a> 填写，并分别确认提供方支持图像、视频、配音或识别。</p>
-</section>
-<section>
-<h2>让 Codex 编排第一条视频</h2>
-<p>安装包内附有 <code>ai-video-studio</code> Skill。在工作台目录运行以下命令，然后在 Codex 打开此目录并开始新对话：</p>
-<pre><code>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-CodexSkill.ps1</code></pre>
-<p>可以这样提出需求：</p>
-<blockquote>使用 $ai-video-studio，先检查环境。制作三个镜头的白板讲解，主题是“核对信息来源”，面向普通读者，使用冷静清晰的中文。由你编写口播和分镜，先检查画面预览，再制作有声视频。</blockquote>
-<p>Codex 可以直接创作分镜并提交工作台，不需要安装本地编剧模型。可选的 Ollama 辅助写稿和小说原文分段仍然保留；按实际需求使用。</p>
-</section>
-<section>
-<h2>按内容目标选择工作流</h2>
-<div class="scroll-table"><table class="model-list"><thead><tr><th>要做什么</th><th>从哪里开始</th><th>重点检查</th></tr></thead><tbody>
-<tr><td>知识讲解、步骤与对比</td><td><a href="/whiteboard">手绘白板</a></td><td>每镜头保留少量关键词，让画面出现顺序与旁白一致。</td></tr>
-<tr><td>资料讲解、热点调查</td><td><a href="/investigation">资料长片</a></td><td>准备章节、来源台账和相关素材；教学图解与真实事件调查明确区分。</td></tr>
-<tr><td>小说或对话改编</td><td><a href="/novel">小说转漫剧</a></td><td>按角色拆分台词，保持人物外观与剧情顺序。</td></tr>
-<tr><td>已有完整分镜</td><td><a href="/production">通用视频制作</a></td><td>核对每镜头的画面、旁白、参数和模型来源。</td></tr>
-</tbody></table></div>
-<p>第一次先做少量镜头，确认表达和效果后再扩成长片。目标分钟数是创作目标；实际时长由最终音轨和镜头决定。</p>
-</section>
-<section>
-<h2>音色和素材可以跨工程复用</h2>
-<p>在 <a href="/voices">音色库</a> 保存不同题材的声音预设，并在流程中给主持人、来宾或其他角色分配音色。先用短句试听语速、咬字与停顿，再生成长段落。支持的 Qwen 固定声线无需私人参考录音；参考克隆使用你有权使用的清晰单人录音。</p>
-<p><a href="/gallery">图库与视频素材</a> 可以上传参考图、查看生成画面并带入动态镜头或长片。FLUX 参考编辑需要对应完整模型组件；参考图有助于延续外观，仍需逐镜检查。</p>
-<p><a href="/audio-library">音频库</a> 集中管理配音、音乐和音效。把音乐导入长片工程后可选为背景音乐；短音效不要直接当作全片循环配乐。</p>
-<p>长片中的素材 ID 属于当前工程。复用其他工程的素材时从资源库重新导入；关联来源也需使用当前工程的台账。</p>
-</section>
-<section>
-<h2>所有成果在“我的作品”管理</h2>
-<p>打开 <a href="/library">我的作品</a>，搜索标题、筛选类型和状态、添加标签或收藏。成片、预览和草稿分开标注；生成完成后的主文件与交付资料集中展示。</p>
-<p>白板、长片与保存的小说草稿可以从详情恢复到对应编辑页面。修改前确认打开的是目标工程；保留旧成片，需要另一个版本时另存工程。</p>
-<p>下载前检查关键画面、配音和字幕，尤其是开头、转场与结尾。MP4 编码成功只说明文件产出，不能证明事实核对、画面质量或听感已经通过。</p>
-</section>
-<section>
-<h2>需要精调单张图时，再进入 ComfyUI</h2>
-<p>已安装 ComfyUI 和对应 Qwen GGUF 组件后，可以 <a href="/qwen-starter.json" download>下载 Qwen 入门工作流</a>，在 <a href="http://127.0.0.1:8188" target="_blank" rel="noopener">本机 ComfyUI</a> 导入。分享包不会替每位使用者安装模型或写入 ComfyUI 工作流列表。</p>
-<p>先理解这条路径：模型加载 → 提示词编码 → 采样 → VAE 解码 → 保存图片。每次只调整一个变量，便于判断变化原因。手动生成的图片位于你的 ComfyUI 输出目录；需要在工作台使用时可导入图库。</p>
-<div class="scroll-table"><table class="model-list"><thead><tr><th>参数</th><th>作用</th><th>注意</th></tr></thead><tbody>
-<tr><td>宽度 / 高度</td><td>生成画面的像素尺寸</td><td>不同模型有不同尺寸要求，成片放大不会增加原始细节。</td></tr>
-<tr><td>Seed</td><td>固定随机起点，便于比较</td><td>相同种子不保证跨镜头人物完全一致。</td></tr>
-<tr><td>Steps / CFG</td><td>采样迭代和提示词引导</td><td>先使用当前引擎的建议值，不把其他模型参数直接搬过来。</td></tr>
-<tr><td>Frames / FPS</td><td>动态镜头帧数和播放速率</td><td>生成时长约为帧数除以帧率。</td></tr>
-</tbody></table></div>
-</section>
-<section>
-<h2>遇到问题先检查这些</h2>
-<ul>
-<li>引擎未就绪：查看模型库缺项和任务错误。运行 <code>Start.cmd</code> 只会启动已安装的相关服务，不会补齐模型。</li>
-<li>显存不足：等待正在运行的任务结束，再降低分辨率或使用适合本机的引擎，避免同时在多个应用执行推理。</li>
-<li>素材或来源覆盖不足：在长片工程中补齐对应缺口，不把待核验内容直接改成“已核验”。</li>
-<li>配音不自然：先回到短句试听，比较音色、语速和表达要求；不要整片反复生成来试错。</li>
-<li>在线接口失败：确认具体媒体能力、模型名称与返回格式；“兼容聊天接口”不保证支持视频或字幕时间戳。</li>
-</ul>
-<p>更多信息：<a href="/guide">快速上手</a> · <a href="/plan">模型准备</a> · <a href="/research">上游项目</a> · <a href="/deployment">源码与数据结构</a>。</p>
-</section>
-</main>
-<script src="/assets/creation.js"></script>
-<script>
-(async()=>{try{const d=await Creation.api('/api/services');document.getElementById('services').textContent=`千问生图：${d.comfyui.ready?'就绪':'未启动'} · 配音：${d.tts.ready?'就绪':'未启动'}`}catch{document.getElementById('services').textContent='服务状态暂不可用'}})();
-</script>
-<script src="/assets/workbench.js"></script>
-</html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>朋友版创作入门 · AI STUDIO</title><link rel="stylesheet" href="/assets/workbench.css"><link rel="stylesheet" href="/assets/hub.css"></head>
+<body class="hub-page workflows-page" data-workbench-services="true"><main>
+<nav aria-label="工作台导航"><a href="/home">工作台</a><a href="/workflows">工作流</a><a href="/library">我的作品</a><a href="/settings">设置</a></nav><p id="services" hidden>检查服务状态…</p>
+<header class="workflow-heading"><div><span class="hub-kicker">AI STUDIO · 朋友版</span><h1>从一个短样片开始</h1><p>让 Codex 创作，在工作台检查效果，再完成作品。</p></div><a class="hub-button secondary" href="/guide">安装与快速上手</a></header>
+<section class="workflow-feature"><div><h2>先准备好工作台与 Skill</h2><p>在解压目录双击 Install.cmd 安装依赖，再双击 Start.cmd。按快速上手安装配套 Skill，在 Codex 打开工作台目录并开始新对话。</p><p>代码动画与白板使用 CPU 渲染，不要求先安装大模型。有声视频还需要实际可用的配音。</p></div></section>
+<section class="hub-support"><h2>给 Codex 一个清楚的目标</h2><blockquote>使用 $ai-video-studio，先检查环境。制作三镜头白板讲解，主题是“核对信息来源”，面向普通读者，声音平静清晰。由你写口播与分镜，先给我短样片，保留工程。</blockquote><p>需要图形动效时，把“白板讲解”换成“代码动画”。说明受众、关键问题、画风和声音即可，再按实际样片逐步修改。当前会话的工具与额度由自己的账号决定。</p></section>
+<div class="workflow-list">
+<article class="workflow-card"><h2>代码动画</h2><p class="workflow-goal">把文字、图形、关系和步骤做成可修改的动画。Codex 编写源码，工作台渲染。</p><p class="workflow-note">也可使用自己已配置的网页编剧生成方案。已有源码的手动渲染不需要编剧服务。</p><div class="hub-card-footer"><a class="hub-button primary" href="/generation?route=code-animation">打开代码动画</a></div></article>
+<article class="workflow-card"><h2>手绘白板</h2><p class="workflow-goal">用旁白和逐步出现的文字、图形讲清方法、步骤与对比。每镜头围绕一个要点。</p><p class="workflow-note">先检查图形预览，再制作有声视频。需要新插图时，可由具备相应工具的 Codex 准备后导入。</p><div class="hub-card-footer"><a class="hub-button primary" href="/whiteboard">打开手绘白板</a></div></article>
+</div>
+<section class="hub-support"><h2>声音与素材可以复用</h2><p>在配音页先试听语速、咬字与停顿，再保存适合题材的声音。Windows 系统语音可离线使用，Edge 需要联网；包里不附带私人录音或克隆声音。</p><div class="hub-inline-links"><a href="/speech">配音试听</a><a href="/voices">音色库</a><a href="/gallery">图库</a><a href="/audio-library">音频库</a></div></section>
+<section class="hub-support"><h2>完成的内容统一存到作品库</h2><p>草稿、样片和成片分别显示，可以搜索、下载或继续编辑。先检查开头、转场、结尾、声音和字幕，再扩大内容；文件已生成不会自动表示质量通过。</p><p>需要精修时，从已完成作品详情进入“送到剪映精修”。草稿已生成、剪映已打开、MP4 已导出要分别确认；只有最终视频时，不能自动恢复其中的文字和声音图层。</p><div class="hub-inline-links"><a href="/library">我的作品与剪映交接</a><a href="/docs/view?path=docs/jianying-windows.md">剪映说明</a></div></section>
+<section class="hub-support"><h2>遇到问题先定位缺口</h2><p>预览失败时检查渲染组件；配音失败时先用短句试听；自动编剧失败时确认自己配置的具体服务。当前样片不满意就修改对应内容，不必整条长片反复生成。</p><div class="hub-inline-links"><a href="/guide">快速上手</a><a href="/research">上游项目</a><a href="/deployment">源码与数据结构</a><a href="/settings">服务设置</a></div></section>
+</main><script src="/assets/workbench.js"></script></body></html>

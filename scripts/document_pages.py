@@ -6,6 +6,8 @@ import re
 from pathlib import Path
 from urllib.parse import parse_qs, quote, unquote, urlparse
 from markdown_it import MarkdownIt
+from web_shell import render_page
+import studio_edition
 
 ROOT = Path(__file__).resolve().parents[1]
 EXTERNAL_VAULT = os.environ.get('AI_VIDEO_VAULT', '').strip()
@@ -27,6 +29,8 @@ if not EXTERNAL_VAULT:
         '/guide': ('使用说明', NOTES/'getting-started.md', '安装工作台，再让 Codex 按制作目标组织素材与工作流。'),
         '/deployment': ('工作台结构', NOTES/'architecture.md', '源码、运行时与个人资源分开管理。'),
     }
+    if studio_edition.is_friend():
+        DOCS['/plan'] = ('运行依赖', NOTES/'local-models.md', 'CPU 渲染、Windows 系统配音与可选在线服务。')
 
 def allowed(path):
     return path.resolve().is_relative_to(NOTES.resolve())
@@ -85,7 +89,7 @@ def render(source, title, description, active):
     nav=''.join('<a href="'+url+'">'+label+'</a>' for url,label in [('/', '插画与提示词'),('/production','视频制作'),('/motion','动态镜头'),('/subtitles','语音转字幕'),('/speech','音色克隆与配音'),('http://127.0.0.1:8188','ComfyUI'),('/settings','在线接口设置'),('/plan','部署方案'),('/research','文章与项目参考'),('/guide','使用说明')])
     tabs=''.join('<a '+('aria-current="page" ' if url==active else '')+'href="'+url+'">'+label+'</a>' for url,(label,_,_) in DOCS.items())
     raw_url='/docs/raw?path='+quote(source.relative_to(VAULT).as_posix())
-    return f'''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} · AI 工作台</title><link rel="stylesheet" href="/assets/workbench.css"><link rel="stylesheet" href="/assets/documents.css"><main><nav>{nav}</nav><p id="services" hidden>正在检查服务</p><header><div class="eyebrow">资料中心 / LOCAL KNOWLEDGE</div><h1>{html.escape(title)}</h1><p>{html.escape(description)}</p><div class="doc-tabs">{tabs}</div><div class="doc-meta">知识库实时读取 · {html.escape(source.name)} <a href="{raw_url}" download>下载 Markdown</a><button id="print-doc">打印 / 保存 PDF</button></div></header><div class="doc-layout"><aside class="doc-toc"><strong>本页目录</strong>{toc_html}</aside><article class="doc-body">{body}</article></div></main><script src="/assets/document.js"></script><script src="/assets/workbench.js"></script></html>'''
+    return render_page(f'''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} · AI 工作台</title><link rel="stylesheet" href="/assets/workbench.css"><link rel="stylesheet" href="/assets/documents.css"><main><nav aria-label="工作台导航">{nav}</nav><p id="services" hidden>正在检查服务</p><header><div class="eyebrow">资料中心 / LOCAL KNOWLEDGE</div><h1>{html.escape(title)}</h1><p>{html.escape(description)}</p><div class="doc-tabs">{tabs}</div><div class="doc-meta">知识库实时读取 · {html.escape(source.name)} <a href="{raw_url}" download>下载 Markdown</a><button id="print-doc">打印 / 保存 PDF</button></div></header><div class="doc-layout"><aside class="doc-toc"><strong>本页目录</strong>{toc_html}</aside><article class="doc-body">{body}</article></div></main><script src="/assets/document.js"></script><script src="/assets/workbench.js"></script></html>''', active)
 
 def handle(handler, route):
     if route.path in DOCS:
@@ -106,4 +110,6 @@ def handle(handler, route):
     else:return False
     handler.send_response(200);handler.send_header('Content-Type',mime)
     handler.send_header('Content-Length',str(len(payload)));handler.send_header('X-Content-Type-Options','nosniff')
-    handler.end_headers();handler.wfile.write(payload);return True
+    handler.end_headers()
+    if getattr(handler, 'command', 'GET') != 'HEAD':handler.wfile.write(payload)
+    return True

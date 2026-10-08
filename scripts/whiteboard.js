@@ -9,7 +9,7 @@
  function node(tag,text,className){const item=document.createElement(tag);if(text!==undefined)item.textContent=text;if(className)item.className=className;return item}
  function message(value,error=false){$('action-status').textContent=value;$('action-status').className=error?'error-text':'success-text'}
  async function api(path,data){const response=await fetch(path,data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const result=await response.json();if(!response.ok)throw Error(result.error||`请求失败：${response.status}`);return result}
- function store(){if(!spec)return;spec.title=$('video-title').value;spec.voice_preset_id=$('voice-preset').value;spec.characters=Object.fromEntries(cast.map(role=>[role.name,role.preset]));delete spec.character_preset_ids;spec.voice=$('voice-speed').value?{speed:Number($('voice-speed').value)}:{};try{localStorage.setItem(key,JSON.stringify({spec,speed:$('voice-speed').value}))}catch{}}
+ function store(){if(!spec)return;spec.title=$('video-title').value;spec.voice_preset_id=$('voice-preset').value;spec.characters=Object.fromEntries(cast.map(role=>[role.name,role.preset]));delete spec.character_preset_ids;spec.voice=$('voice-speed').value?{speed:Number($('voice-speed').value)}:{};const source=window.WhiteboardSpeech?.peek();if(source){spec.backends={tts:source.backend,asr:source.backend==='local'?'local':'synthesis'};spec.voice.voice_id=source.voice_id;}try{localStorage.setItem(key,JSON.stringify({spec,speed:$('voice-speed').value}))}catch{}}
  function backupDraft(reason){
   store();const snapshot={saved_at:new Date().toISOString(),reason,spec:structuredClone(spec),speed:$('voice-speed').value,topic:$('topic').value,pendingDraft:sessionStorage.getItem('whiteboard-pending-draft')};
   let rows=[];try{rows=JSON.parse(localStorage.getItem(key+'-backups')||'[]')}catch{}if(!Array.isArray(rows))rows=[];
@@ -61,11 +61,32 @@
    right.append(node('p','关键词按旁白顺序出现。修改旁白或关键词后，渲染器会重新计算节拍。','small'));
    grid.append(left,right);article.append(grid);$('scenes').append(article);
   });
-  refreshSpeakers();$('add-scene').disabled=spec.scenes.length>=8;
+  window.WhiteboardSpeech?.refresh();refreshSpeakers();$('add-scene').disabled=spec.scenes.length>=8;
  }
- function setSpec(value,exact=false){const previous=spec;spec=structuredClone(value);if(!Object.hasOwn(value,'voice_preset_id'))spec.voice_preset_id=exact?'':previous?.voice_preset_id||new URLSearchParams(location.search).get('preset')||'';if(exact)$('voice-speed').value='';readCast();reindex();renderEditor();if(value.voice&&Object.hasOwn(value.voice,'speed'))$('voice-speed').value=String(value.voice.speed);store()}
- function payload(){if(!spec)throw Error('请先生成分镜或载入示例。');store();if(!spec.title.trim())throw Error('请填写视频标题。');for(const role of cast)if(!role.preset)throw Error(`请选择角色「${role.name}」的音色。`);for(let i=0;i<spec.scenes.length;i++){const scene=spec.scenes[i];if(!scene.board_title.trim()||!scene.narration.trim())throw Error(`请填写镜头 ${i+1} 的标题与旁白。`);if(scene.board_cards.length<1||scene.board_cards.length>3||scene.board_cards.some(s=>s.length>24))throw Error(`镜头 ${i+1} 需要 1–3 条关键词，每条最多 24 字。`)}return{storyboard:spec,...(spec.voice_preset_id?{voice_preset_id:spec.voice_preset_id}:{}),characters:spec.characters,voice:spec.voice,backends:{tts:'local',asr:'local'}}}
- async function submit(operation){const control=$(operation);control.disabled=true;try{const data=operation==='draft'?{topic:$('topic').value,count:Number($('scene-count').value)}:payload();if(operation==='draft'&&!data.topic.trim())throw Error('请先输入选题。');const result=await api(`/api/whiteboard/${operation}`,data);if(operation==='draft'){try{sessionStorage.setItem('whiteboard-pending-draft',result.job_id)}catch{}}message(`${operationNames[operation]}任务已提交：${result.job_id}`);await poll()}catch(error){message(error.message,true)}finally{control.disabled=false}}
+ function speechSource(value){
+  const hasPresets=!!(value.voice_preset_id||Object.keys(value.character_preset_ids||value.characters||{}).length||value.scenes?.some(scene=>scene.voice_preset_id));
+  return {backend:value.backends?.tts||(hasPresets?'local':'windows'),voice_id:value.voice?.voice_id||value.settings?.voice?.voice_id||''};
+ }
+ function setSpec(value,exact=false){
+  const previous=spec,requested=exact?'':new URLSearchParams(location.search).get('preset');spec=structuredClone(value);
+  if(requested)spec.voice_preset_id=requested;
+  else if(!Object.hasOwn(value,'voice_preset_id'))spec.voice_preset_id=exact?'':previous?.voice_preset_id||'';
+  const source=speechSource(spec);if(requested)source.backend='local';window.WhiteboardSpeech?.set(source);
+  if(exact)$('voice-speed').value='';readCast();reindex();renderEditor();if(value.voice&&Object.hasOwn(value.voice,'speed'))$('voice-speed').value=String(value.voice.speed);store();
+ }
+ function payload(){
+  if(!spec)throw Error('请先生成分镜或载入示例。');
+  store();const source=window.WhiteboardSpeech.value();
+  if(!spec.title.trim())throw Error('请填写视频标题。');
+  if(source.backend==='local')for(const role of cast)if(!role.preset)throw Error(`请选择角色「${role.name}」的音色。`);
+  for(let i=0;i<spec.scenes.length;i++){const scene=spec.scenes[i];if(!scene.board_title.trim()||!scene.narration.trim())throw Error(`请填写镜头 ${i+1} 的标题与旁白。`);if(scene.board_cards.length<1||scene.board_cards.length>3||scene.board_cards.some(s=>s.length>24))throw Error(`镜头 ${i+1} 需要 1–3 条关键词，每条最多 24 字。`)}
+  if(source.backend==='local')return {storyboard:spec,...(spec.voice_preset_id?{voice_preset_id:spec.voice_preset_id}:{}),characters:spec.characters,voice:spec.voice,backends:{tts:'local',asr:'local'}};
+  const board=structuredClone(spec);
+  for(const scene of board.scenes){delete scene.voice_preset_id;delete scene.voice;scene.speaker='旁白'}
+  delete board.voice_preset_id;delete board.characters;
+  return {storyboard:board,voice:spec.voice,backends:{tts:source.backend,asr:'synthesis'}};
+ }
+ async function submit(operation){const control=$(operation);control.disabled=true;try{const data=operation==='draft'?{topic:$('topic').value,count:Number($('scene-count').value),backend:$('story-backend').value}:payload();if(operation==='draft'&&!data.topic.trim())throw Error('请先输入选题。');const result=await api(`/api/whiteboard/${operation}`,data);if(operation==='draft'){try{sessionStorage.setItem('whiteboard-pending-draft',result.job_id)}catch{}}message(`${operationNames[operation]}任务已提交：${result.job_id}`);await poll()}catch(error){message(error.message,true)}finally{control.disabled=false}}
  function downloadLink(url,label){const link=node('a',label);link.href=url;link.download='';return link}
  function taskCard(id,state){
   const article=node('article',undefined,'task'),header=node('div',undefined,'job-header');article.dataset.jobId=id;
@@ -94,16 +115,16 @@
   if(story.status==='fulfilled'){$('story-health').textContent=story.value.ready?'本地编剧已就绪':'本地编剧未就绪';$('story-health').title=story.value.message;$('story-health').className=`status-pill ${story.value.ready?'ready':'error'}`}
   if(services.status==='fulfilled'){$('services').textContent=`千问生图：${services.value.comfyui.ready?'就绪':'未启动'} · 配音：${services.value.tts.ready?'就绪':'未启动'}`}
  }catch{}}
- $('draft').onclick=()=>submit('draft');$('preview').onclick=()=>submit('preview');$('render').onclick=()=>submit('render');$('refresh').onclick=()=>{poll();health()};
+ $('story-backend').onchange=()=>{$('story-health').hidden=$('story-backend').value==='online'}; $('draft').onclick=()=>submit('draft');$('preview').onclick=()=>submit('preview');$('render').onclick=()=>submit('render');$('refresh').onclick=()=>{poll();health()};
  $('example').onclick=async()=>{try{setSpec(await api('/api/whiteboard/example'));message('已载入内置示例。可直接生成静帧预览，也可以先编辑。')}catch(error){message(error.message,true)}};
  $('add-scene').onclick=()=>{if(spec.scenes.length>=8)return;spec.scenes.push({id:'new',narration:'',subject:'新镜头',style:'Excalidraw 手绘白板',board_title:'新镜头',board_layout:'steps',board_cards:['关键词']});reindex();renderEditor();store()};
  $('video-title').addEventListener('input',store);$('voice-speed').addEventListener('change',store);
  $('voice-preset').onchange=store;$('voice-preview').onclick=()=>previewVoice($('voice-preset').value);
  $('add-character').onclick=()=>{if(!spec||cast.length>=16)return;let number=cast.length+1;while(cast.some(role=>role.name===`角色${number}`))number++;cast.push({name:`角色${number}`,preset:$('voice-preset').value||voiceLibrary.default_preset_id||voiceLibrary.presets[0]?.id||''});renderCast();refreshSpeakers();store()};
  $('export-draft').onclick=()=>{try{const data=payload();const blob=new Blob([JSON.stringify(data.storyboard,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),link=downloadLink(url,'');link.download='whiteboard-storyboard.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}catch(error){message(error.message,true)}};
- try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved?.spec?.scenes?.length){spec=saved.spec;readCast();$('voice-speed').value=saved.speed??'';renderEditor()}}catch{message('上次保存的草稿无法读取，请重新载入示例或生成。',true)}
+ try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved?.spec?.scenes?.length){spec=saved.spec;window.WhiteboardSpeech?.set(speechSource(spec));readCast();$('voice-speed').value=saved.speed??'';renderEditor()}}catch{message('上次保存的草稿无法读取，请重新载入示例或生成。',true)}
  async function init(){const params=new URLSearchParams(location.search),project=params.get('project');
-  try{voiceLibrary=await api('/api/voice-library');const requested=params.get('preset');if(requested&&spec&&project===null){spec.voice_preset_id=requested;$('voice-speed').value=''}if(spec){renderEditor();if(project===null)store()}$('voice-library-status').textContent='可在音色库按题材挑选。参考试听播放原录音。'}catch(error){$('voice-library-status').textContent='音色库读取失败：'+error.message}
+  try{voiceLibrary=await api('/api/voice-library');const requested=params.get('preset');if(requested&&project===null){window.WhiteboardSpeech?.set({backend:'local'});if(spec){spec.voice_preset_id=requested;$('voice-speed').value=''}}if(spec){renderEditor();if(project===null)store()}$('voice-library-status').textContent='可在音色库按题材挑选。参考试听播放原录音。'}catch(error){$('voice-library-status').textContent='音色库读取失败：'+error.message}
   if(project!==null){try{await loadProject(project)}catch(error){message('无法载入指定项目：'+error.message,true)}}
   // A navigation to a particular project must never be replaced by an older pending draft.
   if(project!==null){try{const pending=sessionStorage.getItem('whiteboard-pending-draft');if(pending)handledDrafts.add(pending)}catch{}}

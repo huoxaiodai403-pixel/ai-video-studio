@@ -1,30 +1,51 @@
 (()=>{
  'use strict';
- const $=id=>document.getElementById(id);let library={presets:[],references:[],emotions:[]},editingId=null,editingVoice={},fixedJob=null;
+ const $=id=>document.getElementById(id);let library={presets:[],references:[],emotions:[]},editingId=null,editingVoice={},fixedJob=null,libraryReady=false,filterWasActive=false,builtinOpenBeforeFilter=false;
  const qwenSpeakers=['Vivian','Serena','Uncle_Fu','Dylan','Eric','Ryan','Aiden','Ono_Anna','Sohee'];
  const qwenLanguages=[['Chinese','中文'],['English','英语'],['Japanese','日语'],['Korean','韩语'],['German','德语'],['French','法语'],['Russian','俄语'],['Portuguese','葡萄牙语'],['Spanish','西班牙语'],['Italian','意大利语'],['Auto','自动识别']];
  const node=(tag,text,className)=>{const item=document.createElement(tag);if(text!==undefined)item.textContent=text;if(className)item.className=className;return item};
  function status(text,error=false){$('library-status').textContent=text;$('library-status').className='status'+(error?' error':'')}
  async function api(url,data){const response=await fetch(url,data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const result=await response.json();if(!response.ok)throw Error(result.error||'请求失败');return result}
  function action(label,callback,className='secondary'){const button=node('button',label,className);button.type='button';button.onclick=callback;return button}
- function link(label,url){const anchor=node('a',label,'button secondary');anchor.href=url;return anchor}
+ function link(label,url,className='secondary'){const anchor=node('a',label,'button '+className);anchor.href=url;return anchor}
  function play(name,url){if(!url){status('该音色暂时没有可试听的参考录音。',true);return}const audio=$('reference-audio');if(audio.getAttribute('src')!==url)audio.src=url;$('playing-name').textContent=name;$('reference-player').hidden=false;audio.play().catch(()=>status('请点击播放器开始试听。'))}
  function render(){
+  if(!libraryReady)return;
   const query=$('voice-search').value.trim().toLowerCase(),tag=$('voice-tag').value;
   const presets=library.presets.filter(preset=>(!tag||(preset.tags||[]).includes(tag))&&(!query||[preset.name,preset.description,...(preset.tags||[])].join(' ').toLowerCase().includes(query)));
-  $('voice-list').replaceChildren();if(!presets.length){$('voice-list').append(node('p','没有符合条件的音色，可以清空筛选或新建预设。','empty'));return}
-  for(const preset of presets){
-   const card=node('article',undefined,'voice-card'),tags=node('div',undefined,'tag-list');card.append(node('h3',preset.name));
+  const personal=preset=>preset.source==='saved'||preset.id===library.default_preset_id;
+  const preferred=presets.filter(personal).sort((a,b)=>Number(b.id===library.default_preset_id)-Number(a.id===library.default_preset_id));
+  const references=presets.filter(preset=>!personal(preset)&&preset.source!=='builtin');
+  const builtins=presets.filter(preset=>!personal(preset)&&preset.source==='builtin');
+  const currentDefault=library.presets.find(preset=>preset.id===library.default_preset_id);
+  $('default-voice-name').textContent=currentDefault?.name||(library.default_voice&&Object.keys(library.default_voice).length?'自定义默认参数':'尚未设置');
+  $('library-summary').textContent=`${library.presets.filter(preset=>preset.source==='saved').length} 个个人预设 · ${library.presets.filter(preset=>preset.source==='reference').length} 份参考录音`;
+  const filtering=!!(query||tag),builtinSection=$('builtin-section');
+  if(filtering&&!filterWasActive)builtinOpenBeforeFilter=builtinSection.open;
+  if(filtering&&builtins.length)builtinSection.open=true;
+  if(!filtering&&filterWasActive)builtinSection.open=builtinOpenBeforeFilter;
+  filterWasActive=filtering;
+  $('filter-summary').textContent=filtering?`找到 ${presets.length} 个匹配音色，包含个人预设、参考录音与内置示例。`:'参考试听播放原录音，实际配音请用自己的台词判断。';
+  $('personal-count').textContent=`${preferred.length} 个`;$('reference-count').textContent=`${references.length} 份`;$('builtin-count').textContent=`${builtins.length} 个`;
+  $('reference-section').hidden=!references.length;builtinSection.hidden=!builtins.length;
+  for(const [id,items] of [['voice-list',preferred],['reference-list',references],['builtin-list',builtins]]){
+   const list=$(id);list.replaceChildren();for(const preset of items)list.append(voiceCard(preset));list.setAttribute('aria-busy','false');
+  }
+  if(!preferred.length)$('voice-list').append(node('p',filtering?(presets.length?'个人预设中没有匹配项，可查看下方的参考录音与示例。':'没有符合条件的音色，可以清空筛选或新建预设。'):'还没有个人预设。可以新建，或试听下方参考录音后另存。','empty'));
+ }
+ function voiceCard(preset){
+   const isDefault=preset.id===library.default_preset_id;
+   const card=node('article',undefined,'voice-card'+(isDefault?' is-default':'')),tags=node('div',undefined,'tag-list');card.dataset.presetId=preset.id;card.append(node('h3',preset.name));
    if(preset.id===library.default_preset_id)tags.append(node('span','默认音色','tag default'));
    for(const tag of preset.tags||[])tags.append(node('span',tag,'tag'));if(tags.childNodes.length)card.append(tags);
-   card.append(node('p',preset.description||'尚未填写适用说明。','small'));
-   const voice=preset.voice||{},expression=voice.engine==='qwen3-clone'?'Qwen3-TTS · 固定参考克隆':voice.engine==='qwen3-design'?'Qwen3-TTS · 声音设计，需先固定为克隆参考':voice.engine==='qwen3-custom'?`Qwen3-TTS · ${voice.qwen_speaker||'Vivian'} · ${voice.qwen_instruct||'默认表达'}`:voice.prosody_reference?`IndexTTS · 表达参考：${library.references.find(item=>item.path===voice.prosody_reference)?.name||'已选录音'} · 强度 ${voice.prosody_strength??1}`:`IndexTTS · ${voice.emotion||'平静'} · 强度 ${voice.intensity??0}`;card.append(node('p',`${expression} · 语速 ${voice.speed??1} ×`,'small'));
+   card.append(node('p',preset.description||'尚未填写适用说明。','small voice-description'));
+   const voice=preset.voice||{},expression=voice.engine==='qwen3-clone'?'Qwen3-TTS · 固定参考克隆':voice.engine==='qwen3-design'?'Qwen3-TTS · 声音设计，需先固定为克隆参考':voice.engine==='qwen3-custom'?`Qwen3-TTS · ${voice.qwen_speaker||'Vivian'} · ${voice.qwen_instruct||'默认表达'}`:voice.prosody_reference?`IndexTTS · 表达参考：${library.references.find(item=>item.path===voice.prosody_reference)?.name||'已选录音'} · 强度 ${voice.prosody_strength??1}`:`IndexTTS · ${voice.emotion||'平静'} · 强度 ${voice.intensity??0}`;card.append(node('p',`${expression} · 语速 ${voice.speed??1} ×`,'small voice-expression'));
    if(preset.source==='builtin')card.append(node('p','内置参考 · 听感待试听','small'));
-   const toolbar=node('div',undefined,'toolbar');toolbar.append(action('参考试听',()=>play(preset.name,preset.preview_url)),link('试配音',`/speech?preset=${encodeURIComponent(preset.id)}`),link('用于白板',`/whiteboard?preset=${encodeURIComponent(preset.id)}`));
-   toolbar.append(action('设为默认',async()=>{try{const result=await api('/api/voice-library/default',{id:preset.id});status(result.message||'已设为默认音色，新任务会使用。');await load()}catch(error){status(error.message,true)}},'quiet'),action(preset.source==='saved'?'编辑预设':'另存预设',()=>edit(preset),'quiet'));card.append(toolbar);$('voice-list').append(card);
-  }
+   const toolbar=node('div',undefined,'toolbar voice-card-actions');toolbar.append(link('试配音',`/speech?preset=${encodeURIComponent(preset.id)}`),action('参考试听',()=>play(preset.name,preset.preview_url),'quiet'));
+   const more=node('div',undefined,'toolbar voice-card-more'),defaultButton=action(isDefault?'当前默认':'设为默认',async()=>{try{defaultButton.disabled=true;const result=await api('/api/voice-library/default',{id:preset.id});status(result.message||'已设为默认音色，新任务会使用。');await load()}catch(error){status(error.message,true);defaultButton.disabled=false}},'quiet');defaultButton.disabled=isDefault;
+   more.append(action(preset.source==='saved'?'编辑预设':'另存预设',()=>edit(preset),'quiet'),defaultButton,link('用于白板',`/whiteboard?preset=${encodeURIComponent(preset.id)}`,'quiet'));card.append(toolbar,more);return card;
  }
- async function load(){library=await api('/api/voice-library');const current=$('voice-tag').value;$('voice-tag').replaceChildren(new Option('全部题材',''));for(const tag of [...new Set(library.presets.flatMap(preset=>preset.tags||[]))].sort())$('voice-tag').append(new Option(tag,tag));if([...$('voice-tag').options].some(option=>option.value===current))$('voice-tag').value=current;render()}
+ async function load(){$('voice-list').setAttribute('aria-busy','true');try{library=await api('/api/voice-library');libraryReady=true;const current=$('voice-tag').value;$('voice-tag').replaceChildren(new Option('全部题材',''));for(const tag of [...new Set(library.presets.flatMap(preset=>preset.tags||[]))].sort())$('voice-tag').append(new Option(tag,tag));if([...$('voice-tag').options].some(option=>option.value===current))$('voice-tag').value=current;render()}finally{$('voice-list').setAttribute('aria-busy','false')}}
  function edit(preset=null,voiceOverride=null){
   editingId=preset?.source==='saved'?preset.id:null;
   const defaults=library.default_voice||library.presets.find(item=>item.id===library.default_preset_id)?.voice||library.presets[0]?.voice||{};
@@ -50,6 +71,6 @@
  $('voice-search').addEventListener('input',render);$('voice-tag').onchange=render;$('new-preset').onclick=()=>edit();$('cancel-preset').onclick=()=>{$('preset-editor').hidden=true};
  async function showFixedJob(id){const jobs=await api('/api/jobs'),job=jobs[id];if(!job||job.kind!=='speech'||job.status!=='done'||!job.audio)throw Error('该配音任务尚未成功，无法保存为角色音色。');if(job.voice_engine!=='qwen3-design')throw Error('此入口仅保存已成功生成的 Qwen 声音设计。');fixedJob=id;$('fixed-voice-job').textContent='来源任务：'+id;$('fixed-voice-audio').src=job.audio;$('fixed-voice-editor').hidden=false;$('fixed-voice-editor').scrollIntoView({behavior:'smooth',block:'start'});$('fixed-voice-name').focus();status('先试听这次结果，再填写角色名称保存。')}
  $('fixed-voice-form').onsubmit=async event=>{event.preventDefault();if(!fixedJob)return;$('fixed-voice-save').disabled=true;try{const result=await api('/api/voice-library/from-speech',{job_id:fixedJob,name:$('fixed-voice-name').value.trim(),tags:$('fixed-voice-tags').value.split(/[,，、]/).map(tag=>tag.trim()).filter(Boolean),description:$('fixed-voice-description').value.replace(/[\r\n]+/g,' ').trim()});status(result.message||'已保存为固定角色音色。');$('fixed-voice-editor').hidden=true;await load();history.replaceState(null,'','/voices')}catch(error){status(error.message,true)}finally{$('fixed-voice-save').disabled=false}};
- async function init(){try{await load();const query=new URLSearchParams(location.search);if(query.get('fromJob'))await showFixedJob(query.get('fromJob'));else if(query.get('from')==='speech'){let saved=null;try{saved=JSON.parse(sessionStorage.getItem('voice-library-from-speech')||'null')}catch{}if(saved){edit(null,saved);status(saved.engine==='qwen3-design'?'已带入声音设计参数。请先生成试听，再从成功任务保存固定角色。':'已带入配音页当前参数。填写名称和题材后保存。')}else status('未找到配音页参数，可直接选择参考声音新建预设。')}}catch(error){status(error.message,true);if(!library.presets.length)$('voice-list').replaceChildren(node('p','音色库暂时无法读取，请稍后刷新。','empty'))}try{const services=await api('/api/services');$('services').textContent=`千问生图：${services.comfyui.ready?'就绪':'未启动'} · 配音：${services.tts.ready?'就绪':'未启动'}`}catch{}}
+ async function init(){try{await load();const query=new URLSearchParams(location.search);if(query.get('fromJob'))await showFixedJob(query.get('fromJob'));else if(query.get('from')==='speech'){let saved=null;try{saved=JSON.parse(sessionStorage.getItem('voice-library-from-speech')||'null')}catch{}if(saved){edit(null,saved);status(saved.engine==='qwen3-design'?'已带入声音设计参数。请先生成试听，再从成功任务保存固定角色。':'已带入配音页当前参数。填写名称和题材后保存。')}else status('未找到配音页参数，可直接选择参考声音新建预设。')}}catch(error){status(error.message,true);if(!libraryReady){$('voice-list').replaceChildren(node('p','音色库暂时无法读取，请稍后刷新。','empty'));$('default-voice-name').textContent='暂时无法读取';$('library-summary').textContent='请稍后刷新重试'}}try{const services=await api('/api/services');$('services').textContent=`千问生图：${services.comfyui.ready?'就绪':'未启动'} · 配音：${services.tts.ready?'就绪':'未启动'}`}catch{}}
  init();
 })();

@@ -1,7 +1,10 @@
 [CmdletBinding()]
 param([switch]$WorkbenchOnly)
 $ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'Initialize-StudioEnvironment.ps1')
 $root=Split-Path $PSScriptRoot -Parent
+$editionFile=Join-Path $root 'EDITION'
+if ((Test-Path -LiteralPath $editionFile) -and ((Get-Content -Raw -LiteralPath $editionFile).Trim() -eq 'friend')) { $WorkbenchOnly=$true }
 foreach ($folder in @('logs','manifests','config','projects/studio','projects/drafts','assets/voices')) {
     New-Item -ItemType Directory -Path (Join-Path $root $folder) -Force | Out-Null
 }

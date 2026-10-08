@@ -85,7 +85,9 @@ def discover():
     candidates = []
     if config.get('executable'):
         candidates.append(Path(config['executable']))
-    for directory in (ROOT.parent / 'JianyingPro', local / 'JianyingPro/Apps', local / 'JianyingPro'):
+    for directory in (ROOT.parent / 'JianyingPro', local / 'JianyingPro/Apps', local / 'JianyingPro',
+                      Path(os.environ.get('ProgramFiles', 'C:/Program Files')) / 'JianyingPro',
+                      Path(os.environ.get('ProgramFiles(x86)', 'C:/Program Files (x86)')) / 'JianyingPro'):
         candidates.append(directory / 'JianyingPro.exe')
         if directory.is_dir():
             candidates.extend(sorted(directory.glob('*/JianyingPro.exe'), reverse=True))
@@ -376,7 +378,13 @@ def build_plan(project_id, mode='auto'):
 
 def status(project_id=None):
     info = discover()
-    info.update(editable_available=bool(info['bridge_ready'] and info['draft_root']), project=None, last_export=None)
+    info.update(editable_available=bool(info['installed'] and info['bridge_ready'] and info['draft_root']), project=None, last_export=None)
+    action = ('ask_install' if not info['installed'] else 'install_bridge' if not info['bridge_ready']
+              else 'first_launch' if not info['draft_root'] else 'ready')
+    info['setup'] = {'action': action, 'requires_install_consent': not info['installed'],
+                     'installer': 'scripts/Install-JianyingBridge.ps1',
+                     'install_argument': '-InstallJianying' if not info['installed'] else None,
+                     'download_url': 'https://www.capcut.cn/'}
     if project_id is not None:
         project = project_path(project_id)
         modes, reasons = [], {}

@@ -25,4 +25,4 @@ if (Test-Path -LiteralPath $targetPath) {
 New-Item -ItemType Directory -Force -Path $targetPath | Out-Null
 Get-ChildItem -LiteralPath $sourcePath -Force | Copy-Item -Destination $targetPath -Recurse -Force
 Write-Host "Installed skill: $targetPath"
-Write-Host 'Start a new Codex conversation and use $ai-video-studio. The workbench and media engines are installed separately.'
+Write-Host 'Start a new Codex conversation and use $ai-video-studio. Install the workbench separately; add media engines only when the requested task needs them.'

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<title>从一句想法到一个镜头</title>
+<style>
+body { background:#0d1422; color:#f6f1e8; font-family:"Microsoft YaHei",sans-serif; }
+canvas { width:100vw; height:100vh; display:block; }
+</style>
+<canvas id="scene"></canvas>
+<script>
+// Original deterministic Canvas scene. Call renderFrame(t) to seek any frame.
+const canvas = document.getElementById('scene');
+const ctx = canvas.getContext('2d');
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => 1 - Math.pow(1 - clamp(x), 3);
+window.renderFrame = function(t) {
+  canvas.width = innerWidth; canvas.height = innerHeight;
+  const sx = innerWidth / 1280, sy = innerHeight / 720;
+  ctx.scale(sx, sy);
+  ctx.fillStyle = '#0d1422'; ctx.fillRect(0, 0, 1280, 720);
+  ctx.fillStyle = '#88d7cf'; ctx.font = '18px "Microsoft YaHei"';
+  ctx.fillText('CODEX  /  原创代码动画', 90, 84);
+  ctx.fillStyle = '#f6f1e8'; ctx.font = 'bold 52px "Microsoft YaHei"';
+  ctx.fillText('让想法，成为看得见的镜头。', 90, 166);
+  ctx.fillStyle = '#99a9bd'; ctx.font = '22px "Microsoft YaHei"';
+  ctx.fillText('明确内容 · 组织画面 · 按时间生成', 92, 215);
+  const labels = [['01', '一句想法', '要表达什么？'], ['02', '视觉分镜', '观众看到什么？'], ['03', '动态镜头', '变化如何发生？']];
+  labels.forEach(([number, title, detail], i) => {
+    const p = ease((t - i * 0.6) / 0.8), x = 90 + i * 370, y = 300 + (1 - p) * 40;
+    ctx.save(); ctx.globalAlpha = p;
+    ctx.fillStyle = '#18263a'; ctx.beginPath(); ctx.roundRect(x, y, 330, 220, 20); ctx.fill();
+    ctx.fillStyle = '#88d7cf'; ctx.font = 'bold 22px "Microsoft YaHei"'; ctx.fillText(number, x + 28, y + 45);
+    ctx.fillStyle = '#f6f1e8'; ctx.font = 'bold 30px "Microsoft YaHei"'; ctx.fillText(title, x + 28, y + 105);
+    ctx.fillStyle = '#a4b4c8'; ctx.font = '20px "Microsoft YaHei"'; ctx.fillText(detail, x + 28, y + 153);
+    ctx.restore();
+  });
+  const progress = clamp(t / 5.8);
+  ctx.fillStyle = '#243449'; ctx.fillRect(90, 584, 1070, 5);
+  ctx.fillStyle = '#88d7cf'; ctx.fillRect(90, 584, progress * 1070, 5);
+  ctx.fillStyle = '#99a9bd'; ctx.font = '18px "Microsoft YaHei"';
+  ctx.fillText('每一帧都有明确时间，可以预览、修改与重新生成。', 90, 638);
+};
+</script>
+</html>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><title>先找到原始出处</title>
+<style>html,body{margin:0;overflow:hidden;background:#f4f0e7}canvas{display:block;width:100vw;height:100vh}</style>
+<canvas id="film" width="1280" height="720"></canvas>
+<script>
+// Original deterministic motion design. The workbench calls renderFrame(t).
+const DURATION = 8;
+const canvas=document.getElementById('film'),c=canvas.getContext('2d');
+const ink='#172f41', muted='#647570', green='#168974', coral='#c86148', paper='#f4f0e7';
+const clamp=v=>Math.min(1,Math.max(0,v));
+const ease=v=>1-Math.pow(1-clamp(v),3);
+const enter=(u,a,b)=>ease((u-a)/(b-a));
+function alpha(a,draw){c.save();c.globalAlpha=clamp(a);draw();c.restore()}
+function box(x,y,w,h,r=18,fill='#fffdf7',stroke=ink){c.beginPath();c.roundRect(x,y,w,h,r);c.fillStyle=fill;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=2;c.stroke()}}
+function text(t,x,y,size=24,color=ink,weight=500){c.fillStyle=color;c.font=`${weight} ${size}px "Microsoft YaHei",sans-serif`;c.textBaseline='middle';c.fillText(t,x,y)}
+function rule(x1,y1,x2,y2,p=1,color=ink,width=3){c.beginPath();c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.moveTo(x1,y1);c.lineTo(x1+(x2-x1)*clamp(p),y1+(y2-y1)*clamp(p));c.stroke()}
+function tick(x,y,p,color=green){rule(x,y,x+11,y+11,Math.min(1,p*2),color,4);if(p>.5)rule(x+11,y+11,x+34,y-15,(p-.5)*2,color,4)}
+function doc(x,y,w,h,{title,tag,mark,fade=1,footer=true}={}){alpha(fade,()=>{
+ c.save();c.shadowColor='#243e421b';c.shadowBlur=28;c.shadowOffsetY=10;box(x,y,w,h,16);c.restore();
+ box(x+22,y+22,8,24,4,mark||green,null);text(tag,x+44,y+34,14,muted,700);
+ text(title,x+24,y+86,26,ink,700);
+ for(let i=0;i<4;i++)rule(x+25,y+127+i*21,x+w-28-(i%2)*40,y+127+i*21,1,i===1?(mark||green):'#d5dbd1',i===1?8:5);
+ if(footer)text('查看完整上下文',x+25,y+h-27,15,muted);
+})}
+function curve(points,p,color=green){c.save();c.strokeStyle=color;c.lineWidth=4;c.lineCap='round';c.setLineDash([650]);c.lineDashOffset=650*(1-clamp(p));c.beginPath();c.moveTo(points[0],points[1]);c.bezierCurveTo(...points.slice(2));c.stroke();c.restore()}
+window.renderFrame=function(t){
+ const u=clamp(t/DURATION);c.clearRect(0,0,1280,720);c.fillStyle=paper;c.fillRect(0,0,1280,720);
+ // A fixed paper pattern; no random or wall-clock animation.
+ c.fillStyle='#ced5c940';for(let x=18;x<1280;x+=28)for(let y=18;y<720;y+=28){c.beginPath();c.arc(x,y,.7,0,Math.PI*2);c.fill()}
+ text('THE SOURCE CHECK',68,53,13,muted,700);text('信息判断 / 01',1050,53,15,muted,600);
+ rule(68,78,1212,78,1,'#c8cfc4',1);
+ text('转发再多，也先找出处。',68,133,42,ink,800);
+ text('让一条消息，回到它最初说了什么。',70,187,19,muted);
+ const small=enter(u,0,.13), back=enter(u,.16,.38), original=enter(u,.30,.48);
+ alpha(small,()=>{c.save();c.translate(0,22*(1-small));
+  doc(70,264,284,274,{title:'你看到的消息',tag:'01 / 转述',mark:coral,footer:false});
+  box(91,493,99,26,13,'#fae4da',null);text('先别急着转',104,506,12,coral,700);c.restore()});
+ alpha(back,()=>{c.save();c.translate(0,16*(1-back));
+  doc(478,291,236,230,{title:'引用链接',tag:'02 / 沿线追溯',mark:muted});c.restore()});
+ curve([355,385,397,385,428,405,466,405],enter(u,.12,.25));
+ alpha(enter(u,.22,.26),()=>{rule(457,396,466,405,1,green,3);rule(457,414,466,405,1,green,3)});
+ curve([715,405,758,405,773,359,817,359],enter(u,.26,.41));
+ alpha(enter(u,.38,.42),()=>{rule(808,350,817,359,1,green,3);rule(808,368,817,359,1,green,3)});
+ alpha(original,()=>{c.save();c.translate(0,18*(1-original));
+  doc(833,248,375,298,{title:'原始文档',tag:'03 / 回到原文',mark:green});
+  box(1108,268,73,27,13,'#dbefe4',null);text('SOURCE',1119,282,11,green,800);c.restore()});
+ const focus=enter(u,.48,.65);alpha(focus,()=>{
+  box(815,229,411,336,24,'#00000000',green);
+  // Visible scanning bracket reads down the actual source, then settles.
+  const sy=367+42*enter(u,.48,.64);
+  rule(853,sy,860,sy,1,green,3);rule(853,sy,853,sy+15,1,green,3);
+  rule(1185,sy,1178,sy,1,green,3);rule(1185,sy,1185,sy+15,1,green,3);
+ });
+ const verdict=enter(u,.66,.84);alpha(verdict,()=>{
+  c.save();c.translate(0,15*(1-verdict));box(71,586,1137,76,16,ink,null);
+  tick(97,623,enter(u,.70,.78),'#79dbc2');text('核对原意',148,625,25,'#f7f4ea',700);
+  rule(290,608,290,641,1,'#4d666e',1);
+  text('谁说的',325,625,22,'#f7f4ea');text('什么时候说的',545,625,22,'#f7f4ea');text('有没有断章取义',835,625,22,'#f7f4ea');
+  for(const x of [469,758,1117])tick(x,626,enter(u,.78,.90),'#79dbc2');c.restore()
+ });
+ alpha(1-verdict,()=>text('沿着引用链，逐层回到信息源。',71,617,23,muted));
+ text('教学示意 · 不对应真实新闻',70,691,12,muted);
+ rule(68,711,1212,711,1,'#d9ded4',3);rule(68,711,1212,711,u,green,3);
+};
+</script></html>

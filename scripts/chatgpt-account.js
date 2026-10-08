@@ -1,0 +1,19 @@
+/* This browser only receives account status and an authorization URL, never tokens. */
+(()=>{
+ 'use strict';
+ const state={connected:false,pending:false,models:[],error:'',url:'',loading:false};let changed=()=>{},host=null,selected='',choose=()=>{},polling=false;
+ const el=(tag,text,cls)=>{const e=document.createElement(tag);if(text)e.textContent=text;if(cls)e.className=cls;return e};
+ async function api(path,body){const r=await fetch('/api/chatgpt/'+path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json();if(!r.ok)throw Error(data.error||'账号连接失败，请重试。');return data}
+ const button=(label,action)=>{const b=el('button',label,'btn-secondary');b.type='button';b.disabled=state.loading;b.onclick=action;return b};
+ async function models(){state.loading=true;paint();try{state.models=(await api('models',{})).models;state.error=state.models.length?'':'账号未返回可用模型，请检查套餐资格。'}catch(e){state.error=e.message}finally{state.loading=false;paint();changed()}}
+ async function refresh(){if(polling)return;polling=true;try{const old=state.connected,wasPending=state.pending;const result=await api('status');Object.assign(state,result);if(old!==state.connected||(wasPending&&!state.pending)){state.url='';if(state.connected)await models();changed()}paint()}catch(e){state.error=e.message;paint()}finally{polling=false}}
+ async function login(newAccount=false){const tab=window.open('about:blank','_blank');if(tab)tab.opener=null;state.loading=true;paint();try{const data=await api('login',{new_account:newAccount});state.url=data.authorization_url;if(!state.url.startsWith('https://auth.openai.com/api/accounts/authorize?'))throw Error('授权地址不正确。');if(tab)tab.location.replace(state.url);await refresh()}catch(e){if(tab)tab.close();state.error=e.message}finally{state.loading=false;paint()}}
+ async function disconnect(){state.loading=true;paint();try{const result=await api('logout',{});state.models=[];state.url='';await refresh();state.error=result.message;changed()}catch(e){state.error=e.message}finally{state.loading=false;paint()}}
+ async function cancel(){try{await api('cancel',{});state.url='';await refresh()}catch(e){state.error=e.message;paint()}}
+ function paint(){if(!host?.isConnected)return;host.replaceChildren();const card=el('div',undefined,'account-card');card.append(el('strong',state.pending?'等待浏览器授权':state.connected?'ChatGPT 账号已连接':'使用 ChatGPT 账号'),el('p',state.connected?state.email||'已授权账号':'在官方页面完成登录。授权仅供此工作台使用，凭证加密保存在本机。','field-help'));
+  const actions=el('div',undefined,'account-actions');if(state.pending){actions.append(button('取消本次登录',cancel));if(state.url){const a=el('a','重新打开授权页面 ↗');a.href=state.url;a.target='_blank';a.rel='noopener noreferrer';actions.append(a)}}else if(state.connected){actions.append(button('更换账号',()=>login(true)),button('重新授权',()=>login(false)),button('断开连接',disconnect))}else actions.append(button('Continue with ChatGPT',()=>login(false)));card.append(actions);if(state.error)card.append(el('p',state.error,'field-help'));host.append(card);
+  if(state.connected){const label=el('label',undefined,'service-field');label.append(el('span','当前账号可用的模型'));const select=el('select');select.id='chatgpt-model';select.name='model';select.append(new Option(state.loading?'正在读取模型…':'请选择模型',''));for(const m of state.models)select.append(new Option(m.name,m.id));select.value=selected;select.disabled=state.loading;select.onchange=()=>{selected=select.value;choose(selected)};label.append(select);host.append(label,button('刷新模型列表',models))}
+  host.append(el('p','此入口使用符合条件的 ChatGPT 套餐额度，仅用于文稿与分镜。保存配置不会生成内容；测试后才会消耗额度。','field-help'));
+ }
+ window.ChatGPTAccount={state,mount(target,value,onChoose){host=target;selected=value;choose=onChoose;paint()},async init(onChange){changed=onChange;await refresh();if(state.connected&&!state.models.length)await models();setInterval(()=>{if(state.pending)refresh()},2000)}};
+})();

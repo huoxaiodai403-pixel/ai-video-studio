@@ -14,6 +14,8 @@ from studio_extensions import handle_get, handle_post, PAGES, listening
 import providers
 import creation_settings
 import document_pages
+import web_shell
+import studio_edition
 
 JOBS = {}
 for status_file in (ROOT/'projects/studio').glob('*/status.json'):
@@ -28,6 +30,10 @@ GPU_LOCK = threading.Lock()
 
 
 class Handler(BaseHTTPRequestHandler):
+    def log_request(self, code='-', size='-'):
+        # Never log OAuth codes or state from a loopback callback URL.
+        self.log_message('"%s %s %s" %s %s', self.command, urlparse(self.path).path, self.request_version, str(code), str(size))
+
     def send_file(self, path):
         """Stream media and support seeking without loading a full film in RAM."""
         length = path.stat().st_size
@@ -53,7 +59,13 @@ class Handler(BaseHTTPRequestHandler):
                 return
             status = 206
         self.send_response(status)
-        self.send_header('Content-Type', 'text/plain; charset=utf-8' if path.suffix=='.md' else mimetypes.guess_type(path.name)[0] or 'application/octet-stream')
+        generated_source = (path.resolve().is_relative_to((ROOT/'projects/studio').resolve())
+                            and path.suffix.lower() in ('.html', '.js', '.py', '.blend'))
+        self.send_header('Content-Type', 'application/octet-stream' if generated_source else 'text/plain; charset=utf-8' if path.suffix=='.md' else mimetypes.guess_type(path.name)[0] or 'application/octet-stream')
+        if generated_source:
+            self.send_header('Content-Disposition', 'attachment')
+            self.send_header('Content-Security-Policy', "sandbox; default-src 'none'")
+        self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('Content-Length', str(max(0, end - start + 1)))
         self.send_header('Accept-Ranges', 'bytes')
         if status == 206:
@@ -74,6 +86,21 @@ class Handler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
             pass  # Browsers close a range request when the user seeks again.
 
+    def send_page(self, source, pathname):
+        """Send a complete first-frame UI; media keeps its streaming/Range path."""
+        body = web_shell.render_page(source, pathname).encode('utf-8')
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('Content-Length', str(len(body)))
+        self.send_header('Cache-Control', 'no-store')
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.end_headers()
+        if self.command != 'HEAD':
+            try:
+                self.wfile.write(body)
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                pass
+
     def do_HEAD(self):
         self.do_GET()
 
@@ -82,12 +109,15 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Content-Length', str(len(body)))
+        self.send_header('Cache-Control', 'no-store')
         self.end_headers()
         if self.command != 'HEAD':
             self.wfile.write(body)
 
     def do_GET(self):
         route = urlparse(self.path)
+        if studio_edition.reject(self, self.path, self.command):
+            return
         query = parse_qs(route.query)
         if document_pages.handle(self, route):
             return
@@ -101,7 +131,7 @@ class Handler(BaseHTTPRequestHandler):
         if route.path == '/api/jobs':
             return self.reply(JOBS)
         if route.path == '/':
-            if set(query) & {'reference', 'engine'}:
+            if not studio_edition.is_friend() and set(query) & {'reference', 'engine'}:
                 self.send_response(302)
                 self.send_header('Location', '/image?' + route.query)
                 self.send_header('Content-Length', '0')
@@ -119,16 +149,23 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply({'error': 'not found'}, 404)
         if not path.is_file():
             return self.reply({'error': 'not found'}, 404)
-        self.send_file(path)
+        if path.suffix == '.html' and path.parent.resolve() == (ROOT/'scripts').resolve():
+            self.send_page(path.read_text(encoding='utf-8'), route.path)
+        else:
+            self.send_file(path)
 
     def do_POST(self):
-        if self.headers.get('Origin') not in (None, 'http://127.0.0.1:8189', 'http://localhost:8189'):
+        if self.headers.get('Origin') not in (None, f'http://127.0.0.1:{self.server.server_port}', f'http://localhost:{self.server.server_port}'):
             return self.reply({'error': 'origin rejected'}, 403)
+        if studio_edition.reject(self, self.path, 'POST'):
+            return
         try:
             size = int(self.headers.get('Content-Length', '0'))
-            if size > (18*1024*1024 if self.path in ('/api/voices','/api/image-references') else 500000):
+            if size > (18*1024*1024 if self.path in ('/api/voices','/api/image-references') else 3*1024*1024 if self.path=='/api/generation/render' else 500000):
                 return self.reply({'error': 'request too large'}, 413)
             data = json.loads(self.rfile.read(size))
+            if studio_edition.reject(self, self.path, 'POST', data):
+                return
             if handle_post(self,data,JOBS):
                 return
             if self.path == '/api/compile':

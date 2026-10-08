@@ -17,14 +17,14 @@ from filelock import FileLock
 ROOT = Path(__file__).resolve().parents[1]
 LOCK = threading.RLock()
 HASH_CACHE = {}
-WORKFLOWS = {'image', 'video', 'speech', 'motion', 'whiteboard', 'investigation', 'enhance', 'asr', 'story', 'music', 'sfx'}
+WORKFLOWS = {'image', 'video', 'speech', 'motion', 'whiteboard', 'investigation', 'enhance', 'asr', 'story', 'music', 'sfx', 'generation'}
 STATUSES = {'done', 'queued', 'running', 'error', 'draft', 'preview'}
 MEDIA_TYPES = {'image', 'video', 'audio', 'document'}
-SUFFIXES = {'image': {'.png', '.jpg', '.jpeg', '.webp'}, 'video': {'.mp4', '.mov', '.mkv', '.webm', '.m4v'},
-            'audio': {'.wav', '.mp3', '.m4a', '.flac'}, 'document': {'.srt', '.json', '.md', '.zip', '.csv', '.txt', '.excalidraw'}}
+SUFFIXES = {'image': {'.png', '.jpg', '.jpeg', '.webp', '.gif'}, 'video': {'.mp4', '.mov', '.mkv', '.webm', '.m4v'},
+            'audio': {'.wav', '.mp3', '.m4a', '.flac'}, 'document': {'.srt', '.json', '.md', '.zip', '.csv', '.txt', '.excalidraw', '.html', '.blend'}}
 LABELS = {'image': '插画', 'video': '成片', 'speech': '配音', 'motion': '动态镜头', 'whiteboard': '白板视频',
           'investigation': '热点长片', 'enhance': '画质增强', 'asr': '字幕转写', 'story': '小说分镜',
-          'music': '配乐', 'sfx': '音效'}
+          'music': '配乐', 'sfx': '音效', 'generation': '生成工坊'}
 
 
 def _read(path, default=None):
@@ -132,6 +132,9 @@ def _deliverables(folder, primary, kind):
                   ('storyboard.json', '完整分镜', 'storyboard'), ('script.md', '文稿', 'script'),
                   ('sources.csv', '来源台账', 'sources'), ('publish-copy.md', '发布文案', 'publishing'),
                   ('delivery.zip', '交付包', 'bundle'), ('chapters.txt', '章节时间', 'chapters')]
+    associated.extend([('plan.json', '创作计划', 'plan'), ('qa.json', '生成检查记录', 'qa'),
+                       ('scene.html', '可编辑动画源码', 'source'), ('scene.blend', '可编辑三维场景', 'source'),
+                       ('scene-spec.json', '三维场景参数', 'source'), ('timeline.json', '镜头时间轴', 'timeline')])
     state = _read(folder / 'status.json', {})
     whiteboard = folder.name.startswith('whiteboard-') or isinstance(state, dict) and state.get('kind') == 'whiteboard'
     if whiteboard:
@@ -167,7 +170,7 @@ def _deliverables(folder, primary, kind):
                 seen.add(path)
                 label = name.removesuffix('.md').removesuffix('.excalidraw')
                 result.append({'label': '可编辑白板 · ' + label, 'url': _output(path), 'kind': 'excalidraw'})
-    for relative in ('封面-4x3.png', '封面-3x4.png', 'cover-4x3.png', 'cover-3x4.png', 'cover-landscape.png'):
+    for relative in ('封面-4x3.png', '封面-3x4.png', 'cover-4x3.png', 'cover-3x4.png', 'cover-landscape.png', 'cover.png'):
         path = _file(folder, relative, 'image')
         if path:
             result.append({'label': '封面 · ' + path.stem, 'url': _output(path), 'kind': 'cover'})
@@ -192,24 +195,38 @@ def _product(job, state, folder):
     workflow = _workflow(job, state)
     if not workflow:
         return None
+    if workflow == 'generation' and state.get('operation') == 'draft' and state.get('status') == 'done':
+        return None  # The saved parent plan owns this draft; the writing job is only execution history.
     spec = _read(folder / 'storyboard.json', {}) if folder else {}
+    if workflow == 'generation' and job.startswith('gen-') and folder:
+        spec = _read(folder/'plan.json', {})
     prompt = _read(folder / 'prompt.json', {}) if folder else {}
     request = _read(folder / 'request.json', {}) if folder else {}
     spec, prompt, request = [value if isinstance(value, dict) else {} for value in (spec, prompt, request)]
     media_type = 'image' if workflow == 'image' else 'audio' if workflow in ('music', 'sfx', 'speech') else 'document' if workflow in ('asr', 'story') else 'video'
     names = {'image': ['image.png'], 'speech': ['audio/preview.wav', 'audio.wav'], 'music': ['bgm.wav'],
              'sfx': ['sfx.wav'], 'asr': ['transcription.srt'], 'story': ['storyboard.json']}.get(workflow, ['video.mp4'])
+    if workflow == 'generation':
+        if state.get('operation') == 'draft' or job.startswith('gen-'):
+            media_type, names = 'document', ['plan.json']
+        elif state.get('workflow_kind') == 'character-loop':
+            media_type, names = 'image', ['animation.gif', 'animation.webp']
+        else:
+            media_type, names = 'video', ['video.mp4', 'sample.mp4']
     path = next((p for name in names if (p := _file(folder, name, media_type))), None) if folder else None
     job_status = state.get('status')
     status = job_status if isinstance(job_status, str) and job_status in STATUSES else 'error'
-    cover = next((p for name in ('封面-4x3.png', 'cover-landscape.png', 'cover-4x3.png')
+    cover = next((p for name in ('封面-4x3.png', 'cover-landscape.png', 'cover-4x3.png', 'cover.png')
                   if (p := _file(folder, name, 'image'))), None) if folder else None
     if status == 'done' and (not path or workflow == 'story'):
         status = 'preview' if cover else 'draft' if spec or workflow == 'story' else 'error'
+    if workflow == 'generation' and status == 'done':
+        status = 'draft' if media_type == 'document' else 'preview' if state.get('preview') else 'done'
     stamp = _number(state.get('created')) or _number(state.get('created_at'))
     if not stamp:
         stamp = (folder / 'status.json').stat().st_mtime if folder and (folder / 'status.json').is_file() else folder.stat().st_mtime if folder else 0
-    title = next((_text(source.get(key), 120) for source in (state, spec, prompt, request)
+    title_sources = (spec, state, prompt, request) if workflow == 'generation' and job.startswith('gen-') else (state, spec, prompt, request)
+    title = next((_text(source.get(key), 120) for source in title_sources
                   for key in ('title', 'topic', 'subject', 'prompt', 'text') if _text(source.get(key))), '')
     if not title and workflow == 'speech' and isinstance(spec.get('scenes'), list) and spec['scenes']:
         title = _text(spec['scenes'][0].get('narration'), 100) if isinstance(spec['scenes'][0], dict) else ''
@@ -219,7 +236,9 @@ def _product(job, state, folder):
                engine=_text(state.get('engine') or state.get('image_engine') or state.get('voice_engine')),
                source_url=('/' + workflow + '?project=' + quote(job)) if workflow in ('whiteboard', 'investigation') else
                    {'image': '/image', 'video': '/production', 'speech': '/speech', 'music': '/music', 'sfx': '/music',
-                    'story': '/novel', 'motion': '/motion', 'enhance': '/enhance', 'asr': '/subtitles'}[workflow],
+                    'story': '/novel', 'motion': '/motion', 'enhance': '/enhance', 'asr': '/subtitles',
+                    'generation': '/generation?plan=' + quote(state.get('plan_id') or job)}[workflow],
+               quality_review=_text(state.get('quality_review')), plan_id=_text(state.get('plan_id')),
                provenance_url=_url(prompt.get('source_url') or request.get('source_url')),
                collections=['products', 'assets'] if status == 'done' and media_type in ('image', 'video', 'audio') else ['products'],
                temporary=folder is None, thumbnail_url=_output(cover) if cover else _output(path) if path and media_type == 'image' else None,

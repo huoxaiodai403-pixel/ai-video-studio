@@ -1,40 +1,32 @@
-# 结构与数据流
+# 朋友版结构与数据流
 
 ```text
-Codex + ai-video-studio skill
-  → 文稿 / 分镜 JSON / 来源与角色安排
-  → 本机 HTTP API（127.0.0.1:8189）
-  → 独立媒体引擎：配音、对齐、生图、视频、音乐
-  → Simon / Remotion / FFmpeg 合成
-  → projects/studio/<任务号> → 统一作品与资源库
+Codex 创作 / 可选的网页编剧
+  → 口播、分镜与代码动画源码
+  → 本机 HTTP API
+  → 配音 + 浏览器渲染器 + FFmpeg
+  → 创作计划、样片与成片
+  → 统一作品库 → 可选剪映精修
 ```
 
-`scripts/studio.py` 是网页入口；扩展接口分布在 `studio_extensions.py`、
-`creation_api.py`、`whiteboard_api.py`、`investigation_api.py`、`music_api.py`。
-`library_api.py` 只索引登记素材、工作台产物与持久小说草稿，不扫描整块磁盘。
+`scripts/studio.py` 提供网页和本机接口。代码动画由 `generation_api.py` 调度；白板由 `whiteboard_api.py` 调度；作品和资源由 `library_api.py` 索引；剪映交接使用 `jianying_bridge.py`。Codex Skill 与网页使用相同的本机接口。
 
-网页与 Codex 调用相同接口。Codex skill 中的标准库 CLI 适合脚本化编排；
-网页负责可视化编辑、试听和审片。详见仓库中的 skill API 参考。
+朋友版只开放代码动画、白板、配音、资源与作品管理及剪映交接。完整版的模型管理、角色生成、三维预演和长片试验有独立范围，见 [版本定位](editions.md)。
 
-| 目录 | 含义 | 是否分享 |
+| 目录 | 内容 | 分享约定 |
 | --- | --- | --- |
-| scripts / docs / skills / examples | 源码、说明、Skill、公共模板 | 是 |
-| apps/investigation-renderer | Remotion 渲染器源码与字体许可证 | 是，不含 node_modules |
-| tools / apps 下其他引擎 | 机器自己的解释器与可选引擎 | 否，按需安装 |
-| models | 模型权重 | 否 |
-| config | 默认参数、接口凭据、音色预设、收藏标签 | 否 |
-| projects | 分镜、草稿、媒体与交付物 | 否 |
-| assets/voices、assets/image-references | 个人音色录音与参考图 | 否 |
-| logs / cache / manifests | 日志、缓存、机器检查记录 | 否 |
+| scripts / docs / skills / examples | 本版源码、说明、Skill 与公共示例 | 随发行包分享 |
+| apps/simon-skills | 固定版本的白板代码、字体和公开贴纸 | 按原许可证分享，不含运行依赖 |
+| tools 与各引擎环境 | 本机安装的 Python、依赖与运行组件 | 在朋友的电脑重新安装 |
+| config | 参数、服务凭据、音色选择与收藏 | 个人数据，不随包分享 |
+| projects | 计划、任务、素材与成品 | 个人数据，按需另行导出 |
+| assets 下个人声音和参考图 | 自己导入的参考内容 | 不随包分享 |
+| models / logs / cache / manifests | 权重、日志、缓存与机器检查记录 | 不随包分享 |
 
-默认接口只绑定环回地址。配置中的在线凭据由当前 Windows 用户加密；
-复制别人的配置文件不是正确的安装方式。朋友应自行配置服务与音色。
+工作台默认只绑定本机环回地址。在线凭据由当前 Windows 用户加密；不要复制他人的配置或虚拟环境作为安装方式。媒体引擎与网页环境分开管理，网页能打开不代表配音或渲染器已经就绪。
 
-GPU 任务按已有线程锁与 `manifests/gpu.lock` 协调；CPU 网页服务不应直接
-导入庞大的 GPU 推理环境。引擎完成后释放其模型进程，避免显存互相挤占。
+工程保存内容和任务参数快照。修改默认音色不会替换已有工程明确选择的音色。打开作品、重新渲染、交接剪映、最终发布是不同操作。
 
-工程保留分镜和任务参数快照。改音色预设或模型默认值只影响新任务。
-恢复工程、重新渲染、最终发布是不同操作，不会因打开作品详情就自动执行。
+发行包由 `packaging/build_release.py` 按明确的文件清单构建，朋友版使用独立范围与覆盖模板，`EDITION` 标记为 `friend`。校验文件用于核对实际下载的文件；不能用作者电脑上的检查记录证明另一台电脑已经安装成功。
 
-发行打包使用 `packaging/build_release.py` 的文件允许列表，并生成每个成员的
-SHA256。不要直接把当前运行目录整体压缩发给他人。
+开始使用见 [快速上手](getting-started.md)，依赖检查见 [运行依赖](local-models.md)。

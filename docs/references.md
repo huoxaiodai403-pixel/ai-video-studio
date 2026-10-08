@@ -1,22 +1,16 @@
-# 上游项目与出处
+# 朋友版上游项目与出处
 
-这些项目提供实际引擎或适配参考；不代表分享包包含其全部运行环境或模型。
+这些项目提供随包代码或运行依赖。具体安装是否完成，以朋友电脑上的实际检查为准；列出项目不代表包含其全部工具或模型。
 
-| 项目 | 用途 |
+| 项目 | 本版用途 |
 | --- | --- |
-| [trustfuture/simon-skills](https://github.com/trustfuture/simon-skills) | 手绘白板与调查视频流程参考，MIT |
-| [ComfyUI](https://github.com/Comfy-Org/ComfyUI) | 本地图像与视频工作流 |
-| [ComfyUI-GGUF](https://github.com/city96/ComfyUI-GGUF) | 量化模型节点 |
-| [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) | 固定音色、声音设计与参考克隆 |
-| [Qwen3-ASR](https://github.com/QwenLM/Qwen3-ASR) | 语音识别与对齐相关模型 |
-| [IndexTTS](https://github.com/index-tts/index-tts) | 备用本地配音引擎 |
-| [ACE-Step 1.5](https://github.com/ace-step/ACE-Step-1.5) | 背景音乐生成 |
-| [Ollama](https://github.com/ollama/ollama) | 可选本地编剧模型运行时 |
-| [Remotion](https://github.com/remotion-dev/remotion) | 调查长片合成 |
-| [FFmpeg](https://ffmpeg.org/) | 音视频编码、混音、合并与检查 |
+| [huoxaiodai403-pixel/simon-skills](https://github.com/huoxaiodai403-pixel/simon-skills) | 固定版本的白板源码，复刻自 [trustfuture/simon-skills](https://github.com/trustfuture/simon-skills)；随包保留许可证与来源清单 |
+| [Playwright](https://github.com/microsoft/playwright) | 浏览器自动渲染所需组件 |
+| [FFmpeg](https://ffmpeg.org/) | 音视频编码、合并与检查 |
+| [pyJianYingDraft](https://github.com/GuanYixuan/pyJianYingDraft) | 剪映草稿桥接，使用独立环境与固定依赖版本 |
 
-引擎与模型安装应使用对应上游说明和许可证；不要用“OpenAI 兼容聊天接口”
-推断同一提供方也实现了图像、音频或视频生成接口。
+在线编剧和语音可使用自己的服务，但要分别确认具体接口能力。兼容聊天格式不表示同一服务也支持图像、视频、配音或字幕时间戳。工具权限与调用额度由实际服务和当前 Codex 会话决定。
 
-剪映互操作单独见 [Windows 剪映说明](jianying-windows.md)。
-随包字体与派生代码的完整许可位置见 [NOTICE](../NOTICE.md)。
+完整版另外研究本地图像、角色视频、模型配音、音乐与长片合成；这些能力不属于朋友版的默认安装和起步承诺。见 [两个版本的定位](editions.md)。
+
+剪映操作与兼容边界见 [Windows 剪映说明](jianying-windows.md)。随包字体、派生代码和依赖遵循各自许可证，详见 [NOTICE](https://github.com/huoxaiodai403-pixel/ai-video-studio/blob/main/NOTICE.md)。

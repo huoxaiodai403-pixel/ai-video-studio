@@ -1,8 +1,10 @@
 /* Shared navigation only: page controls and their handlers stay in place. */
 (()=>{
  const main=document.querySelector('main');if(!main)return;
- const oldNav=main.querySelector('nav'),heading=main.querySelector('h1');
- const title=({'/':'工作台','/home':'工作台','/workflows':'工作流'})[location.pathname]||heading?.textContent||'工作台';
+ if(!main.id)main.id='workbench-main';main.tabIndex=-1;
+ const skip=document.querySelector('.workbench-skip')||document.createElement('a');skip.className='workbench-skip';skip.href='#'+main.id;skip.textContent='跳到主要内容';if(!skip.isConnected)document.body.prepend(skip);
+ const oldNav=main.querySelector('nav[aria-label="工作台导航"]'),heading=main.querySelector('h1');
+ const title=({'/':'工作台','/home':'工作台','/workflows':'工作流','/generation':'生成工坊'})[location.pathname]||heading?.textContent||'工作台';
  const existing=new Map([...(oldNav?.querySelectorAll('a')||[])].map(a=>[a.getAttribute('href'),a]));
  const moduleIcons={
   home:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="4" rx="1.5"/><rect x="14" y="11" width="7" height="10" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/>',
@@ -16,16 +18,21 @@
   {id:'home',name:'工作台',href:'/home',icon:'home',items:[]},
   {id:'library',name:'我的作品',href:'/library',icon:'library',items:[]},
   {id:'assets',name:'资源库',href:'/assets',icon:'assets',items:[['/gallery','图库'],['/audio-library','音频库'],['/voices','音色库'],['/model-library','模型库']]},
-  {id:'workflows',name:'工作流',href:'/workflows',icon:'workflows',items:[['/whiteboard','手绘白板'],['/investigation','热点调查长片'],['/novel','小说转漫剧'],['/production','通用视频制作']]},
+  {id:'workflows',name:'工作流',href:'/workflows',icon:'workflows',items:[['/generation','生成工坊'],['/whiteboard','手绘白板'],['/investigation','热点调查长片'],['/novel','小说转漫剧'],['/production','通用视频制作']]},
   {id:'tools',name:'创作工具',href:'/home#tools',icon:'tools',items:[['/image','图像创作'],['/motion','短镜头'],['/speech','配音与声音设计'],['/music','音乐与音效生成'],['/subtitles','语音转字幕'],['/enhance','视频增强与补帧']]},
-  {id:'settings',name:'设置',href:'/settings',icon:'settings',items:[['/settings','在线接口设置'],['/models','运行与默认参数'],['http://127.0.0.1:8188','ComfyUI'],['/learn','上手教程'],['/guide','使用说明'],['/director','运镜词典与方法'],['/plan','部署方案'],['/research','文章与项目参考']]}
+  {id:'settings',name:'设置',href:'/settings',icon:'settings',items:[['/settings','在线服务'],['/models','本地模型'],['http://127.0.0.1:8188','ComfyUI'],['/learn','上手教程'],['/guide','使用说明'],['/director','运镜词典与方法'],['/plan','部署方案'],['/research','文章与项目参考']]}
  ];
- const sidebar=document.createElement('aside');sidebar.className='sidebar';sidebar.id='workbench-nav';
- sidebar.innerHTML='<a class="brand" href="/home"><img class="brand-mark" src="/assets/brand/studio-mark.svg" width="38" height="38" alt=""><span><strong>AI STUDIO</strong><small>视频创作工作台</small></span></a>';
+ if(document.documentElement.dataset.studioEdition==='friend'){
+  const pages=new Set(['/home','/library','/assets','/gallery','/audio-library','/voices','/workflows','/generation','/whiteboard','/speech','/settings','/learn','/guide','/research']);
+  for(const group of groups)group.items=group.items.filter(([href])=>pages.has(href));
+ }
+ const serverShell=document.querySelector('#workbench-nav[data-shell="server"]');
+ const sidebar=serverShell||document.createElement('aside');sidebar.className='sidebar';sidebar.id='workbench-nav';
+ if(!serverShell)sidebar.innerHTML='<a class="brand" href="/home"><img class="brand-mark" src="/assets/brand/studio-mark.svg" width="38" height="38" alt=""><span><strong>AI STUDIO</strong><small>视频创作工作台</small></span></a>';
  for(const [rel,href,type,sizes] of [['icon','/assets/brand/studio-mark.svg?v=2','image/svg+xml','any'],['alternate icon','/assets/brand/studio-mark.ico?v=2','image/x-icon','16x16 32x32 48x48'],['apple-touch-icon','/assets/brand/studio-mark.png?v=2','image/png','512x512']]){
   const icon=document.createElement('link');icon.rel=rel;icon.href=href;icon.type=type;icon.sizes=sizes;document.head.append(icon);
  }
- const nav=document.createElement('nav');nav.setAttribute('aria-label','工作台导航');
+ const nav=sidebar.querySelector('nav')||document.createElement('nav');nav.setAttribute('aria-label','工作台导航');
  function selectedGroup(){
   if(['/home','/'].includes(location.pathname)&&location.hash==='#tools')return 'tools';
   if(location.pathname==='/')return 'home';
@@ -42,8 +49,28 @@
   else{a.removeAttribute('target');a.removeAttribute('rel')}
   return a;
  }
+ let renderedNavKey='';
  function renderNav(){
-  nav.replaceChildren();const current=selectedGroup();
+  const current=selectedGroup(),navKey=current+'|'+location.pathname+(location.hash==='#tools'?'#tools':'');
+  if(renderedNavKey===navKey)return;
+  renderedNavKey=navKey;
+  if(serverShell){
+   for(const a of nav.querySelectorAll('.nav-primary')){
+    const group=a.dataset.navGroup,isCurrent=group===current;
+    a.classList.toggle('is-active',isCurrent);
+    const exact=a.pathname===location.pathname&&a.hash===location.hash||(group==='home'&&location.pathname==='/'&&!location.hash);
+    const childCurrent=groups.find(item=>item.id===group)?.items.some(([href])=>href===location.pathname);
+    if(exact&&!childCurrent)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
+   }
+   for(const section of nav.querySelectorAll('.nav-context')){
+    section.hidden=section.dataset.navGroup!==current;
+    for(const a of section.querySelectorAll('a')){
+     if(a.origin===location.origin&&a.pathname===location.pathname)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
+    }
+   }
+   return;
+  }
+  nav.replaceChildren();
   for(const g of groups){
    const section=document.createElement('div');section.className='nav-section'+(g.id===current?' is-active':'');
    const primary=link(g.href,g.name,g.icon,true);section.append(primary);
@@ -57,17 +84,48 @@
    nav.append(section);
   }
  }
- renderNav();window.addEventListener('hashchange',renderNav);sidebar.append(nav);
- const foot=document.createElement('div');foot.className='sidebar-footer';foot.innerHTML='<span class="status-dot"></span><span class="health">正在检查服务</span><small>本地优先 · 支持在线接口</small>';sidebar.append(foot);oldNav?.remove();document.body.prepend(sidebar);
- const toggle=document.createElement('button');toggle.className='nav-toggle';toggle.textContent='☰  AI STUDIO · '+title;toggle.setAttribute('aria-label','展开导航');toggle.setAttribute('aria-controls','workbench-nav');toggle.setAttribute('aria-expanded','false');document.body.prepend(toggle);
- const shade=document.createElement('button');shade.className='nav-shade';shade.tabIndex=-1;shade.setAttribute('aria-label','关闭导航');document.body.append(shade);
- function setNav(open){document.body.classList.toggle('nav-open',open);toggle.setAttribute('aria-expanded',String(open));toggle.setAttribute('aria-label',open?'收起导航':'展开导航');if(open)(nav.querySelector('[aria-current]')||nav.querySelector('a'))?.focus()}
- toggle.onclick=()=>setNav(!document.body.classList.contains('nav-open'));shade.onclick=()=>setNav(false);
- nav.addEventListener('click',e=>{if(e.target.closest('a'))setNav(false)});
- document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('nav-open')){setNav(false);toggle.focus()}});
+ renderNav();window.addEventListener('hashchange',renderNav);
+ const create=sidebar.querySelector('.nav-create')||document.createElement('a');create.href='/generation';create.className='nav-create';create.textContent='＋ 开始创作';if(!serverShell)sidebar.append(create,nav);
+ const foot=sidebar.querySelector('.sidebar-footer')||document.createElement('div');foot.className='sidebar-footer';if(!serverShell)foot.innerHTML='<span class="status-dot"></span><span class="health">正在检查服务</span><small>本地优先 · 支持在线接口</small>';if(!serverShell)sidebar.append(foot);oldNav?.remove();if(!serverShell)document.body.prepend(sidebar);
+ const toggle=document.querySelector('.nav-toggle')||document.createElement('button');toggle.className='nav-toggle';toggle.textContent='☰  AI STUDIO · '+title;toggle.setAttribute('aria-label','展开导航');toggle.setAttribute('aria-controls','workbench-nav');toggle.setAttribute('aria-expanded','false');if(!toggle.isConnected)document.body.prepend(toggle);
+ const shade=document.querySelector('.nav-shade')||document.createElement('button');shade.className='nav-shade';shade.tabIndex=-1;shade.setAttribute('aria-label','关闭导航');if(!shade.isConnected)document.body.append(shade);
+ const mobile=window.matchMedia('(max-width:700px)');let drawerOpen=false,mainWasInert=false;
+ function setNav(open,{returnFocus=true}={}){
+  open=Boolean(open&&mobile.matches);
+  if(open&&!drawerOpen){mainWasInert=main.inert;main.inert=true}
+  if(!open&&drawerOpen)main.inert=mainWasInert;
+  const wasOpen=drawerOpen;drawerOpen=open;
+  document.body.classList.toggle('nav-open',open);sidebar.inert=mobile.matches&&!open;
+  toggle.setAttribute('aria-expanded',String(open));toggle.setAttribute('aria-label',open?'收起导航':'展开导航');
+  if(open)requestAnimationFrame(()=>{if(drawerOpen)(nav.querySelector('[aria-current]')||nav.querySelector('a'))?.focus()});
+  else if(wasOpen&&returnFocus&&mobile.matches)toggle.focus();
+ }
+ toggle.onclick=()=>setNav(!drawerOpen);shade.onclick=()=>setNav(false);
+ sidebar.addEventListener('click',e=>{
+  const link=e.target.closest('a');if(!link)return;
+  const destination=new URL(link.href,location.href),sameDocument=destination.origin===location.origin&&destination.pathname===location.pathname&&destination.search===location.search;
+  const wasOpen=drawerOpen;setNav(false,{returnFocus:link.target==='_blank'||sameDocument});
+  if(wasOpen&&sameDocument&&destination.hash)requestAnimationFrame(()=>{
+   let target;try{target=document.getElementById(decodeURIComponent(destination.hash.slice(1)))}catch{return}
+   if(target){if(!target.hasAttribute('tabindex'))target.tabIndex=-1;target.focus({preventScroll:true})}
+  });
+ });
+ mobile.addEventListener('change',()=>{
+  const sidebarHadFocus=sidebar.contains(document.activeElement);setNav(false,{returnFocus:false});
+  if(mobile.matches&&sidebarHadFocus)toggle.focus();
+  else if(!mobile.matches&&document.activeElement===toggle)main.focus({preventScroll:true});
+ });setNav(false);
+ document.addEventListener('keydown',e=>{
+  if(!drawerOpen)return;
+  if(e.key==='Escape'){e.preventDefault();setNav(false);return}
+  if(e.key==='Tab'){
+   const focusable=[toggle,...sidebar.querySelectorAll('a[href],button:not([disabled]),[tabindex="0"]')].filter(el=>el.getClientRects().length);
+   const index=focusable.indexOf(document.activeElement),next=e.shiftKey?index-1:index+1;
+   if(index<0||next<0||next>=focusable.length){e.preventDefault();focusable[e.shiftKey?focusable.length-1:0]?.focus()}
+  }
+ });
  const status=document.getElementById('services');
- function health(){const text=status?.textContent||'',ready=text.includes('千问生图：就绪');foot.querySelector('.status-dot').classList.toggle('ready',ready);foot.querySelector('.health').textContent=ready?'图像服务已连接':text.includes('千问生图：未启动')?'图像服务未启动':text.includes('检查')?'正在检查服务':'服务状态暂不可用';foot.title=text}
- if(status)new MutationObserver(health).observe(status,{childList:true,characterData:true,subtree:true});health();
+ let runtimePending=false;async function health(){if(runtimePending)return;runtimePending=true;try{const response=await fetch('/api/runtime');if(!response.ok)throw Error('unavailable');const runtime=await response.json();foot.querySelector('.status-dot').classList.add('ready');foot.querySelector('.health').textContent='工作台已连接';foot.title='工作台 v'+runtime.version+'；各项能力请在在线服务与本地模型中查看。'}catch{foot.querySelector('.status-dot').classList.remove('ready');foot.querySelector('.health').textContent='工作台连接中断'}finally{runtimePending=false}}health();setInterval(health,30000);
  // Overview pages only read service status; this does not load or start a model.
  if(document.body.dataset.workbenchServices==='true'&&status){let pending=false;async function check(){if(pending)return;pending=true;try{const r=await fetch('/api/services');if(!r.ok)throw Error('HTTP '+r.status);const s=await r.json();status.textContent=`千问生图：${s.comfyui?.ready?'就绪':'未启动'} · 配音：${s.tts?.ready?'就绪':s.tts?.starting?'正在加载':'未启动'}`}catch(e){status.textContent='服务状态读取失败：'+e.message}finally{pending=false}}check();setInterval(check,15000)}
  // Keep editor progress local; the catalog owns browsing the complete history.

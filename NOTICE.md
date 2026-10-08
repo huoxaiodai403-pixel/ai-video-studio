@@ -3,9 +3,20 @@
 The workbench application and its Codex skill are MIT licensed. This does not
 change licenses of dependencies, downloaded models, media or fonts.
 
-- Whiteboard workflows adapt [trustfuture/simon-skills](https://github.com/trustfuture/simon-skills),
-  MIT, copyright 2026 trustfuture. The upstream source is obtained separately;
-  `workflows/simon-windows.patch` records Windows integration changes.
+- Whiteboard workflows bundle a runtime subset from
+  [huoxaiodai403-pixel/simon-skills](https://github.com/huoxaiodai403-pixel/simon-skills),
+  a fork of [trustfuture/simon-skills](https://github.com/trustfuture/simon-skills),
+  MIT, copyright 2026 trustfuture. The full license is `apps/simon-skills/LICENSE`;
+  `SOURCE-MANIFEST.json` in that directory records the revision and checksums.
+  `workflows/simon-windows.patch` is already applied to the bundled runtime.
+  The four bundled stickers are public upstream example assets, not user projects.
+- The bundled Xiaolai font uses SIL Open Font License 1.1, retained at
+  `apps/simon-skills/skills/whiteboard-video/assets/fonts/OFL.txt`.
+- The Volcengine speech adapter follows the MIT Simon TTS integration's
+  protocol, with app-scoped Windows credential storage and timestamp validation.
+  `edge-tts` is installed separately under its own license; it uses an online
+  speech service and is not an offline model. Windows speech uses installed
+  system voices. No private voices or credentials are redistributed.
 - The investigation renderer retains its specific attribution at
   `apps/investigation-renderer/NOTICE.md` and the complete upstream MIT license at
   `apps/investigation-renderer/LICENSE.simon-skills`.

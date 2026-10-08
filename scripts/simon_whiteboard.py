@@ -3,7 +3,7 @@
 No TTS, network request or generated JavaScript is used. The source storyboard is
 validated into JSON, then the fixed simon_bridge.cjs builds editable Excalidraw
 documents. --stills can run before speech generation; --render requires both the
-WAV and its real forced-alignment timestamps for every scene.
+WAV and its synthesis or forced-alignment timestamps for every scene.
 """
 import argparse
 import json
@@ -28,9 +28,15 @@ def readiness():
     if not node.is_file(): node = shutil.which('node')
     ffmpeg = ROOT / 'tools/ffmpeg.exe'
     if not ffmpeg.is_file(): ffmpeg = shutil.which('ffmpeg')
+    try:
+        from simon_source import validate_bundle
+        validate_bundle(ROOT)
+        source_ready, source_message = True, str(SKILL) + ' (bundled fork, Windows patch verified)'
+    except (OSError, ValueError) as error:
+        source_ready, source_message = False, str(error)
     checks = [{'name': 'node', 'ready': bool(node), 'message': str(node or '缺少 Node.js')},
               {'name': 'ffmpeg', 'ready': bool(ffmpeg), 'message': str(ffmpeg or '缺少 ffmpeg')},
-              {'name': 'simon-source', 'ready': (SKILL / 'lib/render.js').is_file(), 'message': str(SKILL)}]
+              {'name': 'simon-source', 'ready': source_ready, 'message': source_message}]
     env = os.environ.copy(); env['PLAYWRIGHT_BROWSERS_PATH'] = str(ROOT / 'cache/ms-playwright')
     if node and (SKILL / 'package.json').is_file():
         try:
@@ -43,7 +49,9 @@ def readiness():
             checks.append({'name': 'node-packages', 'ready': False, 'message': f'请安装白板 Node 依赖及 Chromium: {error}'})
     else:
         checks.append({'name': 'node-packages', 'ready': False, 'message': '需要 Node.js 与 Simon 项目'})
-    return {'ready': all(item['ready'] for item in checks), 'checks': checks}
+    return {'ready': all(item['ready'] for item in checks), 'checks': checks,
+            'scope': 'CPU preview/rendering; narration and alignment are separate',
+            'installer': 'scripts/Install-Renderers.ps1'}
 
 
 def _read(path):
@@ -134,7 +142,7 @@ def _audio_info(project, scene):
     wav = project / 'audio' / f'{sid}.wav'
     alignment = project / 'audio' / f'{sid}.alignment.json'
     if not wav.is_file() or not alignment.is_file():
-        raise FileNotFoundError(f'{sid}: 缺少本地配音或真实时间对齐；请先运行配音和对齐：{wav} / {alignment}')
+        raise FileNotFoundError(f'{sid}: 缺少配音或真实时间戳；请先运行配音与字幕阶段：{wav} / {alignment}')
     with wave.open(str(wav), 'rb') as audio:
         duration = audio.getnframes() / audio.getframerate()
     if duration <= 0:
@@ -161,8 +169,14 @@ def _audio_info(project, scene):
         word = next(w for w in words if w['p'] + w['n'] > cursor)
         starts.append(word['s'] + (word['e'] - word['s']) * (cursor - word['p']) / word['n'])
         cursor += len(_norm(beat))
+    from lightweight_speech import map_boundaries, cues
+    aligned=map_boundaries(''.join(scene['beats']),[{'text':w['w'],'start':w['s'],'end':w['e']} for w in words],duration)
+    captions=[{**c,'start':c['start']+LEAD,'end':c['end']+LEAD} for c in cues(aligned)]
+    metadata=wav.with_suffix('.speech.json')
+    timing=_read(metadata).get('timing','unknown') if metadata.is_file() else 'alignment-file'
     return {'name': sid, 'duration': duration, 'segments': scene['beats'], 'segmentStarts': starts,
             'wordList': [{k: w[k] for k in ('w', 's', 'e')} for w in words],
+            'studioCaptionCues':captions,'timingSource':timing,
             'alignmentSource': str(alignment), 'estimated': False}
 
 
@@ -230,20 +244,24 @@ def render(project, stills=False):
                 'editable_scenes': [f"scenes/{s['id']}.excalidraw.md" for s in scenes],
                 'source': 'storyboard.json', 'bridge_source': 'scenes.js', 'audio_alignment': 'real' if not stills else 'estimated-preview-only'}
     if not stills:
-        manifest['timing_method'] = '真实逐字或逐词对齐时间戳驱动；beat 边界落在多字词内部时，仅在该词实测起止范围内插值'
+        manifest['timing_method'] = '字幕按词边界拆分，复用来源时间戳；仅白板图形 beat 在多字词内部的边界使用词内插值'
+        manifest['speech_timing_sources']={info['name']:info['timingSource'] for info in infos}
     if not stills:
-        _run([node, SKILL / 'lib/render.js', project], env, project)
+        _run([node, '-r', ROOT/'scripts/simon_caption_timing.cjs', SKILL / 'lib/render.js', project], env, project)
         pending_video = project / 'video.whiteboard-pending.mp4'
         _run([ffmpeg, '-y', '-v', 'error', '-i', work / 'out/master.mp4', '-copyts', '-c', 'copy', '-movflags', '+faststart', pending_video], env, project)
         pending_video.replace(project / 'video.mp4')
-        shutil.copy2(project / '字幕.srt', project / 'subtitles.srt')
-        timeline, offset = [], 0.0
+        timeline, offset, caption_rows = [], 0.0, []
         for scene, info in zip(scenes, infos):
             total = math.ceil((info['duration'] + LEAD + HOLD) * FPS) / FPS
             timeline.append({'id': scene['id'], 'start': offset, 'duration': total,
                              'audio_start': offset + LEAD, 'audio_duration': info['duration'],
                              'beat_starts': [offset + LEAD + t for t in info['segmentStarts']]})
+            caption_rows.extend({**c,'start':c['start']+offset,'end':c['end']+offset} for c in info['studioCaptionCues'])
             offset += total
+        from lightweight_speech import write_srt
+        write_srt(project/'subtitles.srt',caption_rows)
+        shutil.copy2(project/'subtitles.srt',project/'字幕.srt')
         _write(project / 'timeline.json', timeline)
         manifest.update({'video': 'video.mp4', 'subtitles': 'subtitles.srt', 'duration': offset,
                          'visual_qa': 'pending-human-review', 'audio_qa': 'pending-human-listening'})

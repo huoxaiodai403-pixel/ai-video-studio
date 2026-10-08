@@ -1,6 +1,8 @@
 [CmdletBinding()]
-param([string]$PythonPath, [switch]$InstallPython, [switch]$Renderers)
+param([string]$PythonPath, [switch]$InstallPython, [switch]$Renderers, [switch]$SkipRenderers)
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Initialize-StudioEnvironment.ps1')
+if ($Renderers -and $SkipRenderers) { throw 'Choose -Renderers or -SkipRenderers, not both.' }
 $studioRoot = Split-Path $PSScriptRoot -Parent
 $env:PYTHONUTF8 = '1'
 $env:PIP_DISABLE_PIP_VERSION_CHECK = '1'
@@ -43,6 +45,8 @@ if (-not (Test-Path -LiteralPath $venvPython)) {
 if ($LASTEXITCODE -ne 0) { throw 'Dependency installation failed. Check your network and rerun Install.cmd.' }
 & $venvPython (Join-Path $PSScriptRoot 'bootstrap_studio.py')
 if ($LASTEXITCODE -ne 0) { throw 'Workbench initialization failed.' }
-if ($Renderers) { & (Join-Path $PSScriptRoot 'Install-Renderers.ps1') }
-Write-Host 'Ready. Run Start.cmd, then configure your providers under Settings.'
+if (-not $SkipRenderers) { & (Join-Path $PSScriptRoot 'Install-Renderers.ps1') }
+Write-Host 'Ready. Run Start.cmd. Codex can write storyboards; CPU renderers need no AI model.'
+if ($SkipRenderers) { Write-Host 'Renderers skipped. Run scripts/Install-Renderers.ps1 before previewing.' }
+Write-Host 'Narration and alignment still need prepared audio/timestamps or an available speech engine.'
 Write-Host 'No AI model weights, voice samples, or API credentials have been installed.'

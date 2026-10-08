@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>在线服务 · AI 视频工作台</title><link rel="stylesheet" href="/assets/workbench.css"><link rel="stylesheet" href="/assets/online-services.css"></head>
+<body><main class="services-page">
+<header class="services-heading"><div><p class="eyebrow">AI VIDEO STUDIO / CONNECTIONS</p><h1>连接创作能力</h1><p>按需接入服务，用一次真实输出确认配置。先从你需要的那一项开始。</p></div><a href="/home">返回工作台 ↗</a></header>
+<div class="connections-tabs" aria-label="运行方式"><a href="/settings" aria-current="page">在线服务</a><a href="/models">本地模型</a></div><div class="service-overview"><span id="configured-count">正在读取配置…</span><span>配置留在本机 · 密钥加密保存</span><a href="/speech">无需密钥？体验 Edge 配音 →</a></div>
+<div id="page-error" class="service-alert" role="alert" hidden></div>
+<div class="services-layout"><nav id="service-nav" class="service-nav" aria-label="创作能力"></nav>
+<section class="service-panel" aria-labelledby="service-title"><header class="service-title-row"><div><p class="eyebrow" id="service-step">01 / 选择服务</p><h2 id="service-title">正在载入</h2></div><span id="service-status" class="status-pill">读取中</span></header>
+<p id="service-description" class="service-description"></p><div id="service-routes" class="service-routes" aria-label="配音服务选择"></div>
+<form id="service-form"><div id="service-fields"></div><div class="service-action-bar"><div><button type="submit" id="save-service" class="btn-secondary">保存配置</button><button type="button" id="test-service" class="btn-primary">保存并验证</button></div><p id="usage-note" class="field-help"></p></div></form>
+<p id="save-message" role="status" aria-live="polite"></p><div id="service-help" class="service-help"></div></section>
+<aside class="verification-panel" aria-labelledby="verify-title"><p class="eyebrow">03 / 验证与预览</p><h2 id="verify-title">让结果说明是否可用</h2><p class="field-help">保存配置只会写入本机。点击验证后，才会向所选服务发送测试请求。</p><div id="verification-result" aria-live="polite"></div><a id="start-creating" class="start-link" href="/home" hidden>开始创作 →</a></aside></div>
+</main><script src="/assets/workbench.js"></script><script src="/assets/chatgpt-account.js"></script><script src="/assets/online-services.js"></script></body></html>

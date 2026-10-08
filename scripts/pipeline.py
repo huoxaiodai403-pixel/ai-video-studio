@@ -83,8 +83,13 @@ def main():
     fingerprint.update(json.dumps(selected,sort_keys=True).encode())
     source_names = ['pipeline.py','tts_batch.py','align_batch.py','comfy_client.py','prompt_library.py','render_whiteboard.py','whiteboard_scene.py','providers.py','online_pipeline.py','wan_client.py','creation_settings.py']
     source_names += ['flux_klein.py','model_profiles.py','image_references.py','wan_a14b.py']
+    if backends.get('tts') in ('windows','edge','volc') or spec.get('render_mode') == 'excalidraw':
+        source_names += ['lightweight_speech.py','windows_speech.ps1','volc_speech.py']
+    if backends.get('tts')=='volc':
+        import volc_speech
+        fingerprint.update(json.dumps(volc_speech.load(public=True),sort_keys=True).encode())
     if spec.get('render_mode') == 'excalidraw':
-        source_names += ['simon_whiteboard.py', 'simon_bridge.cjs']
+        source_names += ['simon_whiteboard.py', 'simon_bridge.cjs', 'simon_caption_timing.cjs']
     for name in source_names:
         fingerprint.update((ROOT/'scripts'/name).read_bytes())
     if spec.get('render_mode') == 'excalidraw':
@@ -121,7 +126,11 @@ def main():
     }
     if spec.get('render_mode') == 'excalidraw':
         artifacts['align'] += [project/'audio'/(s['id']+'.alignment.json') for s in spec['scenes']]
-    cpu_only = spec.get('render_mode') == 'excalidraw' and not any(s != 'render' for s in stages)
+    if backends.get('asr') == 'synthesis':
+        artifacts['tts'] += [project/'audio'/(s['id']+'.alignment.json') for s in spec['scenes']]
+    cpu_only = not any((stage in ('tts','align') and backends.get('tts' if stage=='tts' else 'asr','local')=='local')
+                       or (stage in ('images','motion') and backends.get('image' if stage=='images' else 'video','local')=='local')
+                       for stage in stages)
     with (nullcontext() if cpu_only else FileLock(str(ROOT/'manifests/gpu.lock'), timeout=0)) as gpu_lock:
         for stage in stages:
             if stage in state.get('completed',[]) and all(p.is_file() and p.stat().st_size for p in artifacts[stage]) and not args.force:
@@ -130,7 +139,13 @@ def main():
             state['running']=stage
             state_file.write_text(json.dumps(state,indent=2),encoding='utf-8')
             try:
-                if stage=='tts' and backends.get('tts')=='online':
+                if stage=='tts' and (backends.get('tts') in ('windows','edge','volc') or (is_board and backends.get('tts')=='online')):
+                    import lightweight_speech
+                    lightweight_speech.tts_project(project,spec)
+                elif stage=='align' and backends.get('asr')=='synthesis':
+                    import lightweight_speech
+                    lightweight_speech.align_project(project,spec)
+                elif stage=='tts' and backends.get('tts')=='online':
                     online_pipeline.tts(project,spec)
                 elif stage=='align' and backends.get('asr')=='online':
                     online_pipeline.align(project,spec)

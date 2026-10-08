@@ -17,6 +17,8 @@ from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_ope
 
 JSON_LIMIT = 8 * 1024 * 1024
 REQUEST_LIMIT = 500_000
+EDITION_FILE = Path(__file__).resolve().parents[1] / 'EDITION'
+FRIEND = EDITION_FILE.is_file() and EDITION_FILE.read_text(encoding='utf-8-sig').strip() == 'friend'
 ACTIONS = {
     'whiteboard-preview': '/api/whiteboard/preview',
     'whiteboard-render': '/api/whiteboard/render',
@@ -32,13 +34,20 @@ ACTIONS = {
     'motion': '/api/motion',
     'transcribe': '/api/transcribe',
     'produce': '/api/produce',
+    'generation-plan': '/api/generation/plan',
+    'generation-draft': '/api/generation/draft',
+    'generation-compose': '/api/generation/compose',
+    'generation-render': '/api/generation/render',
 }
-JOB_PATTERN = r'(?:[a-f0-9]{12}|(?:whiteboard|investigation|speech|music|motion|asr|video|enhance|story)-[a-f0-9]{10})'
+if FRIEND:
+    ACTIONS = {key: value for key, value in ACTIONS.items()
+               if key.startswith(('whiteboard-', 'generation-')) or key == 'speech'}
+JOB_PATTERN = r'(?:[a-f0-9]{12}|gen-[a-f0-9]{32}|(?:whiteboard|investigation|speech|music|motion|asr|video|enhance|story|generation)-[a-f0-9]{10})'
 LIB_PATTERN = r'lib-[a-f0-9]{24}'
 PROJECT_PATTERN = r'[A-Za-z0-9][A-Za-z0-9_-]{0,119}'
 DOWNLOAD_FIELDS = ('video', 'audio', 'subtitle', 'bundle', 'image', 'storyboard_url',
                    'manifest_url', 'verification', 'metadata', 'transcript', 'manuscript',
-                   'source_ledger', 'publish_copy')
+                   'source_ledger', 'publish_copy', 'gif', 'webp', 'qa', 'blend')
 
 
 class StudioError(Exception):
@@ -221,15 +230,24 @@ def save_download(client, path, destination, max_bytes):
 
 def doctor(client):
     root = find_root()
+    discovered_root = root
     checks = {}
     for name, route in (
+        ('runtime', '/api/runtime'), ('jianying', '/api/jianying/status'),
         ('services', '/api/services'), ('whiteboard', '/api/whiteboard/status'),
         ('qwen_tts', '/api/voice-library/qwen-status'), ('music', '/api/music'),
+        ('speech', '/api/speech/options'),
+        ('generation', '/api/generation/catalog'),
     ):
+        if FRIEND and name == 'music':
+            continue
         try:
             checks[name] = client.json(route)
         except StudioError as exc:
             checks[name] = {'reachable': False, 'error': str(exc), 'detail': exc.detail}
+    server_root = checks.get('runtime', {}).get('root')
+    if isinstance(server_root, str) and (Path(server_root) / 'scripts/studio.py').is_file():
+        root = Path(server_root).resolve()
     try:
         jobs = client.json('/api/jobs')
         service_available = isinstance(jobs, dict)
@@ -241,8 +259,17 @@ def doctor(client):
         checks['jobs'] = {'error': str(exc)}
     return {'url': client.base, 'service_available': service_available,
             'root': str(root) if root else None, 'python': sys.executable,
+            'discovered_root': str(discovered_root) if discovered_root else None,
+            'root_source': 'running-service' if isinstance(server_root, str) and root == Path(server_root).resolve() else 'local-discovery',
             'start_script': str(root / 'scripts/Start-Studio.ps1') if root else None,
             'active_jobs': active, 'checks': checks,
+            'creation_options': {
+                'writing': 'Codex writes the storyboard directly; no local LLM required',
+                'images': 'Use the current Codex built-in image tool when available; import its actual saved file',
+                'whiteboard_preview': 'CPU renderer; no image model, speech model or API key required',
+                'narration_and_alignment': 'Windows CPU speech works offline; Edge and Volc return synthesis timestamps. See checks.speech. Online and local settings are separate.',
+                'video_music_sfx': 'Use available tools or imported media; not implied by Codex sign-in',
+            },
             'note': '只读检查；未启动服务、下载模型或执行生成。Codex 写稿无需本地编剧模型。'}
 
 
@@ -260,15 +287,19 @@ def parser():
     listing.add_argument('--query', default='')
     listing.add_argument('--favorite', action='store_true')
     sub.add_parser('voices', help='List actual preset IDs and voice configurations')
-    sub.add_parser('models', help='Read creation settings/model inventory and music engines')
+    sub.add_parser('models', help='Read creation settings' if FRIEND else 'Read creation settings/model inventory and music engines')
+    workshop = sub.add_parser('generation', help='Read generation routes, saved plans or optional Codex handoff')
+    workshop.add_argument('--plan')
+    workshop.add_argument('--handoff', action='store_true')
     item = sub.add_parser('item', help='Read one library item')
     item.add_argument('item_id')
     status = sub.add_parser('status', help='Read job state; optionally wait up to 60 seconds')
     status.add_argument('job_id')
     status.add_argument('--wait', type=float, default=0)
     status.add_argument('--interval', type=float, default=3)
-    project = sub.add_parser('project', help='Read saved investigation storyboard, assets and gaps')
-    project.add_argument('job_id')
+    if not FRIEND:
+        project = sub.add_parser('project', help='Read saved investigation storyboard, assets and gaps')
+        project.add_argument('job_id')
     submit = sub.add_parser('submit', help='Submit a JSON file to a named creation endpoint')
     submit.add_argument('action', choices=tuple(ACTIONS))
     submit.add_argument('--json', required=True, dest='json_file')
@@ -313,7 +344,17 @@ def main(argv=None):
     elif args.command == 'voices':
         result = client.json('/api/voice-library')
     elif args.command == 'models':
-        result = {'creation': client.json('/api/creation'), 'music': client.json('/api/music')}
+        result = {'creation': client.json('/api/creation')}
+        if not FRIEND:
+            result['music'] = client.json('/api/music')
+    elif args.command == 'generation':
+        if args.plan:
+            identifier(args.plan, r'gen-[a-f0-9]{32}', '创作计划 ID')
+            result = client.json('/api/generation/' + ('handoff' if args.handoff else 'plan') + '?' + urlencode({'id': args.plan}))
+        elif args.handoff:
+            raise StudioError('交接指令需要 --plan')
+        else:
+            result = client.json('/api/generation/catalog')
     elif args.command == 'item':
         result = client.item(args.item_id)
     elif args.command == 'project':
@@ -331,10 +372,10 @@ def main(argv=None):
             time.sleep(min(args.interval, remaining))
     elif args.command == 'submit':
         payload = load_payload(args.json_file)
-        if args.action in ('speech', 'image', 'motion', 'transcribe') and payload.get('backend') != 'local':
-            raise StudioError('此分享客户端单项生成要求显式 backend=local，在线提供商请在工作台中按用户选择操作。')
-        if args.action == 'produce' and any(value != 'local' for value in payload.get('storyboard', {}).get('backends', {}).values()):
-            raise StudioError('此分享客户端不提交在线流水线。')
+        if args.action in ('speech', 'image', 'motion', 'transcribe'):
+            allowed = ('local', 'windows', 'edge', 'volc', 'online') if args.action == 'speech' else ('local', 'online')
+            if payload.get('backend') not in allowed:
+                raise StudioError('请显式选择 backend；配音支持 windows/edge/volc/online/local，其他单项支持 local/online。')
         result = client.json(ACTIONS[args.action], payload)
     elif args.command == 'jianying':
         project_id = identifier(args.project, PROJECT_PATTERN, '工程 ID') if args.project else None

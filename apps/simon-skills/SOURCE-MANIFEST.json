@@ -1,0 +1,25 @@
+{
+  "repository": "https://github.com/huoxaiodai403-pixel/simon-skills",
+  "upstream": "https://github.com/trustfuture/simon-skills",
+  "revision": "3ad0a25127c17da48a0e869c9efbf4136c40848b",
+  "license": "MIT",
+  "font_license": "SIL OFL 1.1",
+  "patch_sha256": "a7ad8960acff50ebbcddd2e82351cd7d10595dfe61a0d50b83bd04910a1ce5ce",
+  "files": {
+    "LICENSE": "f833a14653a0a090490e7d17c673f5459ac98c600aa041b628c9a10c7525994d",
+    "skills/whiteboard-video/package.json": "86d2777878d623c61e1c0678b7477afc574c4daa49a784c86e049c20d32245e6",
+    "skills/whiteboard-video/package-lock.json": "5e9ef187d4a4ecc8189ab8b9f4571f5195c6dee8ec2b9b9a2ff3b2e9e2c5c092",
+    "skills/whiteboard-video/config.json": "f4e91431eb2589b1e0fe6f297aac544c4f03aeaf7ca39a0892c04087c6086d80",
+    "skills/whiteboard-video/lib/captions.cjs": "df2045579a366c9166126f8c6fd2f250d6c202d2657ecfd4d45944744874e550",
+    "skills/whiteboard-video/lib/paths.cjs": "2fec38081ae65d56063c737bd37f7dda72366a0e9e7441737090aa011bd27b4b",
+    "skills/whiteboard-video/lib/render.js": "2033696f3aeb9dfdf95d7e44a246ef5206d0a98003ee4d6bc4498a7c0cf3c231",
+    "skills/whiteboard-video/lib/render.html": "6a585e53dd58b673660687033cb336567cee027e839063574c20107d22f23475",
+    "skills/whiteboard-video/lib/scene-dsl.js": "c446148672b2470f350c17726e82e84fc231af1507827c5c25c92c297d867a3d",
+    "skills/whiteboard-video/assets/fonts/OFL.txt": "0df7e09be4c2c850a48bd8beb9cd64b343aad49cd5d3f6cfb2ad2e3d28a56ca4",
+    "skills/whiteboard-video/assets/fonts/Xiaolai-Regular.ttf": "e2f68daf0e72777a8cf58bc83de1b98634b251e537ddbfca24b0ae50d1802da2",
+    "skills/whiteboard-video/examples/2026-09-08 为什么懂很多道理还是没变化/assets/reader.png": "a8e2d7230a8bc97ba7c9a4844c2a5dfa493bf5cc2a4920ad268b25345b2f86ce",
+    "skills/whiteboard-video/examples/2026-09-08 为什么懂很多道理还是没变化/assets/stepper.png": "4f391938e0039c0b67812ade04927fbf493c3588edb78a6019d3c503ce20c3c5",
+    "skills/whiteboard-video/examples/2026-09-08 为什么懂很多道理还是没变化/assets/stuck.png": "9c1d8c141c96c5a121ea8e966898bd034e1f9478b7191498f568e2460ddde07b",
+    "skills/whiteboard-video/examples/2026-09-08 为什么懂很多道理还是没变化/assets/panicked.png": "3e5a695b2969d8c89f58e9fddcd2a0f066e54b2e66da91b0e52c5baaee6ec6cf"
+  }
+}
