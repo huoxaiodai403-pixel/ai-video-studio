@@ -38,7 +38,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "cfee15781af0bcdf1857a2810da8ca3b1988f202a69c5f9ad5674a4bddc513dd"
+      "sha256": "3206ffe0718a7aafe760751a0993ab8a0c67a45ec166c898661c2cd1c77dfff8"
     },
     {
       "path": "Start.cmd",
@@ -202,7 +202,7 @@
     },
     {
       "path": "docs/deployment.md",
-      "sha256": "c947c61a46a1b33d1e5892b276c3a3f01833ff008a835f9067d3c312574070ec"
+      "sha256": "6624397cd8c960dc79a9bac8043db4de88da73f5465be39db3cd8dd3538409c6"
     },
     {
       "path": "docs/design-system.md",
@@ -254,7 +254,7 @@
     },
     {
       "path": "docs/releases/v0.3.1.md",
-      "sha256": "094970b4d7b494c9cc37303b192c2ef62b440548d95d131d96d3b7a76b5c5aea"
+      "sha256": "eef1653d43974837496417690fd6f7559fec79b4df8964e7d42e5ed950179fad"
     },
     {
       "path": "docs/review-workbench.md",

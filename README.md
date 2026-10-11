@@ -35,6 +35,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Open-Studio.ps1
 
 换电脑和旧版升级见 [安装与迁移](docs/deployment.md)，本次修复与验收范围见 [v0.3.1](docs/releases/v0.3.1.md)。
 
+2026-10-12 文档补充：GitHub 下载的 v0.3.1 新包已完成本机隔离安装与三段新内容出片检查，未借用预装 Python 或本地模型；另一台电脑与干净 Windows 虚拟机尚未验收。首次在工作电脑使用请按[部署说明](docs/deployment.md#工作电脑首次部署不安装本地模型)操作。现有 v0.3.1 附件与校验值保持不变。
+
 ## 在 Codex 中使用
 
 直接使用网页时，从「工作流 → 生成工坊」开始，详见 [生成工坊](docs/generation-workshop.md)。以下 Skill 安装只适用于希望配合 Codex 的用户。
