@@ -1,37 +1,24 @@
 <!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>创作流程 · AI STUDIO 朋友版</title>
-  <link rel="stylesheet" href="/assets/workbench.css">
-  <link rel="stylesheet" href="/assets/hub.css">
-</head>
-<body class="hub-page workflows-page" data-workbench-services="true">
-<main>
-  <nav aria-label="工作台导航"><a href="/home">工作台</a><a href="/library">我的作品</a><a href="/gallery">图库</a><a href="/workflows">工作流</a><a href="/settings">设置</a></nav>
-  <p id="services" hidden>检查服务状态…</p>
-  <header class="workflow-heading"><div><span class="hub-kicker">AI STUDIO · 朋友版</span><h1>选一种方式，把想法做成片</h1><p>先创作与预览，再完善声音和画面。所有结果统一保存在作品库。</p></div><a class="hub-button secondary" href="/library">继续已有工程</a></header>
-  <section class="workflow-feature" aria-labelledby="codex-guide"><div><h2 id="codex-guide">让 Codex 负责创作</h2><p>在 Codex 中使用 $ai-video-studio，说明主题、受众、画风和声音偏好。它会检查环境、写稿、安排分镜并提交短样片。</p></div><a class="hub-button secondary" href="/home#codex-start">查看开场示例</a></section>
-  <div class="workflow-list">
-    <article class="workflow-card" id="code-animation-flow">
-      <span class="hub-kicker">文字、图形与步骤</span><h2>代码动画</h2>
-      <p class="workflow-goal">把概念、关系或操作步骤设计成可修改的动画。适合知识解释、产品演示和图形动效。</p>
-      <p class="workflow-output"><span>交付</span>创作计划、动画源码、样片与视频。</p>
-      <details class="workflow-details" open><summary>制作步骤</summary><ol><li>让 Codex 写口播、分镜和自包含动画。</li><li>生成短样片，检查文字、构图、运动和声音。</li><li>提出具体修改，满意后生成完整片段。</li></ol><p class="workflow-note">使用 CPU 渲染器。已有 HTML 可导入；也可选用自己已配置的网页编剧，生成后仍需审看。</p></details>
-      <div class="hub-card-footer"><a class="hub-button primary" href="/generation?route=code-animation">打开代码动画</a></div>
-    </article>
-    <article class="workflow-card" id="whiteboard-flow">
-      <span class="hub-kicker">旁白、要点与逐笔图形</span><h2>手绘白板</h2>
-      <p class="workflow-goal">跟着解说逐步出现文字、图形和贴纸。适合方法讲解、过程演示和简单对比。</p>
-      <p class="workflow-output"><span>交付</span>视频、字幕、封面与可继续编辑的白板工程。</p>
-      <details class="workflow-details" open><summary>制作步骤</summary><ol><li>让 Codex 提炼旁白与视觉要点，写出分镜。</li><li>检查白板预览，调整文字、布局和声音。</li><li>生成有声视频，查看字幕和画面节奏。</li></ol><p class="workflow-note">图形预览使用 CPU，不要求安装生图模型。有声版本需要本机实际可用的语音。</p></details>
-      <div class="hub-card-footer"><a class="hub-button primary" href="/whiteboard">打开手绘白板</a></div>
-    </article>
-  </div>
-  <section class="hub-support" aria-labelledby="finish-heading"><h2 id="finish-heading">补声音、选素材、做精修</h2><p>配音先试听。完成的视频从“我的作品”进入剪映交接；在剪映检查并导出后，再回收独立的 MP4。</p><div class="hub-inline-links"><a href="/speech">生成配音</a><a href="/voices">选择音色</a><a href="/gallery">查看图库</a><a href="/library">作品与剪映交接 →</a></div></section>
-  <p class="hub-status">样片用来判断效果；生成完成不会自动表示画面、声音和字幕已经通过审看。</p>
-</main>
-<script src="/assets/workbench.js"></script>
-</body>
-</html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>工作流 · AI STUDIO</title><link rel="stylesheet" href="/assets/workbench.css"><link rel="stylesheet" href="/assets/hub.css"></head>
+<body class="hub-page workflows-page" data-workbench-services="true"><main>
+<nav aria-label="工作台导航"><a href="/home">工作台</a><a href="/library">我的作品</a><a href="/assets">资源库</a><a href="/workflows">工作流</a><a href="/settings">设置</a></nav><p id="services" hidden>检查服务状态…</p>
+<header class="workflow-heading"><div><span class="hub-kicker">AI STUDIO</span><h1>工作流</h1><p>按当前要做的内容选择，保留每一步的计划与素材。</p></div><div class="hub-actions"><a class="hub-button secondary" href="/library">继续已有工程</a><a href="/home#tools">单步工具 →</a></div></header>
+<div class="workflow-start-grid">
+<section class="workflow-feature" aria-labelledby="generation-entry-title"><div><span class="hub-kicker">从一个想法开始</span><h2 id="generation-entry-title">生成工坊</h2><p>描述主题，安排分镜，逐步制作样片。</p></div><a class="hub-button primary" href="/generation">开始创作 →</a></section>
+<section class="workflow-feature" aria-labelledby="video-tools-title"><div><span class="hub-kicker">已经有了素材</span><h2 id="video-tools-title">剪辑工作台</h2><p>剪辑片段、制作动效、翻译字幕和配音。</p></div><a class="hub-button secondary" href="/video-tools">打开剪辑 →</a></section>
+</div><div class="workflow-catalog-heading"><h2>按内容选择</h2><p class="hub-status" id="workflow-filter-status" role="status" aria-live="polite">正在整理工作流…</p></div>
+<div class="workflow-search"><label for="workflow-search">搜索方法或题材</label><input id="workflow-search" type="search" placeholder="例如：纸艺、诗词、火柴人、书评"><button id="workflow-clear" type="button" hidden>清除筛选</button></div>
+<div class="hub-filter" role="group" aria-label="按内容筛选工作流"><button type="button" data-flow-filter="all" aria-pressed="true">全部工作流</button><button type="button" data-flow-filter="knowledge" aria-pressed="false">讲解与知识</button><button type="button" data-flow-filter="story" aria-pressed="false">故事叙事</button><button type="button" data-flow-filter="animation" aria-pressed="false">动画与预演</button><button type="button" data-flow-filter="custom" aria-pressed="false">自由分镜</button></div>
+<p id="workflow-empty" class="hub-empty" role="status" hidden>没有匹配的方法。试试更短的关键词，或清除筛选查看全部。</p>
+<section data-workflow-section aria-labelledby="creative-methods-heading"><div class="workflow-catalog-heading"><h2 id="creative-methods-heading">视频 Skill · 10 种创作方法</h2><p>从文稿和素材，到配音、画面与成片。</p></div><div id="creative-methods" class="workflow-list"></div></section>
+<section data-workflow-section aria-labelledby="general-workflows-heading"><div class="workflow-catalog-heading"><h2 id="general-workflows-heading">通用制作工具</h2><p>自由组合已有能力，继续你的工程。</p></div><div class="workflow-list">
+<article class="workflow-card" data-flow-category="animation" id="code-animation-flow"><span class="hub-kicker">让信息与图形真正动起来</span><h2>代码动画</h2><p class="workflow-goal">为主题设计文字、图形、节拍和层次，生成可修改的艺术动效或解释动画。</p><details class="workflow-details"><summary>准备与制作步骤</summary><p class="workflow-output"><span>交付</span>可继续编辑的创作计划、画面源代码、预览和视频。</p><dl><dt>准备</dt><dd>内容需求、喜欢的参考与风格约定。</dd><dt>制作步骤</dt><dd><ol><li>在网页生成分镜与画面方案。</li><li>直接生成动画样片，检查构图、文字与动作。</li><li>修改不满意的部分，再生成完整片段。</li></ol></dd></dl><p class="workflow-note">样片用来确认设计。已有 HTML 可在高级入口导入；常规使用不需要编写代码。</p></details><div class="hub-card-footer"><a class="workflow-link" href="/generation?route=code-animation">创作代码动画</a></div></article>
+<article class="workflow-card" data-flow-category="story" id="character-story-flow"><span class="hub-kicker">先固定角色，再讲一个故事</span><h2>角色叙事短片</h2><p class="workflow-goal">制作火柴人、绘本或写实故事，为各镜头安排一致的角色与清晰的动作。</p><details class="workflow-details"><summary>准备与制作步骤</summary><p class="workflow-output"><span>交付</span>镜头计划、参考图、有声叙事片段和审片记录。</p><dl><dt>准备</dt><dd>故事内容、角色描述，可选图库中的角色参考。</dd><dt>制作步骤</dt><dd><ol><li>生成分镜，确认人物外观、风格与台词。</li><li>制作有声配图样片，检查身份、画面与声音。</li><li>逐镜头返修，生成完整片段。</li></ol></dd></dl><p class="workflow-note">默认生成有声配图叙事，沿用当前图像与语音设置。生成时可直接勾选真实动态镜头，调用当前视频模型，耗时更长。</p></details><div class="hub-card-footer"><a class="workflow-link" href="/generation?route=character-story">创作角色短片</a></div></article>
+<article class="workflow-card" data-flow-category="animation" id="character-loop-flow"><span class="hub-kicker">把一个角色做成动作素材</span><h2>角色循环动画</h2><p class="workflow-goal">生成真实关键姿势，制作可以反复使用的透明 GIF 动画。</p><details class="workflow-details"><summary>准备与制作步骤</summary><p class="workflow-output"><span>交付</span>关键姿势、循环 GIF 与质量检查记录。</p><dl><dt>准备</dt><dd>角色参考与动作描述，例如挥手、惊讶或思考。</dd><dt>制作步骤</dt><dd><ol><li>固定角色，设计起始、预备、峰值与恢复姿势。</li><li>生成姿势并组帧，检查造型和透明边缘。</li><li>查看循环衔接，保存动作素材。</li></ol></dd></dl><p class="workflow-note">已有姿势可从图库选入。关键姿势组帧与模型生成连续视频是不同的制作方式。</p></details><div class="hub-card-footer"><a class="workflow-link" href="/generation?route=character-loop">创作循环动画</a></div></article>
+<article class="workflow-card" data-flow-category="animation" id="blender-previs-flow"><span class="hub-kicker">先把空间和镜头走通</span><h2>Blender 动画与镜头预演</h2><p class="workflow-goal">可先做白模验证空间，也可让 Codex 制作完整 Blender 场景，渲染镜头后回到同一工程合成。</p><details class="workflow-details"><summary>准备与制作步骤</summary><p class="workflow-output"><span>交付</span>白模视频与可继续制作的镜头计划。</p><dl><dt>准备</dt><dd>场景与运镜意图，以及已安装的 Blender。</dd><dt>制作步骤</dt><dd><ol><li>描述主体、相机路线与镜头目标。</li><li>生成白模样片，查看空间关系和结束构图。</li><li>保留预演，交给支持视频参考的模型继续制作。</li></ol></dd></dl><p class="workflow-note">预演用于运动参考；复杂角色动画、骨骼和外部生成模型需要各自的资产与环境。</p></details><div class="hub-card-footer"><a class="workflow-link" href="/generation?route=blender-previs">进入 Blender 制作</a></div></article>
+<article class="workflow-card" data-flow-category="knowledge" id="whiteboard-flow"><span class="hub-kicker">讲清一个问题</span><h2>手绘白板</h2><p class="workflow-goal">用简洁文字、图形和逐笔动画，制作知识讲解或方法演示。</p><details class="workflow-details"><summary>准备与制作步骤</summary><p class="workflow-output"><span>交付</span>视频、字幕、横竖封面与可编辑 Excalidraw 场景。</p><dl><dt>准备</dt><dd>一个选题，或可修改的示例分镜。</dd><dt>制作步骤</dt><dd><ol><li>生成草稿，修改旁白、关键词与布局。</li><li>选择全片音色和角色，先看静帧预览。</li><li>生成有声视频，检查字幕与画面节奏。</li></ol></dd></dl><p class="workflow-note">AI 草稿需审阅；生成前可直接编辑每个镜头。</p></details><div class="hub-card-footer"><a class="workflow-link" href="/whiteboard">打开手绘白板</a></div></article>
+<article class="workflow-card" data-flow-category="knowledge" id="investigation-flow"><span class="hub-kicker">把资料组织成叙事</span><h2>热点调查长片</h2><p class="workflow-goal">结合来源台账、分章讲解与画面素材，制作调查或知识长片。</p><details class="workflow-details"><summary>准备与制作步骤</summary><p class="workflow-output"><span>交付</span>成片、字幕、源文稿、来源台账、封面和发布文案草稿。</p><dl><dt>准备</dt><dd>选题、来源原文与可用图片或视频素材。</dd><dt>制作步骤</dt><dd><ol><li>选叙事方式，登记来源并查阅原文。</li><li>审阅章节和分镜，关联素材、角色与配乐。</li><li>补齐覆盖缺口，预览后渲染并检查实际片长。</li></ol></dd></dl><p class="workflow-note">目标分钟数不保证自动达成；来源状态表示查阅记录，成稿仍需审阅。</p></details><div class="hub-card-footer"><a class="workflow-link" href="/investigation">打开长片工作流</a></div></article>
+<article class="workflow-card" data-flow-category="story" id="novel-flow"><span class="hub-kicker">从一个片段开始</span><h2>小说转漫剧</h2><p class="workflow-goal">把小说片段拆成可编辑镜头，安排角色台词、画面与运镜。</p><details class="workflow-details"><summary>准备与制作步骤</summary><p class="workflow-output"><span>交付</span>可重新载入的分镜草稿与合成视频。</p><dl><dt>准备</dt><dd>粘贴小说片段或导入 TXT，确定本批制作范围。</dd><dt>制作步骤</dt><dd><ol><li>选择原文分段或 AI 编剧，审阅改编草稿。</li><li>核对人物与台词，为各镜头安排画面。</li><li>保存草稿，选择静帧或动态镜头后制片。</li></ol></dd></dl><p class="workflow-note">每批最多 12 个镜头，长篇按章节制作；角色外观与改编内容需逐镜头检查。</p></details><div class="hub-card-footer"><a class="workflow-link" href="/novel">打开小说转漫剧</a></div></article>
+<article class="workflow-card" data-flow-category="custom" id="production-flow"><span class="hub-kicker">自主安排每个镜头</span><h2>通用视频制作</h2><p class="workflow-goal">从已有结构化分镜出发，组合插画、动态镜头、配音和字幕。</p><details class="workflow-details"><summary>准备与制作步骤</summary><p class="workflow-output"><span>交付</span>合成视频与保留在项目目录中的镜头素材。</p><dl><dt>准备</dt><dd>载入示例，或准备含旁白和画面描述的分镜 JSON。</dd><dt>制作步骤</dt><dd><ol><li>编辑分镜内容，选择所需的生成环节。</li><li>确认图像、配音、字幕与动态镜头参数。</li><li>提交制作，查看任务结果并审片。</li></ol></dd></dl><p class="workflow-note">适合愿意编辑结构化分镜的用户。新的逐笔白板视频使用独立白板工作流。</p></details><div class="hub-card-footer"><a class="workflow-link" href="/production">打开通用视频制作</a></div></article>
+</div></section><footer class="hub-support"><div class="hub-inline-links"><a href="/assets">准备资源</a><a href="/library">查看已有作品</a><a href="/learn">阅读上手教程</a></div></footer>
+</main><script src="/assets/workbench.js"></script><script src="/assets/workflows.js"></script></body></html>

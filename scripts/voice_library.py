@@ -20,6 +20,15 @@ LOCK = threading.RLock()
 AUDIO_SUFFIXES = {'.wav', '.mp3', '.m4a', '.flac'}
 
 
+class PresetConflict(ValueError):
+    """The editor is attempting to replace a newer saved preset."""
+
+
+def revision(row):
+    return hashlib.sha256(json.dumps(row, ensure_ascii=False, sort_keys=True,
+                                    separators=(',', ':')).encode('utf-8')).hexdigest()
+
+
 def _label(value, name, maximum, empty=False):
     if not isinstance(value, str) or (not empty and not value.strip()) or len(value.strip()) > maximum:
         raise ValueError(f'{name}应为 {0 if empty else 1}–{maximum} 字')
@@ -144,8 +153,20 @@ def _catalog():
                              'voice': voice, 'preview_url': reference['preview_url'], 'source': 'builtin' if example else 'reference'}
     document = _document()
     for saved in document['presets']:
-        row = _record(saved, saved['id'], refs)
-        row.update(preview_url=reference_map.get(row['voice']['reference'],{}).get('preview_url'), source='saved')
+        try:
+            row = _record(saved, saved['id'], refs)
+            row['available'] = True
+        except (ValueError, TypeError, OSError) as error:
+            # Missing reference media must not hide healthy presets or destroy the
+            # original record. Only an explicit, validated edit can repair it.
+            row = {'id': saved['id'], 'name': str(saved.get('name') or '待修复预设'),
+                   'description': str(saved.get('description') or ''),
+                   'tags': [tag for tag in saved.get('tags', []) if isinstance(tag, str)]
+                           if isinstance(saved.get('tags'), list) else [],
+                   'voice': copy.deepcopy(saved.get('voice')) if isinstance(saved.get('voice'), dict) else {},
+                   'available': False, 'error': str(error)}
+        row.update(preview_url=reference_map.get(str(row['voice'].get('reference', '')),{}).get('preview_url'),
+                   source='saved', revision=revision(saved))
         presets[row['id']] = row
     current = settings.load()['voice']
     saved_default = presets.get(document.get('default_preset_id'))
@@ -166,12 +187,14 @@ def resolve(identity, catalog_data=None):
     row = next((row for row in data['presets'] if row['id'] == identity), None)
     if row is None:
         raise ValueError('音色预设不存在，请刷新音色列表后重新选择')
+    if row.get('available') is False:
+        raise ValueError('该音色预设需要修复：' + row['error'])
     # Return an owned copy so a job snapshot can never mutate the live preset.
     return copy.deepcopy(row)
 
 
 def save(value):
-    if not isinstance(value, dict) or set(value) - {'id', 'name', 'tags', 'description', 'voice'}:
+    if not isinstance(value, dict) or set(value) - {'id', 'revision', 'name', 'tags', 'description', 'voice'}:
         raise ValueError('预设字段格式不正确')
     with LOCK:
         PRESETS.parent.mkdir(parents=True, exist_ok=True)
@@ -180,11 +203,17 @@ def save(value):
             supplied_id = value.get('id')
             editing = supplied_id not in (None, '')
             identity = preset_id(supplied_id) if editing else 'voice-' + uuid.uuid4().hex[:16]
-            if editing:
-                resolve(identity, data)
-            row = _record(value, identity, data['references'])
             document = _document()
             rows = document['presets']
+            if editing:
+                existing = next((row for row in rows if row['id'] == identity), None)
+                if existing is None:
+                    raise ValueError('原预设已不存在，请另存为新预设')
+                if 'revision' in value and value['revision'] != revision(existing):
+                    raise PresetConflict('该预设已在其他窗口修改。当前输入仍保留，请另存为新预设或重新打开最新版。')
+            elif 'revision' in value:
+                raise ValueError('新预设不应包含旧版本标识')
+            row = _record(value, identity, data['references'])
             rows = [entry for entry in rows if entry['id'] != identity] + [row]
             if len(rows) > 200:
                 raise ValueError('最多保存 200 个音色预设')
@@ -199,7 +228,7 @@ def set_default(identity):
         with FileLock(str(PRESETS) + '.lock', timeout=5):
             row = resolve(identity)
             # Preserve non-voice configuration and the chosen identity among equal presets.
-            settings.save({'voice': copy.deepcopy(row['voice'])})
+            settings.save_voice_default(copy.deepcopy(row['voice']))
             document = _document()
             document['default_preset_id'] = row['id']
             _write_document(document)

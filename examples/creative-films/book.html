@@ -1,0 +1,14 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#ece5d5}canvas{display:block}</style></head><body><canvas width="720" height="1280"></canvas>
+<!-- CREATIVE_FILM -->
+<script>
+const c=document.querySelector('canvas'),g=c.getContext('2d'),E=Film.ease;
+function rect(x,y,w,h,col){g.fillStyle=col;g.fillRect(x,y,w,h);}
+function book(x,y,s,a=0){g.save();g.translate(x,y);g.rotate(a);g.scale(s,s);g.shadowColor='#33291636';g.shadowBlur=22;g.shadowOffsetX=14;g.shadowOffsetY=20;rect(-170,-240,340,480,'#304b68');g.shadowColor='transparent';rect(-156,-238,7,476,'#77929e');rect(27,-194,86,264,'#ece6d4');Film.text(g,'论',69,-133,58,'#30475c','center');Film.text(g,'语',69,-49,58,'#30475c','center');for(let i=0;i<6;i++){g.strokeStyle='#cec4a8';g.lineWidth=3;g.beginPath();g.moveTo(-179,-181+i*76);g.lineTo(-147,-166+i*76);g.lineTo(-179,-149+i*76);g.stroke();}rect(93,209,24,84,'#ae6350');g.restore();}
+function pages(x,y,s){g.save();g.translate(x,y);g.scale(s,s);g.shadowColor='#382b2330';g.shadowBlur=14;rect(-285,-194,570,389,'#eee9d8');g.shadowColor='transparent';rect(-2,-194,5,389,'#cfc7b2');for(let i=0;i<7;i++){rect(-253,-150+i*39,202,2,'#c6bca3');rect(38,-150+i*39,202,2,'#c6bca3');}g.restore();}
+window.renderFrame=function(t){const s=Film.shot(t),p=E(s.progress);g.fillStyle='#ece5d5';g.fillRect(0,0,720,1280);for(let i=0;i<130;i++){g.fillStyle='#6f614a0a';g.fillRect((i*133)%720,(i*211)%1280,3,1);}Film.text(g,'一页一问',55,95,27,'#5c665f','left',500);Film.text(g,'读书笔记 / 原创封面示意',55,135,18,'#898370','left',400);
+if(s.index===0){Film.text(g,'从一个问题',55,239,54,'#304b68');Film.text(g,'开始读。',55,313,54,'#304b68');book(384,673,.98,-.08+.06*p);}
+if(s.index===1){Film.text(g,'原文 · 学而第一',55,228,31,'#304b68','left',500);pages(360,639,1.05);rect(367,443,223,390,'#eee9d8');const chars='学而时习之';g.font='48px KaiTi,serif';g.textAlign='center';g.textBaseline='middle';chars.split('').forEach((v,i)=>{g.globalAlpha=E((s.local-i*.23)/.4);g.fillStyle='#384b4c';g.fillText(v,467,486+i*65);});g.globalAlpha=1;Film.text(g,'原句节选；下镜为现代阅读建议',360,948,19,'#8b7f69','center',400);}
+if(s.index===2){Film.text(g,'拿自己的经历',55,243,49,'#304b68');Film.text(g,'来对照。',55,310,49,'#304b68');g.save();g.translate(352,630);g.rotate(-.1);pages(0,0,.86);g.restore();g.save();g.translate(293,760);g.rotate(.09);rect(-158,-86,283,156,'#d6c297');Film.text(g,'哪里做到了？',-132,-35,28,'#494e43');Film.text(g,'哪里还没做到？',-132,18,25,'#494e43');g.restore();g.save();g.translate(543,805);g.rotate(.42+.07*Math.sin(s.local));rect(-7,-178,14,294,'#9a5946');g.fillStyle='#ccb589';g.beginPath();g.moveTo(-7,116);g.lineTo(7,116);g.lineTo(0,141);g.fill();g.restore();}
+if(s.index===3){Film.text(g,'不急着读完',360,260,53,'#304b68','center');Film.text(g,'先把这一页读明白',360,337,33,'#717868','center',500);book(360,694,.84-.08*p,.04);Film.text(g,'书签留下，问题继续。',360,1018,23,'#7a7c68','center',400);}
+Film.caption(g,t,720,1280);};
+</script></body></html>

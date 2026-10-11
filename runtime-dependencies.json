@@ -4,6 +4,7 @@
   "minimum": {
     "python": "3.11-3.14 x64",
     "python_requirements": "requirements-studio.txt",
+    "python_bootstrap": {"version": "3.13.16", "url": "https://api.nuget.org/v3-flatcontainer/python/3.13.16/python.3.13.16.nupkg", "sha256": "95fad176338f1d6a799e45946488063f4aa61764e6cff2f132ddeffbf7a04c34", "source": "CPython official NuGet package; application-local, no registry or PATH changes"},
     "ffmpeg": "provided by imageio-ffmpeg wheel; copied locally only when absent",
     "gpu_required": false,
     "model_weights_downloaded": false

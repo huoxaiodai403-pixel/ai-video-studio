@@ -1,0 +1,16 @@
+{
+ "title":"修伞人 · 人生漫画","width":1280,"height":720,"fps":25,
+ "speech":{"backend":"windows","voice_id":"Microsoft Huihui Desktop","speed":1},
+ "scene_html":"life.html","assets":{"comic":"assets/comic.webp"},
+ "audio_bed":{"path":"assets/comic.wav","gain":0.27,"loop":true,"credit":"项目自制轻声音乐与雨声，无外部录音；make_soundbeds.py"},
+ "style":"黑色漫画格框，暖金与灰绿，固定黑发圆眼镜、绿围裙的虚构修伞人。图片推拉平移明确作为剪辑运动。",
+ "brief":"原创虚构人生片段，保留连续旁白。开场快闪职业字卡后定格修伞人，再以四种景别组织人物、手部、开伞与离去。四格原图由内置 imagegen 生成，非视频模型动态。",
+ "scenes":[
+  {"id":"opening","narration":"今天体验的人生副本是，","visual":"不同职业字卡短促切换","action":"送信人、木匠、修伞人字卡快闪后停止","camera":"平面标题"},
+  {"id":"reveal","narration":"修伞人。","visual":"门口主角定格，职业标题显现","action":"固定主角初次亮相","camera":"定格全景"},
+  {"id":"shop","narration":"你推开小店的门，第一把伞已经在等你。","visual":"同一修伞人在晨雨中推开旧店门","action":"静图轻推近，保持人物与店铺","camera":"室内广角建立空间"},
+  {"id":"hands","narration":"旧伞骨卡住了，你先停下来，找准那一处弯折。","visual":"双手用钳子修整一处伞骨","action":"静图由左向右，停在工具与折点","camera":"手部极近特写"},
+  {"id":"open","narration":"撑开的那一刻，雨声又落回了伞面。","visual":"同一主角撑起修好的红伞","action":"由近到远揭示完整伞面","camera":"低机位中景"},
+  {"id":"leave","narration":"你没有修好所有天气，只是让一个人能继续赶路。","visual":"主角站在门边，看客人撑着同一红伞离开","action":"静图横移，以街道留白收束","camera":"门框中的远景"}
+ ]
+}

@@ -6,20 +6,29 @@ not an HTML sanitizer or a renderer for generated/user-provided media.
 from dataclasses import dataclass
 from html import escape, unescape
 from html.parser import HTMLParser
+import hashlib
+from pathlib import Path
 import re
 from urllib.parse import urlsplit
 import studio_edition
 
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def storage_scope(root=None):
+    return hashlib.sha256(str(Path(root or ROOT).resolve()).casefold().encode('utf-8')).hexdigest()[:24]
+
 
 GROUPS = (
     ('home', '工作台', '/home', ()),
-    ('library', '我的作品', '/library', ()),
-    ('assets', '资源库', '/assets', (('/gallery', '图库'), ('/audio-library', '音频库'), ('/voices', '音色库'), ('/model-library', '模型库'))),
-    ('workflows', '工作流', '/workflows', (('/generation', '生成工坊'), ('/whiteboard', '手绘白板'), ('/investigation', '热点调查长片'), ('/novel', '小说转漫剧'), ('/production', '通用视频制作'))),
+    ('library', '我的作品', '/library', (('/review', '审片与返修'),)),
+    ('assets', '资源库', '/assets', (('/gallery', '图库'), ('/characters', '角色库'), ('/audio-library', '音频库'), ('/voices', '音色库'), ('/model-library', '模型库'))),
+    ('workflows', '工作流', '/workflows', (('/video-tools', '剪辑工作台'), ('/generation', '生成工坊'), ('/whiteboard', '手绘白板'), ('/investigation', '热点调查长片'), ('/novel', '小说转漫剧'), ('/production', '通用视频制作'))),
     ('tools', '创作工具', '/home#tools', (('/image', '图像创作'), ('/motion', '短镜头'), ('/speech', '配音与声音设计'), ('/music', '音乐与音效生成'), ('/subtitles', '语音转字幕'), ('/enhance', '视频增强与补帧'))),
-    ('settings', '设置', '/settings', (('/settings', '在线服务'), ('/models', '本地模型'), ('http://127.0.0.1:8188', 'ComfyUI'), ('/learn', '上手教程'), ('/guide', '使用说明'), ('/director', '运镜词典与方法'), ('/plan', '部署方案'), ('/research', '文章与项目参考'))),
+    ('settings', '设置', '/settings', (('/models', '本地模型'), ('/runtime-settings', '运行参数'))),
 )
-_LOCAL_PATHS = {'/', '/runtime-settings', '/docs/view', '/deployment'} | {
+HELP = (('/learn', '上手教程'), ('/guide', '使用说明'), ('/director', '运镜词典'), ('/plan', '部署方案'), ('/research', '文章与项目参考'))
+_LOCAL_PATHS = {'/', '/settings', '/docs/view', '/deployment', '/brief'} | {href for href, _ in HELP} | {
     urlsplit(href).path for _, _, href, children in GROUPS
     for href in (href, *(href for href, _ in children)) if href.startswith('/')
 }
@@ -35,7 +44,7 @@ _ICONS = {
 # Geometry is available even before the external stylesheet has arrived. Full
 # visual rules and transitions belong to workbench.css, not this critical block.
 _CRITICAL = '''<meta charset="utf-8"><meta name="color-scheme" content="dark">
-<style id="workbench-critical">html{background:#10151d;color-scheme:dark;scrollbar-gutter:stable}body{margin:0;background:#10151d;color:#edf3fa}main{margin-left:224px;margin-right:0;box-sizing:border-box;min-width:0}.sidebar,.sidebar *{box-sizing:border-box}.sidebar{position:fixed;inset:0 auto 0 0;width:224px;background:#151c26;border-right:1px solid #2d394b;z-index:30;display:flex;flex-direction:column;font:13px/1.6 system-ui,"Microsoft YaHei",sans-serif}.sidebar a{text-decoration:none;color:#aab3c1}.sidebar .brand{min-height:80px;display:flex;align-items:center;gap:11px;padding:17px 21px}.brand-mark{width:36px;height:36px;flex-shrink:0}.brand strong,.brand small{display:block}.sidebar .nav-create{display:flex;align-items:center;justify-content:center;min-height:42px;margin:0 16px 18px}.sidebar nav{padding:0 12px 18px;min-height:0;overflow-y:auto;flex:1}.sidebar nav a{display:flex;align-items:center;gap:11px;min-height:42px;padding:9px 12px;margin:3px 0}.sidebar .nav-primary-list{display:grid;gap:4px}.sidebar nav .nav-primary{min-height:42px;margin:0}.nav-icon{width:19px;height:19px;flex:0 0 19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.nav-context[hidden]{display:none!important}.sidebar-footer{padding:16px 22px 20px;flex-shrink:0}.sidebar-footer small{display:block}.nav-toggle,.nav-shade{display:none}.workbench-skip{position:fixed;left:16px;top:-100px;z-index:100}.workbench-skip:focus{top:12px}@media(max-width:700px){main{margin-left:0;padding-top:78px}.sidebar{top:54px;width:min(280px,85vw);transform:translateX(-100%);visibility:hidden}.nav-toggle{display:block;position:fixed;inset:0 0 auto;min-height:54px;width:100%;margin:0;z-index:40;background:#151c26;color:#edf3fa;border:0}.nav-shade{position:fixed;inset:54px 0 0;z-index:25}body.nav-open .sidebar{transform:none;visibility:visible}body.nav-open .nav-shade{display:block}}</style>'''
+<style id="workbench-critical">html{background:#14191f;color-scheme:dark;scrollbar-gutter:stable}body{margin:0;background:#14191f;color:#eef1f7}main{margin-left:208px;margin-right:0;box-sizing:border-box;min-width:0}.sidebar,.sidebar *{box-sizing:border-box}.sidebar{position:fixed;inset:0 auto 0 0;width:208px;background:#181d24;border-right:1px solid #2c3541;z-index:30;display:flex;flex-direction:column;font:13px/1.6 system-ui,"Microsoft YaHei",sans-serif}.sidebar a{text-decoration:none;color:#b3bdca}.sidebar .brand{min-height:84px;display:flex;align-items:center;gap:10px;padding:20px}.brand-mark{width:34px;height:34px;flex-shrink:0}.brand strong,.brand small{display:block}.sidebar .nav-create{display:flex;align-items:center;justify-content:center;min-height:40px;margin:0 16px 24px}.sidebar nav{padding:0 12px 12px;min-height:0;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:24px}.nav-primary-list{display:grid;gap:6px}.sidebar .nav-primary{display:flex;align-items:center;gap:12px;min-height:44px;padding:10px 12px}.nav-bottom{margin-top:auto}.nav-icon{width:19px;height:19px;flex:0 0 19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.nav-help>div{position:fixed;bottom:70px;left:200px;z-index:45}.sidebar-footer{padding:14px 22px;flex-shrink:0}.nav-toggle,.nav-shade{display:none}.workbench-skip{position:fixed;left:16px;top:-100px;z-index:100}.workbench-skip:focus{top:12px}@media(max-width:700px){main{margin-left:0;padding-top:78px}.sidebar{top:54px;width:min(280px,85vw);transform:translateX(-100%);visibility:hidden}.nav-toggle{display:block;position:fixed;inset:0 0 auto;min-height:54px;width:100%;margin:0;z-index:40;background:#181d24;color:#eef1f7;border:0}.nav-shade{position:fixed;inset:54px 0 0;z-index:25}body.nav-open .sidebar{transform:none;visibility:visible}body.nav-open .nav-shade{display:block}.nav-help>div{position:static}}</style>'''
 
 
 @dataclass
@@ -103,24 +112,19 @@ def _selected(path):
     for group, _, href, children in GROUPS:
         if href == path or any(child == path for child, _ in children):
             return group
-    return 'settings'
+    return 'help'
 
 
 def _shell(path, main_id, title, old_links):
     selected = _selected(path)
     canonical = '/home' if path == '/' else path
-    groups = tuple((key, label, href, tuple((child, text) for child, text in children
-                   if not studio_edition.is_friend() or child.startswith('/') and studio_edition.allowed(urlsplit(child).path)))
-                   for key, label, href, children in GROUPS)
+    groups = GROUPS
 
     def link(href, label, group, primary=False):
         attributes = dict(old_links.get(href, {}))
-        repeated_as_child = primary and any(child == href for item, _, _, children in groups if item == group for child, _ in children)
         attributes.update(href=href, **{'class': 'nav-primary' + (' is-active' if selected == group else '') if primary else 'nav-child', 'data-nav-group': group})
         attributes.pop('aria-current', None)
-        if repeated_as_child:
-            attributes.pop('id', None)
-        if href == canonical and not repeated_as_child:
+        if href == canonical:
             attributes['aria-current'] = 'page'
         icon = ('<svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + _ICONS[group] + '</svg>') if primary else ''
         external = ''
@@ -129,14 +133,28 @@ def _shell(path, main_id, title, old_links):
             external = '<span class="external" aria-hidden="true">↗</span>'
         return '<a' + _attrs(attributes) + '>' + icon + '<span>' + escape(label) + '</span>' + external + '</a>'
 
-    primary = ''.join(link(href, label, group, True) for group, label, href, _ in groups)
-    contexts = ''.join('<section class="nav-context" data-nav-group="' + group + '" aria-label="' + label + '分类"' + ('' if selected == group else ' hidden') + '>' + ('<div class="nav-context-title">' + label + '</div>' if children else '') + ''.join(link(href, text, group) for href, text in children) + '</section>' for group, label, _, children in groups)
+    primary = ''.join(link(href, label, group, True) for group, label, href, _ in groups if group != 'settings')
+    settings = link('/settings', '设置', 'settings', True)
+    help_links = ''.join(link(href, text, 'help') for href, text in HELP)
     return ('<a class="workbench-skip" href="#' + escape(main_id, quote=True) + '">跳到主要内容</a>'
             '<button type="button" class="nav-toggle" id="workbench-toggle" aria-label="展开导航" aria-controls="workbench-nav" aria-expanded="false">☰  AI STUDIO · ' + escape(title) + '</button>'
-            '<aside class="sidebar" id="workbench-nav" data-shell="server"><a class="brand" href="/home"><img class="brand-mark" src="/assets/brand/studio-mark.svg" width="36" height="36" alt=""><span><strong>AI STUDIO</strong><small>' + ('朋友版' if studio_edition.is_friend() else '完整开发版') + '</small></span></a>'
-            '<a class="nav-create" href="/generation">＋ 开始创作</a><nav aria-label="工作台导航"><div class="nav-primary-list">' + primary + '</div><div class="nav-contexts">' + contexts + '</div></nav>'
-            '<div class="sidebar-footer"><span class="status-dot"></span><span class="health">正在检查服务</span><small>本地优先 · 支持在线接口</small></div></aside>'
+            '<aside class="sidebar" id="workbench-nav" data-shell="server" data-current-group="' + selected + '"><a class="brand" href="/home"><img class="brand-mark" src="/assets/brand/studio-mark.svg" width="36" height="36" alt=""><span><strong>AI STUDIO</strong><small>' + '创作工作台' + '</small></span></a>'
+            '<a class="nav-create" href="/workflows">＋ 开始创作</a><nav aria-label="工作台导航"><div class="nav-primary-list">' + primary + '</div><div class="nav-bottom">' + settings + '<details class="nav-help"><summary>帮助与参考</summary><div>' + help_links + '</div></details></div></nav>'
+            '<div class="sidebar-footer"><span class="status-dot"></span><span class="health">正在检查服务</span></div></aside>'
             '<button type="button" class="nav-shade" id="workbench-shade" tabindex="-1" aria-label="关闭导航"></button>')
+
+
+def _context(path, title, old_links, current_href=None):
+    """Page-level wayfinding. Global navigation never expands a second directory."""
+    group = next((item for item in GROUPS if item[0] == _selected(path)), None)
+    if path in ('/', '/home', '/workflows', '/library', '/assets', '/settings', '/video-tools'):
+        return ''
+    parent, label = (group[2], group[1]) if group else ('/learn', '帮助与参考')
+    attrs = dict(old_links.get(path, {}))
+    if any(href == path for href, _ in HELP):
+        attrs.pop('id', None)
+    attrs.update(href=current_href or path, **{'aria-current': 'page'})
+    return '<nav class="workspace-context" aria-label="当前位置"><a href="' + parent + '">' + label + '</a><span aria-hidden="true">/</span><a' + _attrs(attrs) + '>' + escape(title) + '</a></nav>'
 
 
 def render_page(source: str, pathname: str) -> str:
@@ -159,10 +177,8 @@ def render_page(source: str, pathname: str) -> str:
     document_end = html.close_start if html and html.close_start is not None else len(source)
     edits, old_links = [], {}
     shared_css = None
+    design_assets = ('/assets/design-tokens.css', '/assets/ui-components.css')
     for tag in parsed.tags:
-        if studio_edition.is_friend() and tag.name == 'a' and tag.attrs.get('href', '').startswith('/') and not studio_edition.allowed(urlsplit(tag.attrs['href']).path):
-            attributes = {**tag.attrs, 'hidden': None, 'aria-hidden': 'true', 'tabindex': '-1'}
-            edits.append((tag.start, tag.end, '<a' + _attrs(attributes) + '>'))
         if tag.name == 'nav' and tag.attrs.get('aria-label') == '工作台导航' and any(parent is main for parent in tag.parents):
             if tag.close_end is not None:
                 edits.append((tag.start, tag.close_end, ''))
@@ -170,12 +186,20 @@ def render_page(source: str, pathname: str) -> str:
                     if child.name == 'a' and any(parent is tag for parent in child.parents) and child.attrs.get('href'):
                         old_links.setdefault(child.attrs['href'], child.attrs)
         if tag.name == 'link' and 'stylesheet' in (tag.attrs.get('rel') or '').lower().split() and _local_asset(tag.attrs.get('href'), '/assets/workbench.css'):
-            shared_css = source[tag.start:tag.end]
+            shared_css = source[tag.start:tag.end] + '<script src="/assets/draft-migration.js"></script>'
+            edits.append((tag.start, tag.end, ''))
+        if tag.name == 'link' and any(_local_asset(tag.attrs.get('href'), asset) for asset in design_assets):
             edits.append((tag.start, tag.end, ''))
         if tag.name == 'meta' and ('charset' in tag.attrs or (tag.attrs.get('name') or '').lower() == 'color-scheme'):
             edits.append((tag.start, tag.end, ''))
         if tag.name in ('head', 'body') and tag.close_start is not None:
             edits.append((tag.close_start, tag.close_end, ''))
+        # Top-layer content can be a sibling of main. Give each such component
+        # the same scope without pulling navigation chrome into page controls.
+        if tag.name == 'dialog' and not any(parent is main for parent in tag.parents):
+            attributes = dict(tag.attrs)
+            attributes['class'] = ' '.join(dict.fromkeys((attributes.get('class', '') + ' ui-scope').split()))
+            edits.append((tag.start, tag.end, '<dialog' + _attrs(attributes) + '>'))
     main_id = main.attrs.get('id') or 'workbench-main'
     if not main.attrs.get('id'):
         used_ids = {tag.attrs.get('id') for tag in parsed.tags}
@@ -184,6 +208,7 @@ def render_page(source: str, pathname: str) -> str:
             main_id = 'workbench-main-' + str(suffix)
             suffix += 1
     additions = {}
+    additions['class'] = ' '.join(dict.fromkeys((main.attrs.get('class', '') + ' ui-scope').split()))
     if not main.attrs.get('id'):
         additions['id'] = main_id
     if 'tabindex' not in main.attrs:
@@ -205,13 +230,18 @@ def render_page(source: str, pathname: str) -> str:
 
     heading = first('h1')
     title = unescape(re.sub('<[^>]+>', '', source[heading.end:heading.close_start])).strip() if heading and heading.close_start is not None else '工作台'
+    title = {'/gallery': '图库与视频素材', '/audio-library': '音乐与音频库'}.get(path, title)
     if path in ('/', '/home'):
         title = '工作台'
     head_content = part(head_start, head_end)
     # A doctype preceding an implicit <html> must not end up inside <head>.
     head_content = re.sub(r'<!doctype\b[^>]*>', '', head_content, flags=re.I)
-    html_open = '<html' + _attrs({**(html.attrs if html else {'lang': 'zh-CN'}), 'data-studio-edition': studio_edition.edition()}) + '>'
+    html_open = '<html' + _attrs({**(html.attrs if html else {'lang': 'zh-CN'}), 'data-studio-edition': studio_edition.edition(), 'data-studio-storage-scope': storage_scope()}) + '>'
     head_open = source[head.start:head.end] if head else '<head>'
     body_open = source[body.start:body.end] if body else '<body>'
-    stylesheet = shared_css or '<link rel="stylesheet" href="/assets/workbench.css">'
-    return '<!doctype html>' + html_open + head_open + _CRITICAL + head_content + stylesheet + '</head>' + body_open + _shell(path, main_id, title, old_links) + part(body_start, document_end) + '</body></html>'
+    stylesheet = '<link rel="stylesheet" href="/assets/ui-components.css">' + (shared_css or '<link rel="stylesheet" href="/assets/workbench.css"><script src="/assets/draft-migration.js"></script>')
+    content = part(body_start, document_end)
+    # Insert inside main while preserving every original control and script.
+    context = _context(path, title, old_links, pathname)
+    content = re.sub(r'(<main\b[^>]*>)', lambda match: match[0] + context, content, count=1)
+    return '<!doctype html>' + html_open + head_open + _CRITICAL + '<link rel="stylesheet" href="/assets/design-tokens.css"><script src="/assets/studio-storage.js"></script>' + head_content + stylesheet + '</head>' + body_open + _shell(path, main_id, title, old_links) + content + '</body></html>'

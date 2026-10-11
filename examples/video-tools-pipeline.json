@@ -1,0 +1,8 @@
+{
+  "title": "组合制作示例：动效与字幕",
+  "steps": [
+    {"skill": "remotion", "options": {"props": {"title": "从素材到成片", "subtitle": "动效 · 剪辑 · 字幕 · 配音 · 审片"}, "duration": 4, "width": 1280, "height": 720}},
+    {"skill": "ffmpeg-skill", "options": {"cuts": [{"start": 0, "end": 3}], "width": 1280, "height": 720, "fit": "pad"}},
+    {"skill": "agent-caption", "options": {"cues": [{"start": 0.3, "end": 2.8, "text": "把每一步安排在同一份工程里"}], "burn": true}}
+  ]
+}

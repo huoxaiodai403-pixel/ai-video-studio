@@ -1,0 +1,110 @@
+/* Shared primitives. Layout, sizing of media and domain-specific controls stay
+   with the page pattern. Do not add route selectors to this file. */
+html { background: var(--studio-bg); scrollbar-gutter: stable; scroll-padding-top: 24px; }
+body { margin: 0; background: var(--studio-bg); color: var(--studio-text); font: var(--studio-text-base)/var(--studio-leading) var(--studio-font); }
+[hidden] { display: none !important; }
+.ui-scope, .ui-scope * { box-sizing: border-box; }
+.ui-scope :where(h1,h2,h3,p,label,summary) { overflow-wrap: anywhere; }
+.ui-scope :where(h1) { font-size: var(--studio-text-xl); line-height: 1.3; letter-spacing: -.02em; margin: 0 0 8px; }
+.ui-scope :where(h2) { font-size: var(--studio-text-lg); line-height: 1.5; }
+.ui-scope :where(h3) { font-size: var(--studio-text-base); line-height: 1.5; }
+.ui-scope :where(p,.small) { color: var(--studio-muted); }
+.ui-scope :where(.small) { font-size: var(--studio-text-xs); }
+/* Sections group content; only explicit panels paint a surface and own its inset. */
+:where(.ui-scope .ui-panel) { padding: var(--studio-panel-padding); background: var(--studio-surface); border: 1px solid var(--studio-soft-line); border-radius: var(--studio-radius-panel); }
+.ui-scope :where(a) { color: var(--studio-link); text-decoration: none; transition: color var(--studio-motion-feedback); }
+.ui-scope :where(a:hover) { color: var(--studio-accent-hover); }
+.ui-scope .ui-title-link { color: var(--studio-text); }
+.ui-scope .ui-title-link:hover { color: var(--studio-link); }
+.ui-scope .ui-action-row {
+  display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: var(--studio-space-3);
+  padding: var(--studio-space-3); border-radius: var(--studio-radius-control); color: var(--studio-text);
+  transition: background-color var(--studio-motion-feedback), color var(--studio-motion-feedback);
+}
+.ui-scope .ui-action-row > :where(strong,span) { grid-column: 1; }
+.ui-scope .ui-action-row::after { content: "→"; grid-column: 2; grid-row: 1 / 3; align-self: center; color: var(--studio-muted); }
+.ui-scope .ui-action-row:where(:hover,:focus-visible) { background: var(--studio-raised); color: var(--studio-link); }
+.ui-scope :where(label) { font-size: var(--studio-text-sm); min-width: 0; }
+.ui-scope :where(.form-field) { display: flex; flex-direction: column; }
+.ui-scope :where(.form-grid) { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--studio-space-4); }
+.ui-scope :where(.full) { grid-column: 1 / -1; }
+.ui-scope :where(.form-field) > :where(input,select,textarea) { margin-top: 6px; }
+.ui-scope :is(input,textarea,select) {
+  min-width: 0; max-width: 100%; font: inherit; font-size: var(--studio-text-sm);
+  border: 1px solid var(--studio-field-border); border-radius: var(--studio-radius-control);
+  padding: 9px 11px; background: var(--studio-inset); color: var(--studio-text); caret-color: var(--studio-accent);
+  transition: border-color var(--studio-motion-feedback), background-color var(--studio-motion-feedback);
+}
+.ui-scope :where(input:not([type=checkbox]):not([type=radio]):not([type=range]),textarea,select) { width: 100%; min-height: var(--studio-control-height); }
+.ui-scope :where(textarea) { display: block; resize: vertical; min-height: 96px; line-height: 1.8; }
+.ui-scope input.editable-title { background: var(--studio-inset); border-color: var(--studio-field-border); border-radius: var(--studio-radius-control); box-shadow: none; }
+.ui-scope input.editable-title:where(:hover,:focus) { border-color: var(--studio-accent); }
+.ui-scope :is(input[type=checkbox],input[type=radio],input[type=range]) { accent-color: var(--studio-accent); }
+.ui-scope :is(input[type=checkbox],input[type=radio]) { width: auto; min-height: 0; padding: 0; }
+.ui-scope ::placeholder { color: var(--studio-placeholder); }
+.ui-scope :is(input,textarea,select):disabled { opacity: .6; cursor: not-allowed; }
+.ui-scope :is(input,textarea,select)[aria-invalid=true],.ui-scope :is(input,textarea,select):user-invalid { border-color: var(--studio-danger-line); }
+.ui-scope :where(button,a,input,select,textarea,summary,[tabindex="0"]):focus-visible { outline: 2px solid var(--studio-accent); outline-offset: 3px; }
+.ui-scope :where(button,.button,.hub-button,.btn-primary,.btn-secondary,.tool-primary-link) {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: var(--studio-control-height); padding: 9px 14px;
+  border: 1px solid var(--studio-line); border-radius: var(--studio-radius-control);
+  background: var(--studio-raised); color: var(--studio-text); font: 500 var(--studio-text-sm)/1.5 var(--studio-font);
+  text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--studio-motion-feedback), border-color var(--studio-motion-feedback), transform var(--studio-motion-press) var(--studio-ease-out);
+}
+.ui-scope :where(button,.button,.hub-button,.btn-primary,.btn-secondary,.tool-primary-link):hover:not(:disabled) { background: var(--studio-hover); filter: none; text-decoration: none; }
+.ui-scope :is(button.primary,.button.primary,.hub-button.primary,.btn-primary,.tool-primary-link) { background: var(--studio-accent); color: var(--studio-on-accent); border-color: transparent; font-weight: 600; }
+.ui-scope :is(button.primary,.button.primary,.hub-button.primary,.btn-primary,.tool-primary-link):where(:hover:not(:disabled)) { background: var(--studio-accent-hover); }
+.ui-scope :is(button.quiet,.button.quiet) { background: transparent; color: var(--studio-link); border-color: transparent; font-weight: 400; }
+.ui-scope :is(button.quiet,.button.quiet):where(:hover:not(:disabled)) { background: var(--studio-raised); }
+.ui-scope :is(button.danger,.button.danger) { color: var(--studio-danger); border-color: var(--studio-danger-line); background: var(--studio-danger-bg); }
+.ui-scope :is(button,.button,.hub-button):where(:active:not(:disabled)) { transform: translateY(1px); }
+.ui-scope button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.ui-scope button[aria-busy=true] { cursor: progress; }
+/* Media and title entries are semantic buttons, not filled action controls. */
+.ui-scope .ui-media-preview {
+  display: flex; align-items: center; justify-content: center; padding: 0; min-height: 0;
+  border: 0; border-radius: 0; background: var(--studio-inset); color: var(--studio-muted);
+}
+.ui-scope .ui-media-preview:hover:not(:disabled) { background: var(--studio-inset); }
+.ui-scope .ui-card-title {
+  display: block; width: 100%; min-height: 0; padding: 0; border: 0; border-radius: 0;
+  background: transparent; color: var(--studio-text); text-align: left;
+  font: 600 var(--studio-text-base)/1.5 var(--studio-font);
+}
+.ui-scope .ui-card-title:hover:not(:disabled) { background: transparent; color: var(--studio-link); }
+.ui-scope .ui-card-title > span {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden; overflow-wrap: anywhere; height: 3em;
+}
+.ui-scope .ui-media-preview:focus-visible { outline-offset: -3px; }
+.ui-scope :where(summary) { cursor: pointer; color: var(--studio-text); }
+.ui-scope :is(.status-pill,.job-state,.library-badge) { border-radius: 5px; font-size: 11px; padding: 3px 8px; border: 1px solid var(--studio-line); background: var(--studio-raised); color: var(--studio-muted); white-space: nowrap; }
+.ui-scope :is(.status-pill.success,.job-state[data-state=done],.library-badge.done) { color: var(--studio-success); background: var(--studio-success-bg); border-color: var(--studio-success-line); }
+.ui-scope :is(.job-state[data-state=queued],.job-state[data-state=running],.library-badge.queued,.library-badge.running) { color: var(--studio-warning); background: var(--studio-warning-bg); border-color: var(--studio-warning-line); }
+.ui-scope :is(.job-state[data-state=error],.job-state[data-state=interrupted],.library-badge.error) { color: var(--studio-danger); background: var(--studio-danger-bg); border-color: var(--studio-danger-line); }
+.ui-scope :is(.error,.library-error,[data-error=true]) { color: var(--studio-danger); }
+.ui-scope :is(.service-alert,.verify-error) { color: var(--studio-danger); background: var(--studio-danger-bg); border: 1px solid var(--studio-danger-line); border-radius: var(--studio-radius-control); padding: 13px; overflow-wrap: anywhere; }
+:is(dialog.ui-scope,.ui-scope dialog) { max-width: calc(100vw - 24px); max-height: calc(100dvh - var(--studio-dialog-clearance)); overflow: auto; overscroll-behavior: contain; padding: var(--studio-dialog-padding); border: 1px solid var(--studio-field-border); border-radius: var(--studio-radius-dialog); background: var(--studio-surface); color: var(--studio-text); box-shadow: var(--studio-shadow-dialog); opacity: 1; }
+:is(dialog.ui-scope,.ui-scope dialog)::backdrop { background: var(--studio-backdrop); backdrop-filter: none; }
+:is(dialog.ui-scope,.ui-scope dialog)[open] { animation: studio-dialog-enter var(--studio-motion-dialog) var(--studio-ease-out); }
+/* The action area is outside the scrollport, so native focus scrolling cannot
+   place a field underneath it. Keep all controls inside the owning form. */
+:is(dialog.ui-scope,.ui-scope dialog).form-dialog { padding: 0; overflow: hidden; }
+.ui-scope .dialog-form { display: flex; flex-direction: column; min-width: 0; min-height: 0; max-height: calc(100dvh - var(--studio-dialog-clearance) - 2px); margin: 0; }
+.ui-scope .dialog-body { min-height: 0; overflow: auto; overscroll-behavior: contain; scroll-padding-block: var(--studio-space-4); padding: var(--studio-dialog-padding); }
+.ui-scope .dialog-body > h2:first-child { margin-top: 0; }
+.ui-scope .dialog-actions { display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: var(--studio-space-2); margin: 0; padding: var(--studio-space-4) var(--studio-dialog-padding); border-top: 1px solid var(--studio-line); background: var(--studio-surface); }
+.ui-scope .dialog-actions > [role=status] { flex-basis: 100%; margin: 0 0 var(--studio-space-1); max-height: 5em; overflow: auto; }
+.ui-scope .dialog-actions > [role=status]:empty { display: none; }
+@keyframes studio-dialog-enter { from { transform: translateY(8px); } to { transform: none; } }
+@media (max-width:700px) {
+  .ui-scope { --studio-control-height: 42px; --studio-text-xl: 25px; --studio-dialog-padding: 18px; --studio-dialog-clearance: 16px; --studio-panel-padding: var(--studio-space-4); }
+  .ui-scope :where(.form-grid) { grid-template-columns: minmax(0,1fr); }
+  .ui-scope .dialog-actions > button { flex: 1 1 auto; }
+}
+@media (prefers-reduced-motion:reduce) {
+  html { scroll-behavior: auto !important; }
+  .ui-scope, .ui-scope *, .sidebar, .sidebar * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

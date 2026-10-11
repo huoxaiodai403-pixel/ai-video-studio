@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import math
 import os
 import re
 import subprocess
@@ -26,31 +27,46 @@ def run(command, log, cwd=None):
 
 def render(project, spec):
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
-    settings=spec.get('settings',load());out=settings['output'];width,height,fps=out['width'],out['height'],out['fps']
+    settings=spec['settings'] if 'settings' in spec else load();out=settings['output'];width,height,fps=out['width'],out['height'],out['fps']
     segments = project / 'segments'
     segments.mkdir(exist_ok=True)
-    listing = []
+    clips, timeline, offset = [], [], 0.0
+    previous_timeline=json.loads((project/'timeline.json').read_text('utf-8'))
+    from video_tools_media import read_srt
+    captions=read_srt(project/'subtitles.srt')
     for scene in spec['scenes']:
         sid = scene['id']
         audio = project / 'audio' / (sid+'.wav')
         image = project / 'images' / (sid+'.png')
         with wave.open(str(audio)) as f:
             duration = f.getnframes()/f.getframerate()
+        clip_duration=math.ceil(duration*fps)/fps
         output = segments / (sid+'.mp4')
         if spec.get('motion_enabled'):
             video=project/'motion'/(sid+'.mp4')
             reader=imageio_ffmpeg.read_frames(str(video));metadata=next(reader);reader.close()
             rate=duration/metadata['duration']
             vf=f'setpts={rate}*(PTS-STARTPTS),fps={fps},scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},tpad=stop_mode=clone:stop_duration=1'
-            inputs=['-i',video,'-i',audio]
+            inputs=['-i',video]
         else:
             vf = f"scale={width*2}:{height*2}:force_original_aspect_ratio=increase,crop={width*2}:{height*2},zoompan=z='min(zoom+0.00015,1.05)':x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':d=1:s={width}x{height}:fps={fps}"
-            inputs=['-loop','1','-framerate',str(fps),'-i',image,'-i',audio]
-        run([ffmpeg,'-y',*inputs,'-vf',vf,'-t',str(duration),'-c:v','libx264','-preset','fast','-crf','20','-pix_fmt','yuv420p','-c:a','aac','-ar','48000',output], project / (sid+'.render.log'))
-        listing.append(f"file '{output.as_posix()}'")
-    (project/'segments.txt').write_text('\n'.join(listing), encoding='utf-8')
-    run([ffmpeg,'-y','-f','concat','-safe','0','-i',project/'segments.txt','-c','copy',project/'video.clean.mp4'], project/'concat.log')
-    run([ffmpeg,'-y','-i','video.clean.mp4','-vf',f"subtitles=subtitles.srt:force_style='FontName=Microsoft YaHei,FontSize={out['subtitle_size']},Outline=2,MarginV=28'",'-c:v','libx264','-preset','fast','-crf','20','-c:a','copy','-movflags','+faststart','video.mp4'],project/'subtitles.render.log',project)
+            inputs=['-loop','1','-framerate',str(fps),'-i',image]
+        run([ffmpeg,'-y',*inputs,'-an','-vf',vf,'-t',str(clip_duration),'-c:v','libx264','-preset','fast','-crf','20','-pix_fmt','yuv420p',output], project / (sid+'.render.log'))
+        clips.append(output)
+        timeline.append({'id':sid,'start':offset,'duration':clip_duration,'audio_duration':duration})
+        offset+=clip_duration
+    # ASR services may supply sentence timestamps instead of word timestamps.
+    # Shift measured cues by each scene's frame padding, without inventing words.
+    old={row['id']:row for row in previous_timeline};shifted=[]
+    for cue in captions:
+        row=next((row for row in reversed(timeline) if cue['start']+.0005>=old[row['id']]['start']),timeline[0])
+        delta=row['start']-old[row['id']]['start']
+        shifted.append({**cue,'start':cue['start']+delta,'end':min(cue['end']+delta,row['start']+row['duration'])})
+    from lightweight_speech import write_srt
+    write_srt(project/'subtitles.srt',shifted)
+    (project/'timeline.json').write_text(json.dumps(timeline,ensure_ascii=False,indent=2),'utf-8')
+    from generation_delivery import assemble_timeline
+    assemble_timeline(project,clips,timeline,out,'video.mp4')
 
 
 def main():
@@ -61,7 +77,7 @@ def main():
     args = parser.parse_args()
     project = args.project.resolve()
     spec = json.loads((project/'storyboard.json').read_text(encoding='utf-8'))
-    settings=spec.get('settings',load())
+    settings=spec['settings'] if 'settings' in spec else load()
     # Validate frozen inputs even when the stage or per-image cache is reusable.
     from image_references import checked_paths
     for scene in spec['scenes']:
@@ -79,10 +95,11 @@ def main():
             raise ValueError('Scene ids must use letters, numbers, underscore or hyphen')
     fingerprint = hashlib.sha256((project/'storyboard.json').read_bytes())
     backends=spec.get('backends',{})
-    selected={k:v for k,v in providers.load(public=True).items() if backends.get(k)=='online'}
+    selected=({k:v for k,v in providers.load(public=True).items() if backends.get(k)=='online'}
+              if 'online' in backends.values() else {})
     fingerprint.update(json.dumps(selected,sort_keys=True).encode())
     source_names = ['pipeline.py','tts_batch.py','align_batch.py','comfy_client.py','prompt_library.py','render_whiteboard.py','whiteboard_scene.py','providers.py','online_pipeline.py','wan_client.py','creation_settings.py']
-    source_names += ['flux_klein.py','model_profiles.py','image_references.py','wan_a14b.py']
+    source_names += ['flux_klein.py','model_profiles.py','image_references.py','wan_a14b.py','generation_delivery.py','lightweight_speech.py']
     if backends.get('tts') in ('windows','edge','volc') or spec.get('render_mode') == 'excalidraw':
         source_names += ['lightweight_speech.py','windows_speech.ps1','volc_speech.py']
     if backends.get('tts')=='volc':
@@ -131,6 +148,9 @@ def main():
     cpu_only = not any((stage in ('tts','align') and backends.get('tts' if stage=='tts' else 'asr','local')=='local')
                        or (stage in ('images','motion') and backends.get('image' if stage=='images' else 'video','local')=='local')
                        for stage in stages)
+    if not cpu_only:
+        from studio_edition import require_local
+        require_local()
     with (nullcontext() if cpu_only else FileLock(str(ROOT/'manifests/gpu.lock'), timeout=0)) as gpu_lock:
         for stage in stages:
             if stage in state.get('completed',[]) and all(p.is_file() and p.stat().st_size for p in artifacts[stage]) and not args.force:
@@ -168,13 +188,21 @@ def main():
                         image_code.update((ROOT/'scripts'/name).read_bytes())
                     for scene in spec['scenes']:
                         ratio='竖版' if settings['image']['height']>settings['image']['width'] else '横版'
-                        prompt = compile_prompt(scene['subject'],scene['style'],scene.get('composition',ratio+'，底部预留字幕空间'),scene.get('palette','统一角色服装与配色'),scene.get('source_case_id'),scene.get('reference_text',''))
+                        subject='\n'.join(filter(None,[scene['subject'],scene.get('character_context','')]))
+                        prompt = compile_prompt(subject,scene['style'],scene.get('composition',ratio+'，主体完整，背景延伸至四边'),scene.get('palette','统一角色服装与配色'),scene.get('source_case_id'),scene.get('reference_text',''))
+                        if scene.get('image_prompt'):
+                            prompt['prompt']=scene['image_prompt']
                         prompt.update(settings['image']);prompt['models']=settings['models']
                         prompt['reference_images']=scene.get('image_references',[])
                         if prompt['reference_images']:
                             if backends.get('image','local')!='local' or prompt.get('engine','qwen-image-2512')!='flux2-klein-4b':
                                 raise ValueError('参考图编辑需要本地 FLUX.2 klein 4B，不能忽略参考图继续生成')
                             checked_paths(prompt['reference_images'])
+                            if scene.get('character_context') or scene.get('character_reference'):
+                                prompt['prompt'] = ('Create a NEW shot featuring the same character from the reference. '
+                                    'Use the reference ONLY for facial identity, hairstyle, clothing and illustration style. '
+                                    'Replace the pose, camera angle, framing and surroundings to follow the new shot below. '
+                                    'Do not reproduce the reference composition.\nNEW SHOT:\n' + prompt['prompt'])
                         prompt['workflow_sha256']=image_code.hexdigest()
                         if 'seed' in scene:prompt['seed']=scene['seed']
                         if 'steps' in scene:prompt['steps']=scene['steps']
@@ -206,9 +234,9 @@ def main():
                         # not need to reserve the model inference lock.
                         if gpu_lock is not None:
                             gpu_lock.release()
-                        run([ROOT/'tools/.venv/Scripts/python.exe',ROOT/'scripts/simon_whiteboard.py',project],project/'whiteboard.log')
+                        run([sys.executable,ROOT/'scripts/simon_whiteboard.py',project],project/'whiteboard.log')
                     elif spec.get('render_mode')=='whiteboard':
-                        run([ROOT/'tools/.venv/Scripts/python.exe',ROOT/'scripts/render_whiteboard.py',project],project/'whiteboard.log')
+                        run([sys.executable,ROOT/'scripts/render_whiteboard.py',project],project/'whiteboard.log')
                     else:
                         render(project,spec)
                 state.setdefault('completed',[])

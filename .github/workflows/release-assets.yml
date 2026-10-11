@@ -8,7 +8,7 @@ on:
       tag:
         description: Existing release tag to package
         required: true
-        default: v0.3.0
+        default: v0.3.1
         type: string
 
 permissions:
@@ -30,12 +30,6 @@ jobs:
           gh auth setup-git
           gh repo clone "$GITHUB_REPOSITORY" source -- --depth 1 --branch "$RELEASE_TAG"
           test "v$(cat source/VERSION | tr -d '\r\n')" = "$RELEASE_TAG"
-          edition="$(cat source/EDITION | tr -d '\r\n')"
-          if [[ "$edition" == development ]]; then
-            test "$(gh api "repos/$GITHUB_REPOSITORY" --jq .private)" = true
-          elif [[ "$edition" != friend ]]; then
-            echo "Unknown source edition" >&2; exit 1
-          fi
       - name: Build and verify source-only archives
         shell: bash
         run: |
@@ -51,9 +45,9 @@ jobs:
           if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             notes="source/docs/releases/$RELEASE_TAG.md"
             if [[ -f "$notes" ]]; then
-              gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --title "$RELEASE_TAG · AI 视频工作台 ($(cat source/EDITION))" --notes-file "$notes"
+              gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --title "$RELEASE_TAG · AI 视频工作台" --notes-file "$notes"
             else
-              gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --title "$RELEASE_TAG · AI 视频工作台 ($(cat source/EDITION))" --generate-notes
+              gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --title "$RELEASE_TAG · AI 视频工作台" --generate-notes
             fi
           fi
           gh release upload "$RELEASE_TAG" source/dist/*.zip source/dist/SHA256SUMS.txt source/dist/release-manifest.json --repo "$GITHUB_REPOSITORY"

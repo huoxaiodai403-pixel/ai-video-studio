@@ -30,10 +30,11 @@ def search(query='', limit=30, library='image'):
 def compile_prompt(subject, style, composition, palette, case_id=None, reference_text=''):
     selected = next((c for c in cases() if c['id'] == case_id), None)
     prompt = '\n'.join([
-        f'一帧用于中文短片的电影画面。画面内容：{subject}。',
+        f'独立完整插画。画面内容：{subject}。',
         f'视觉风格：{style}。构图：{composition}。配色：{palette}。',
-        '主体清楚，信息层级清晰，画面底部预留字幕空间。画面中不要出现文字、标注、徽标或水印。',
+        '主体清楚，底部保持简洁，场景填满整个画布；书页和书脊保持无字的纸张色块。',
         f'补充画面要求：{reference_text}' if reference_text else '',
+        'Full-bleed standalone artwork filling the entire canvas edge to edge. Pure visual scene, blank unlettered pages and book covers. No typography, text, captions, subtitles, speech bubbles, letterboxing, black bars, overlays, logos or watermarks.',
     ]).strip()
     return {
         'model': 'Qwen-Image-2512-Q4_K_M', 'prompt': prompt,

@@ -1,0 +1,15 @@
+{
+  "title": "给今天一点甜 · 纸艺祝福",
+  "width": 720, "height": 1280, "fps": 25,
+  "speech": {"backend":"windows","voice_id":"Microsoft Huihui Desktop","speed":0.95},
+  "scene_html":"papercraft.html",
+  "style":"奶油纸张、浅蓝与珊瑚色、真实折痕和一致右下投影。二维剪纸关节动画，12.5 fps 定格节奏。",
+  "brief":"原创小兔通用生日祝福。未提供孩子信息，样片不杜撰姓名和年龄。登场、祝福和生活叮嘱三段式，全部为可编辑二维纸艺动画。",
+  "audio_bed":{"path":"assets/paper.wav","gain":0.3,"loop":true,"credit":"项目自制合成钟琴音床，源码 make_soundbeds.py，无外部音乐"},
+  "scenes":[
+    {"id":"hello","narration":"今天，把一张小小的纸，折成送给你的惊喜。","visual":"折叠信封打开，原创纸兔从中探头","action":"翻开信封盖，纸兔分两次探头并挥手","camera":"竖屏全景"},
+    {"id":"cake","narration":"生日快乐。愿你新的一岁，总有好奇心和笑声相伴。","visual":"小兔推来纸艺蛋糕，星星随祝福落下","action":"纸轮滚动带入蛋糕，星星以定格节奏飘落","camera":"向蛋糕靠近的中景"},
+    {"id":"care","narration":"记得照顾好自己，好好吃饭，也好好睡觉。","visual":"纸兔把碗、月亮和小床依次摆好","action":"温柔的折纸翻面转场，月亮从碗后升起","camera":"物件近景"},
+    {"id":"wish","narration":"慢慢长大，勇敢出发。你的每一天，都值得被祝福。","visual":"纸兔抱着一颗珊瑚色心，身后展开纸旗","action":"心形展开后轻轻抬起，最终稳稳定格","camera":"回到完整祝福构图"}
+  ]
+}

@@ -1,0 +1,11 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#12252e}canvas{display:block}</style></head><body><canvas width="1280" height="720"></canvas>
+<!-- CREATIVE_FILM -->
+<script>
+const c=document.querySelector('canvas'),g=c.getContext('2d'),E=Film.ease;
+function box(x,y,w,h,col,r=10){g.fillStyle=col;g.beginPath();g.roundRect(x,y,w,h,r);g.fill();}
+function rail(y,queue,t,scale=1){g.save();g.translate(0,y);g.strokeStyle='#476572';g.lineWidth=3;g.beginPath();g.moveTo(102,0);g.lineTo(1171,0);g.stroke();g.fillStyle='#476572';g.beginPath();g.moveTo(1171,0);g.lineTo(1153,-10);g.lineTo(1153,10);g.fill();for(let i=0;i<queue;i++)box(704-i*65,-25,45,50,'#e7a98c',5);box(814,-70,150,140,'#38515b',14);box(833,-51,112,102,'#73b7a8',8);Film.text(g,'处理',889,0,29,'#152c32','center');let a=t%1;box(100+a*210,-24,42,48,'#92bcca',5);box(1006+a*130,-24,42,48,'#84bfae',5);g.restore();}
+window.renderFrame=function(t){let s=Film.shot(t),p=E(s.progress);g.fillStyle='#12252e';g.fillRect(0,0,1280,720);Film.text(g,'看见机制',56,48,21,'#96b3bf','left',500);Film.text(g,'教学示意 · 非性能实测',1222,48,17,'#96b3bf','right',400);let titles=['每次，只处理一个','输入更快，等待更多','先找出卡住的环节','让节奏重新匹配'];Film.text(g,titles[s.index],60,153,49,'#f2e8d9');if(s.index===0){rail(396,1,t*.55);Film.text(g,'输入',175,499,27,'#a9c2ca','center');Film.text(g,'一次一个',889,518,27,'#84bfae','center');}
+if(s.index===1){rail(404,2+Math.floor(p*4),t*1.3);Film.text(g,'等待队列',546,517,29,'#e7a98c','center');Film.text(g,'处理节奏未变',889,543,25,'#9db8c2','center');}
+if(s.index===2){g.save();g.translate(-150,-53);g.scale(1.1,1.1);rail(398,6,t*.6);g.restore();let r=116+Math.sin(t*2)*6;g.strokeStyle='#e7a98c';g.lineWidth=4;g.beginPath();g.arc(828,385,r,0,7);g.stroke();Film.text(g,'等待在哪里形成？',383,552,35,'#e7a98c','center');Film.text(g,'观察同一环节',833,562,27,'#9db8c2','center');}
+if(s.index===3){rail(322,6,t*.6);rail(506,Math.max(1,6-Math.floor(p*5)),t*.6);Film.text(g,'原先',58,320,24,'#e7a98c');Film.text(g,'调整后',58,503,23,'#84bfae');}Film.caption(g,t,1280,720,true);};
+</script></body></html>

@@ -1,0 +1,14 @@
+{
+  "title": "先走一步 · 火柴人短片",
+  "width": 1280, "height": 720, "fps": 25,
+  "speech": {"backend": "windows", "voice_id": "Microsoft Huihui Desktop", "speed": 1},
+  "scene_html": "stickman.html",
+  "style": "白底、黑色火柴人、金黄台阶。角色用双脚落点、重心和关节运动完成真正的迈步。",
+  "brief": "原创寓言短片，验证连续配音、语义分镜、角色动作、字幕与成片。没有事实或效果承诺。",
+  "scenes": [
+    {"id":"wall", "narration":"总想一下登顶，脚反而迈不出去。", "visual":"左侧小人与右侧高墙形成尺度差", "action":"小人抬头，再抬脚试探高墙", "camera":"固定全景"},
+    {"id":"steps", "narration":"把眼前那一步，改成一个够得着的小台阶。", "visual":"高墙分解为四级金黄台阶", "action":"台阶依次降到可迈高度，小人转向第一阶", "camera":"固定中景"},
+    {"id":"weight", "narration":"先落下一只脚，再把重心移过去。", "visual":"放大脚部与身体重心", "action":"抬脚、落脚、移动身体、后脚跟上，动作有支撑点", "camera":"脚部特写"},
+    {"id":"walk", "narration":"今天先走一步，路就从这里开始。", "visual":"小人从第一级走到第二级，远方留白", "action":"连贯登阶后站稳，最后半秒保持完整末态", "camera":"回到全景"}
+  ]
+}

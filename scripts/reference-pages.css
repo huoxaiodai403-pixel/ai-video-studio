@@ -1,0 +1,20 @@
+/* Reading/reference and administration patterns, using the common controls. */
+.reference-page main>p { max-width: 76ch; margin: 0 0 24px; }
+.reference-page section { margin: 20px 0; }
+.reference-page section>h2 { margin: 0 0 14px; }
+.reference-page section>p { max-width: 85ch; }
+.reference-page p,.reference-page li { font-size: 14px; line-height: 1.85; }
+.reference-page .grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.25fr); gap: 24px; }
+.reference-page :where(input,textarea,select) { margin: 7px 0 14px; }
+.reference-page :where(button) { margin: 4px 8px 4px 0; }
+.reference-page .case { width: 100%; text-align: left; justify-content: start; }
+.reference-page .list { max-height: 430px; overflow: auto; }
+.reference-page img,.reference-page video { max-width: 100%; border-radius: var(--studio-radius-control); }
+.reference-page pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 16px; background: var(--studio-inset); border: 1px solid var(--studio-line); border-radius: var(--studio-radius-control); font: var(--studio-text-sm)/1.8 var(--studio-font-mono); }
+.reference-page blockquote { margin: 20px 0; padding: 0 20px; border-left: 3px solid var(--studio-selected-line); color: var(--studio-text); line-height: 1.9; }
+.reference-page .quick-start { display: flex; gap: 12px; flex-wrap: wrap; margin: 24px 0 30px; }
+.reference-page .cards { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 18px; }
+.reference-page label { display: block; }
+.reference-page .scroll-table { max-width: 100%; overflow-x: auto; }
+.reference-page .scroll-table table { min-width: 640px; }
+@media(max-width:800px) { .reference-page .grid { grid-template-columns: minmax(0,1fr); }.reference-page .quick-start .button { flex: 1 1 160px; } }

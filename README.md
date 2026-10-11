@@ -1,83 +1,105 @@
 <p align="center"><img src="assets/brand/studio-mark.svg" width="88" alt="AI Video Studio"></p>
 
-# AI Video Studio · 朋友版
+# AI Video Studio
 
-**让 Codex 创作文稿、分镜和动画，在本机工作台预览、配音、保存作品，再交给剪映精修。**
+**在本机工作台创作视频，统一管理素材、音色、分镜和作品。**
 
-面向 Windows 的轻量视频创作工作台，主要提供代码动画、手绘白板、配音、统一作品库和剪映交接。先从一个短样片开始，不必为了写稿、白板或代码动画安装整套本地大模型。
+Windows 优先的本地 AI 视频工作台，提供代码动画、角色短片、循环动画、Blender 镜头预演、手绘白板、热点调查长片、小说转漫剧和通用制片流程。安装源码包含可选模型接入与仍需验证的实验流程。
+
+只维护一个工作台，本地模型按需安装和启用。朋友可以直接使用在线接口、Windows 系统语音、CPU 渲染和已有素材。所有创作入口共享同一份源码，详见[运行方式](docs/editions.md)。
+
+本轮新增[实际视频审片与返修](docs/review-workbench.md)，可慢放、标记问题、保存记录和复制返修说明。收藏文章提到的十类工具已整理为[视频 Skills 来源与接入](docs/video-skills.md)，区分已核实来源、已有引擎与待适配能力。
+
+可以直接在网页中填写需求、生成并修改方案、看样片和制作视频。也可以用 Codex 创作文稿、分镜或直接编写动画，再由工作台渲染；配套 Skill 是可选操作入口。
 
 ## 下载与启动
 
-从 [Releases](https://github.com/huoxaiodai403-pixel/ai-video-studio/releases) 下载：
+从 [v0.3.1 发布页](https://github.com/huoxaiodai403-pixel/ai-video-studio/releases/tag/v0.3.1) 下载统一工作台；自己和朋友使用同一个安装包，旧版本保留供回退：
 
-- `ai-video-studio-friend-0.3.0-windows.zip`：Windows 工作台。
-- `ai-video-studio-friend-skill-0.3.0.zip`：单独的 Codex Skill，需要连接已安装的工作台。
-- `SHA256SUMS.txt`：下载校验值。
+- [ai-video-studio-0.3.1-windows.zip](https://github.com/huoxaiodai403-pixel/ai-video-studio/releases/download/v0.3.1/ai-video-studio-0.3.1-windows.zip)：工作台源码、CPU 渲染适配、可选本地模型接入、安装/启动脚本与文档。
+- [ai-video-studio-skill-0.3.1.zip](https://github.com/huoxaiodai403-pixel/ai-video-studio/releases/download/v0.3.1/ai-video-studio-skill-0.3.1.zip)：可选的 Codex Skill，需要连接工作台。
+- [SHA256SUMS.txt](https://github.com/huoxaiodai403-pixel/ai-video-studio/releases/download/v0.3.1/SHA256SUMS.txt)：下载校验值，可用 PowerShell `Get-FileHash .\ai-video-studio-0.3.1-windows.zip -Algorithm SHA256` 对照。
 
-1. 解压到可写目录，保持包内目录结构。
-2. 双击 `Install.cmd`，准备 Python、网页依赖、Node 和浏览器渲染组件。首次安装需要网络，不默认下载模型权重。
-3. 双击 `Start.cmd`，打开本机工作台；默认地址为 <http://127.0.0.1:8189/home>。
-4. 在工作台目录的 PowerShell 中安装配套 Skill：
+解压到可写目录，先双击 `Install.cmd`，成功后双击 `Start.cmd`。也可在 PowerShell 中运行：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Studio.ps1 -InstallPython
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Open-Studio.ps1
+```
+
+默认页面：<http://127.0.0.1:8189/home>。安装器准备网页环境及 CPU 渲染器（Node、npm 依赖、Chromium），**不会默认下载模型权重**。Simon 来自本账号复刻仓库的固定版本，源码、Windows 补丁与字体直接随包分发，朋友无需安装 Git 或另行拉取仓库。只需网页环境时可加 `-SkipRenderers`。默认启动只打开工作台；需要已安装的 ComfyUI / Ollama 时运行 `scripts/Start-Studio.ps1 -StartLocalModels`，也可在本地运行设置中按需启动。
+
+在 Codex 桌面端直接写口播和分镜；当前会话有内置生图工具时，可生成插图后导入工作台，无需另配图像接口。白板预览只需 CPU 渲染器。基础配音与字幕可用 Windows 系统语音离线完成，Edge 可免密钥在线配音；生成式视频和配乐仍需对应工具或已有素材，详见 [快速上手](docs/getting-started.md)。
+
+此包是可安装的源码发行包，不是包含全部模型的离线整合包。空环境能启动工作台，不代表所有媒体引擎已经就绪。
+
+换电脑和旧版升级见 [安装与迁移](docs/deployment.md)，本次修复与验收范围见 [v0.3.1](docs/releases/v0.3.1.md)。
+
+## 在 Codex 中使用
+
+直接使用网页时，从「工作流 → 生成工坊」开始，详见 [生成工坊](docs/generation-workshop.md)。以下 Skill 安装只适用于希望配合 Codex 的用户。
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-CodexSkill.ps1
 ```
 
-在 Codex 中打开解压后的工作台目录，开始新对话，明确使用 `$ai-video-studio`。同名 Skill 已存在时，安装器会先保留备份。
+在 Codex 打开解压目录，开始新对话，示例：
 
-这是可安装的源码包，不是自带全部依赖与模型的离线整合包。安装出错时按提示补齐具体组件，操作说明见 [快速上手](docs/getting-started.md)。
+> 使用 $ai-video-studio，做一个讲“如何判断一条热点消息是否可靠”的白板视频。先给出分镜，使用平静清晰的中文解说，检查可用引擎后再制作。
 
-## 让 Codex 开始创作
+> 使用 $ai-video-studio，把这个脚本做成双角色调查长片。先检查来源与素材，保留可编辑工程、旁白和 SRT，成片放入作品库。
 
-可以直接对 Codex 说：
+> 使用 $ai-video-studio，把刚才的作品送到剪映，保留可编辑轨道，检查后将精修成片放回原作品。
 
-> 使用 $ai-video-studio，做一段解释“如何找到消息原始出处”的代码动画。由你写口播、设计画面和动画，先检查环境，生成短样片供我审看，保留可编辑源码和创作计划。
+> 使用 $ai-video-studio，直接编写一个解释“先查原始出处”的图形动画，按真实旁白时长安排动作，生成可播放样片并保留源码。
 
-> 使用 $ai-video-studio，做一条三镜头手绘白板视频，用平静清晰的中文解说。先写分镜和视觉要点，检查预览后再生成有声视频。
+完整入口见 [Skill](skills/ai-video-studio/SKILL.md)。分享单独 skill 时，朋友还需安装工作台；只为文稿、Codex 生图和白板预览，不必安装本地大模型。
 
-> 使用 $ai-video-studio，把刚才的成片送到剪映精修，尽量保留镜头、声音和字幕轨道；告诉我实际采用了哪种交接方式。
+## 模块
 
-Codex 负责创作、提交与检查；工作台负责运行渲染任务、展示结果和管理文件。反馈不满意的镜头、措辞或节奏后，可以继续在同一任务中修改，不必自己手写请求数据。已经配置网页编剧时，也可在代码动画页直接生成方案与样片；使用朋友自己的服务与额度。
+| 模块 | 用途 |
+| --- | --- |
+| 工作台 | 从内容目标选择流程，继续最近工程 |
+| 我的作品 | 集中查看成片、预览和草稿，搜索、标签、收藏、下载、恢复工程 |
+| 资源库 | 图库与视频素材、音频库、音色库、模型库 |
+| 工作流 | 组合制作、生成工坊、手绘白板、热点长片、小说转漫剧、通用视频制作 |
+| 创作工具 | 图像、动态镜头、配音、音乐音效、字幕、画质增强 |
+| 在线服务 / 本地模型 | 分开管理账号、接口与本机引擎；实际输出验证和预览 |
 
-## 包含哪些能力
+成果自动进入统一作品管理；可复用画面和音频进入资源库。选择图片可带入参考生图、动态镜头或调查长片；长片可按全片、角色和镜头设置音色。
 
-| 模块 | 用途 | 需要准备什么 |
-| --- | --- | --- |
-| Codex 创作 | 写口播、分镜与自包含 HTML/Canvas/SVG 动画 | 朋友自己的 Codex 账号、当前会话工具与配套 Skill |
-| 代码动画 | 把文字、图形与步骤渲染成视频，保留动画源码 | CPU 渲染组件；有声版本另需配音 |
-| 手绘白板 | 文字、图形、贴纸按讲解顺序出现，先预览再出片 | CPU 渲染组件；有声视频需要可用语音 |
-| 配音与音色库 | 试听、保存本机声音选择，并复用到作品 | Windows 系统语音、联网的 Edge 或自行配置的服务 |
-| 我的作品 | 集中查看草稿、样片、成片，搜索、下载、继续修改 | 本机实际保存的工程与产物 |
-| 剪映交接 | 生成草稿，精修后回收导出的 MP4 | 剪映客户端与独立桥接组件 |
+## 可选引擎
 
-基础 Windows 配音可离线运行，不需要显卡和模型权重；Edge 需要网络。可用声线及听感以本机试听为准。分享包不附带任何人的私人录音或克隆声音。
+“工作流 → 组合制作”可把 HyperFrames / Remotion 动效、素材剪辑、字幕译配、产品演示与截图演示串联为真实任务。运行 `scripts/Install-VideoTools.ps1` 安装固定版本组件；默认不下载模型。无需模型时，选择在线来源、系统语音或现成素材。执行方式、例子和当前验证边界见 [视频 Skills 接入](docs/video-skills.md)。
 
-当前 Codex 会话有内置生图时，可以让它制作插图或封面并把真实文件交给工作台。工具是否可用及用量由朋友自己的会话决定；Skill 不会额外授予媒体工具或桌面控制权限。网页也不会直接调用 Codex 聊天中的工具。
+| 用途 | 已接入的引擎 |
+| --- | --- |
+| 图像 | Qwen-Image 2512、FLUX.2 klein 4B 参考图编辑 |
+| 动态镜头 | Wan2.2 5B、Wan2.2 A14B |
+| 配音 | Windows CPU 系统语音；Edge、火山及兼容在线语音；可选 Qwen3-TTS / IndexTTS |
+| 字幕 | Qwen3-ASR、Qwen3 ForcedAligner |
+| 音乐与音效 | ACE-Step 1.5、Stable Audio 3 |
+| 文稿辅助 | Codex 对话；ChatGPT 官方账号授权或 API Key；可选 Ollama 与原文分段 |
+| 动画与合成 | 自包含 HTML/Canvas/SVG 逐帧动画、Blender 几何预演、Simon 白板适配、Remotion 调查片、FFmpeg |
 
-## 作品与剪映
+图像、视频、配音、识别工具也可配置兼容在线接口。具体能力取决于提供方，配置会保存在朋友自己的电脑；本仓库没有 API 密钥。
 
-所有结果集中到“我的作品”。草稿是计划，样片用于检查，完整视频生成后仍要看片和听声音；不会因为文件存在而自动标记质量通过。
+## 边界与交付
 
-在已完成的视频详情中使用“送到剪映精修”。缺少剪映时，先确认安装官方客户端，再配置草稿桥接。桥接需要 64 位 Python 3.12–3.14，与基础工作台环境单独管理。
+- 长片按章节和镜头制作；不保证一句话无需审阅即可生成可靠的十分钟内容。
+- 需要对事实来源、人物一致性、配音听感和字幕进行实际审阅。
+- 分享包不带原作者个人作品、参考照片、克隆录音、凭据、模型权重或私人笔记。
+- 不自动公开发布视频。工作台默认仅绑定本机环回地址，不应直接暴露到公网。
+- 剪映草稿交接与成片回收：在“我的作品 → 送到剪映精修”生成草稿；剪映内的编辑、导出由用户或具备桌面工具的 Codex 完成。首次交接若缺剪映，Skill 会先询问是否安装，同意后安装官方客户端及桥接。手动运行 `scripts/Install-JianyingBridge.ps1` 也会在缺客户端时提示。见 [剪映接入说明](docs/jianying-windows.md)。
 
-原工程保留完整镜头、配音和字幕时，可交接相应轨道；只有最终 MP4 时，交接的是整片，不会自动恢复其中的文字图层、人物声线或原始动效。剪映内的编辑与导出由你完成，或由当前具备 Windows 桌面工具的 Codex 协助。详见 [剪映说明](docs/jianying-windows.md)。
+## 文档与开发
 
-## 使用边界
-
-- 先生成短样片，检查文字、动作、角色、声音、字幕与结尾，再扩展内容。代码动画有渲染预算限制，长内容需要拆镜制作。
-- Windows 字幕使用同次合成事件的词起点，不等于声学强制对齐。代码动画的 SRT 按镜头音轨时长分段，不代表逐词对齐或已经烧录到视频。
-- Codex 创作效果仍需审看；不承诺一句话自动得到高质量长片，也不承诺任意动作或多角色一致性。
-- 朋友版不附带本地编剧、图像或视频模型权重，也不以完整模型工作流作为起步要求。更广的自动模型流程在完整版持续开发，见 [两个版本的定位](docs/editions.md)。
-- 剪映草稿生成、打开工程、导出 MP4 和成片验收分别确认。社区草稿格式可能随剪映更新发生兼容变化。
-
-## 更新与分享
-
-更新前保留自己的配置和工程。分享时转发公开 Release 的软件包与校验文件；个人作品、参考照片、录音、密钥和模型由本人另行管理，不要把自己的工作目录整包转发。
-
-工作台默认只在本机环回地址运行。应用源码与 Skill 使用 MIT 许可证，第三方依赖、字体和内容遵循各自许可证。
-
-- [v0.3.0 发布说明](docs/releases/v0.3.0.md)
 - [快速上手](docs/getting-started.md)
-- [朋友版与完整版](docs/editions.md)
-- [Skill](skills/ai-video-studio/SKILL.md)
+- [换电脑安装、迁移与安全软件拦截](docs/deployment.md)
+- [生成工坊与代码动画](docs/generation-workshop.md)
+- [本地模型与依赖](docs/local-models.md)
+- [结构与数据流](docs/architecture.md)
+- [上游项目与出处](docs/references.md)
 - [第三方许可证](NOTICE.md)
+
+应用源码与 skill 使用 MIT 许可证。第三方模型、字体、依赖与内容各自遵循原许可证。

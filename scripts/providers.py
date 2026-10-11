@@ -6,7 +6,10 @@ import os
 import time
 import threading
 import copy
+import subprocess
+from contextlib import contextmanager
 from contextvars import ContextVar
+from functools import wraps
 from pathlib import Path
 from urllib.parse import urlparse,quote
 import requests
@@ -16,6 +19,7 @@ from prompt_library import ROOT
 
 CONFIG=ROOT/'config/providers.json'
 KINDS=('image','tts','asr','video','story')
+SNAPSHOT_KINDS=(*KINDS,'volc')
 SAVE_LOCK=threading.Lock()
 SNAPSHOT=ContextVar('online_provider_snapshot',default=None)
 
@@ -36,12 +40,82 @@ def crypt(value, decrypt=False):
 
 def load(public=False):
     frozen=SNAPSHOT.get()
-    data=copy.deepcopy(frozen) if frozen is not None else json.loads(CONFIG.read_text(encoding='utf-8')) if CONFIG.exists() else {}
+    data={kind:copy.deepcopy(row) for kind,row in frozen.items() if kind in KINDS} if frozen is not None else json.loads(CONFIG.read_text(encoding='utf-8')) if CONFIG.exists() else {}
     for kind in KINDS:
         row=data.setdefault(kind,{'base_url':'','model':'','protocol':'openai','voice':'alloy','size':'auto','video_transport':'json'})
         if public:
-            row['has_key']=bool(row.pop('key_encrypted','') or os.getenv('AI_VIDEO_'+kind.upper()+'_KEY'))
+            row['has_key']=bool(row.pop('key_encrypted','') or (os.getenv('AI_VIDEO_'+kind.upper()+'_KEY') if frozen is None else ''))
     return data
+
+
+def freeze(kinds=None):
+    """Capture only the selected services; credentials never go into job files."""
+    selected = set(KINDS if kinds is None else kinds)
+    if selected - set(SNAPSHOT_KINDS):
+        raise ValueError('Unknown online capability')
+    if not selected:
+        return {}
+    online = selected & set(KINDS)
+    current = load() if online else {}
+    result = {kind: copy.deepcopy(current[kind]) for kind in online}
+    if SNAPSHOT.get() is None:
+        for kind, row in result.items():
+            if kind == 'story' and row.get('auth_mode') == 'chatgpt':
+                import chatgpt_auth
+                row['account_id'] = chatgpt_auth.identity()
+                row.pop('key_encrypted', None)
+            else:
+                key = os.getenv('AI_VIDEO_'+kind.upper()+'_KEY', '')
+                if not row.get('key_encrypted') and key:
+                    row['key_encrypted'] = crypt(key)
+    if 'volc' in selected:
+        import volc_speech
+        result['volc'] = volc_speech.freeze()
+    return result
+
+
+def selection(snapshot):
+    """Public service identity for resumable work; no credentials or key flags."""
+    fields = ('base_url', 'model', 'protocol', 'voice', 'size', 'video_transport', 'auth_mode', 'account_id')
+    return {kind: {key: row[key] for key in (('auth_mode','app_id','resource_id','voice','style') if kind == 'volc' else fields) if key in row}
+            for kind, row in snapshot.items()}
+
+
+@contextmanager
+def frozen(snapshot):
+    token = SNAPSHOT.set(copy.deepcopy(snapshot))
+    try:
+        yield
+    finally:
+        SNAPSHOT.reset(token)
+
+
+def bind(snapshot, function):
+    """ContextVars do not propagate to a newly queued worker thread."""
+    snapshot = copy.deepcopy(snapshot)
+    @wraps(function)
+    def call(*args, **kwargs):
+        with frozen(snapshot):
+            return function(*args, **kwargs)
+    return call
+
+
+def start_worker(command, snapshot, **kwargs):
+    """Pass a snapshot through a private pipe, never argv, environment or disk."""
+    payload = json.dumps(snapshot, ensure_ascii=False).encode('utf-8')
+    if len(payload) > 1024*1024:
+        raise ValueError('Online service snapshot is too large')
+    command = list(map(str, command))
+    process = subprocess.Popen([command[0], str(Path(__file__).with_name('provider_worker.py')), *command[1:]],
+                               stdin=subprocess.PIPE, **kwargs)
+    try:
+        process.stdin.write(payload)
+        process.stdin.close()
+        process.stdin = None
+    except (BrokenPipeError, OSError):
+        process.wait()
+        raise RuntimeError('无法把本次服务配置交给制作进程，请重新提交。') from None
+    return process
 
 
 def save(data):
@@ -71,13 +145,18 @@ def _save(data):
 
 
 def configured(kind):
+    if kind == 'volc':
+        import volc_speech
+        return volc_speech.configured()
     row=load()[kind]
     if kind=='story' and row.get('auth_mode')=='chatgpt':
         import chatgpt_auth
-        if not chatgpt_auth.status()['connected']:raise ValueError('请先在「在线服务 → 编剧与分镜」登录并授权 ChatGPT。')
+        if SNAPSHOT.get() is not None and not row.get('account_id'):
+            raise ValueError('本次任务缺少 ChatGPT 账号记录，请重新提交。')
+        row['account_id'] = chatgpt_auth.identity(row.get('account_id'))
         if not row.get('model'):raise ValueError('请从当前账号可用的模型中选择一个并保存。')
         return row,None
-    key=crypt(row['key_encrypted'],True) if row.get('key_encrypted') else os.getenv('AI_VIDEO_'+kind.upper()+'_KEY','')
+    key=crypt(row['key_encrypted'],True) if row.get('key_encrypted') else (os.getenv('AI_VIDEO_'+kind.upper()+'_KEY','') if SNAPSHOT.get() is None else '')
     if not row.get('base_url') or not row.get('model') or not key:
         names={'image':'生图','tts':'配音','asr':'识别与字幕','video':'视频','story':'编剧'}
         missing=[label for field,label in [('base_url','服务地址'),('model','模型名称')] if not row.get(field)]
@@ -109,7 +188,7 @@ def story(messages, **options):
     row,_=configured('story')
     if row.get('auth_mode')=='chatgpt':
         import chatgpt_auth
-        return chatgpt_auth.generate(row['model'],messages)
+        return chatgpt_auth.generate(row['model'],messages,account_id=row['account_id'])
     response=request('story','POST','/chat/completions',json={'model':row['model'],'messages':messages,**options})
     try:content=response.json()['choices'][0]['message']['content']
     finally:response.close()

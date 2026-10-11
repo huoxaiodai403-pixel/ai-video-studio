@@ -1,0 +1,10 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#e4dbc2}canvas{display:block}</style></head><body><canvas width="720" height="1280"></canvas>
+<!-- CREATIVE_FILM -->
+<script>
+const c=document.querySelector('canvas'),g=c.getContext('2d');
+function painting(i){Film.atlas(g,'poem',i,0,0,720,1150,1,0);}
+window.renderFrame=function(t){const s=Film.shot(t),p=s.progress;g.fillStyle='#ece3cf';g.fillRect(0,0,720,1280);painting(s.index);if(s.index>0&&s.local<.45){g.save();g.globalAlpha=1-s.local/.45;painting(s.index-1);g.restore();}g.save();g.beginPath();g.rect(0,0,545,1150);g.clip();if(s.index===2){g.strokeStyle='#c3d0d377';g.lineWidth=1.3;for(let i=0;i<66;i++){let x=(i*107)%560,y=(i*79+t*370)%1150;g.beginPath();g.moveTo(x,y);g.lineTo(x-12,y+42);g.stroke();}}
+if(s.index>=2){g.strokeStyle=s.index===2?'#ccd7d777':'#7c847a77';g.lineWidth=1.2;for(let i=0;i<5;i++){let a=(t*.48+i*.2)%1;g.globalAlpha=(1-a)*.75;g.beginPath();g.ellipse(170+i*58,880-i*38,10+a*74,3+a*18,0,0,7);g.stroke();}}
+if(s.index<2){for(let i=0;i<27;i++){g.fillStyle='#fff6db65';g.beginPath();g.arc((i*89+t*5)%530,150+(i*83+t*10)%800,1.2+i%3*.35,0,7);g.fill();}}g.restore();
+g.fillStyle='#e8ddc930';g.fillRect(555,0,165,1150);Film.text(g,'春 晓',637,86,29,'#4f4e40','center',500);Film.text(g,'孟浩然',637,132,19,'#746d59','center',500);const line=s.narration.replace(/[。，]/g,'');g.font='54px KaiTi,STKaiti,serif';g.textAlign='center';g.textBaseline='middle';for(let i=0;i<line.length;i++){g.fillStyle='#303e34';g.globalAlpha=Film.ease((s.local-i*.16)/.4);g.fillText(line[i],637,309+i*77);}g.globalAlpha=1;g.fillStyle='#985b4a';g.fillRect(617,769,39,39);Film.text(g,'春',637,789,25,'#f4ebd8','center',500);Film.text(g,'绢本意境 · 四句成章',360,1203,22,'#77705f','center',400);};
+</script></body></html>

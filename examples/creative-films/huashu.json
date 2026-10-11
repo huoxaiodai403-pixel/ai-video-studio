@@ -1,0 +1,14 @@
+{
+ "title":"先找到瓶颈 · 机制动画","width":1280,"height":720,"fps":25,
+ "speech":{"backend":"windows","voice_id":"Microsoft Huihui Desktop","speed":1},
+ "scene_html":"huashu.html",
+ "audio_bed":{"path":"assets/mechanism.wav","gain":0.22,"loop":true,"credit":"项目自制节拍与合成音；make_soundbeds.py"},
+ "style":"黑蓝底、珊瑚与青绿，具体任务方块流经处理节点；以队列累积、局部放大和前后比较解释机制。",
+ "brief":"原创教学示意，非真实系统性能测试。使用花叔先对象、动作、机制再结论的方法，演示输入更快而处理不变时队列积压；不泛化为所有系统的性能结论。",
+ "scenes":[
+  {"id":"flow","narration":"假设任务不断送来，每次只能处理一个。","visual":"方块从输入端进入单个处理节点","action":"任务匀速进入，处理节点逐个亮起","camera":"完整流程图"},
+  {"id":"queue","narration":"送得更快，处理速度却没变，等待的任务就排起了队。","visual":"处理节点前任务从两个累积为六个","action":"输入增多，队列加长，出口保持原节奏","camera":"输入与队列中景"},
+  {"id":"bottleneck","narration":"这时先找出卡住的环节，比继续催着提交更有用。","visual":"放大处理节点，队列和节点用强调色分开","action":"光圈聚焦受限节点，输入端维持中性色","camera":"瓶颈节点特写"},
+  {"id":"balance","narration":"让输入和处理相互匹配，再观察队列有没有缩短。","visual":"上下两条示意流程对照，下面的队列逐渐缩短","action":"下方任务按处理节奏流动，最终剩一格等待","camera":"前后对照全景"}
+ ]
+}

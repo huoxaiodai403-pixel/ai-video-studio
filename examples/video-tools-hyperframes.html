@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>动效示例 · 画面预览</title>
+<script>
+// The workbench serves this file as a still preview and as render source.
+// The isolated worker copies GSAP beside index.html. Keep its script parser-
+// blocking so the timeline is ready before the renderer starts capture.
+if (location.pathname !== '/video-tools-example.html') {
+  document.write('<script src="gsap.min.js"><\/script>');
+}
+</script>
+<style>
+html,body{width:100%;height:100%;margin:0}
+body{background:#102038;color:#edf5ff;font-family:sans-serif}
+#root{position:relative;width:100%;height:100%;overflow:hidden}
+.clip{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:clamp(24px,5vw,64px)}
+h1{font-size:clamp(32px,5vw,64px);margin:0 0 28px}
+p{font-size:clamp(18px,2.2vw,28px);color:#a6caff;margin:0;line-height:1.6}
+#bar{height:6px;background:#8ebcff;width:80%;margin-top:48px;transform-origin:left}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-width="1280" data-height="720" data-duration="4">
+<section class="clip" data-start="0" data-duration="4">
+<h1 id="title">让想法动起来</h1><p id="subtitle">设计 → 动效 → 配音 → 成片</p><div id="bar"></div>
+</section>
+</div>
+<script>
+if (window.gsap) {
+  const tl=gsap.timeline({paused:true});
+  tl.from('#title',{y:36,opacity:0,duration:.6},.15);
+  tl.from('#subtitle',{y:24,opacity:0,duration:.5},.45);
+  tl.from('#bar',{scaleX:0,duration:1.4,ease:'power2.out'},.65);
+  window.__timelines=window.__timelines||{};
+  window.__timelines.main=tl;
+}
+</script>
+</body>
+</html>

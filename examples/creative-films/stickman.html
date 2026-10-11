@@ -1,0 +1,48 @@
+<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#fff}canvas{display:block}</style>
+<canvas id="stage" width="1280" height="720"></canvas>
+<!-- CREATIVE_FILM -->
+<script>
+const canvas=document.getElementById('stage'),ctx=canvas.getContext('2d'),ink='#202326',gold='#eab939';
+const mix=(a,b,p)=>a+(b-a)*p;
+function path(points,color=ink,width=7){ctx.beginPath();ctx.moveTo(...points[0]);for(const p of points.slice(1))ctx.lineTo(...p);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();}
+function figure(x,y,feet,lean=0,reach=0){
+ const hip=[x+lean,y-86],neck=[x+lean*.5,y-164];
+ path([neck,hip]); ctx.beginPath();ctx.arc(neck[0],neck[1]-27,25,0,Math.PI*2);ctx.strokeStyle=ink;ctx.lineWidth=7;ctx.stroke();
+ feet.forEach((foot,i)=>{const k=[mix(hip[0],foot[0],.53)+(i?9:-9),mix(hip[1],foot[1],.5)-8];path([hip,k,foot,[foot[0]+14,foot[1]]]);});
+ path([neck,[x-22+lean,y-119],[x-38+lean,y-100-reach]]);
+ path([neck,[x+30+lean,y-125],[x+43+lean,y-99-reach]]);
+}
+function stairs(){for(let i=0;i<4;i++){ctx.fillStyle=gold;ctx.fillRect(480+i*112,532-i*43,111,43+i*43);}}
+function heading(kicker,title){Film.text(ctx,kicker,70,59,18,'#8a7750','left',500);Film.text(ctx,title,70,120,48,ink);}
+window.renderFrame=function(t){
+ const s=Film.shot(t),p=s.progress,e=Film.ease;
+ ctx.fillStyle='#fff';ctx.fillRect(0,0,1280,720);
+ if(s.id==='wall'){
+  heading('一则关于开始的小故事','第一步，不必是山顶');
+  ctx.fillStyle='#eeeae0';ctx.fillRect(580,200,390,375);path([[80,575],[1120,575]],'#bfc3c4',3);
+  const lift=Math.sin(Math.min(1,p*1.7)*Math.PI)*17;figure(325,575,[[301,575],[346,575-lift]],-7,Math.sin(p*Math.PI)*15);
+  path([[457,211],[457,552]],'#b8b6af',2);path([[449,224],[457,211],[465,224]],'#b8b6af',2);
+ }else if(s.id==='steps'){
+  heading('把目标拆开','先找一个够得到的落点');
+  path([[80,575],[1170,575]],'#bfc3c4',3);
+  for(let i=0;i<4;i++){const k=e((p-.05*i)/.6),top=mix(200,532-i*43,k);ctx.fillStyle=i===0?gold:'#ede8d8';ctx.fillRect(480+i*112,top,111,575-top);}
+  figure(383,575,[[360,575],[405,575]],mix(-7,5,e(p*2)));
+  if(p>.48){ctx.globalAlpha=e((p-.48)*4);Film.text(ctx,'就这一步',530,493,27,'#94701d','center');ctx.globalAlpha=1;}
+ }else if(s.id==='weight'){
+  heading('把动作做实','落脚 → 移重心 → 站稳');
+  ctx.save();ctx.translate(-140,-335);ctx.scale(1.5,1.5);stairs();
+  const lift=e(p/.32),shift=e((p-.32)/.35),back=e((p-.65)/.3);
+  const front=[mix(416,520,lift),mix(575,532,lift)-Math.sin(lift*Math.PI)*45];
+  const rear=[mix(376,483,back),mix(575,532,back)-Math.sin(back*Math.PI)*34];
+  const x=mix(396,499,shift),y=mix(575,532,shift);figure(x,y,[rear,front],7);
+  ctx.fillStyle=gold;ctx.beginPath();ctx.arc(x+7,y-86,7,0,Math.PI*2);ctx.fill();ctx.restore();
+ }else{
+  heading('从一个落点，到下一个落点','今天，先走一步');stairs();path([[80,575],[480,575]],'#bfc3c4',3);
+  const step=e(p/.8),front=[mix(519,630,step),mix(532,489,step)-Math.sin(step*Math.PI)*42];
+  const follow=e((p-.28)/.6),rear=[mix(483,592,follow),mix(532,489,follow)-Math.sin(follow*Math.PI)*30];
+  const body=e((p-.12)/.65);figure(mix(499,610,body),mix(532,489,body),[rear,front],6*(1-body));
+  ctx.globalAlpha=e((p-.45)/.35);Film.text(ctx,'开始，就是进展。',982,332,32,'#8b6924','center');ctx.globalAlpha=1;
+ }
+ Film.caption(ctx,t,1280,720);
+};
+</script>

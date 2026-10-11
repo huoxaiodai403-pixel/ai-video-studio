@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "runtime": {"hyperframes":"0.8.143","remotion":"4.0.508","react":"19.2.8","ffprobe-static":"3.1.0","gsap":"3.14.2"},
+  "skills": [
+    {"id":"hyperframes","name":"HTML 动效视频","repo":"heygen-com/hyperframes","ref":"3aa68869f7d4cec8b37cdfcb9cd539389b63abed","paths":["skills/hyperframes","skills/hyperframes-core","skills/hyperframes-cli","skills/hyperframes-animation","skills/hyperframes-creative"],"entry":"hyperframes","execution":"upstream-cli"},
+    {"id":"video-use","name":"按内容剪辑","repo":"browser-use/video-use","ref":"43cfc566833548093455c9d4a46bd69913b7e552","paths":["."],"entry":"video-use","execution":"studio-adapter"},
+    {"id":"remotion","name":"React 模板视频","repo":"remotion-dev/skills","ref":"32b241b97f4e0e4ab61fe9a41b05e6e64503f8c5","paths":["skills/remotion-best-practices","skills/remotion-render","skills/remotion-create","skills/remotion-multimedia","skills/remotion-saas"],"entry":"remotion-best-practices","execution":"remotion-renderer"},
+    {"id":"ffmpeg-skill","name":"剪切、拼接与导出","repo":"kajisho5/ffmpeg-skill","ref":"008333aaf6722083392eb6bd8bd67b59884a2a26","paths":["."],"entry":"ffmpeg-skill","execution":"upstream-cli-and-studio-adapter"},
+    {"id":"agent-caption","name":"识别并制作字幕","repo":"ahkamboh/agent-caption","ref":"e25c765b0e82d924fc0674bd0f9c1e9e56b8427b","paths":["."],"entry":"agent-caption","execution":"whisperx-or-studio-asr"},
+    {"id":"video-subtitle-translator","name":"多语言字幕","repo":"alwaysmavs/agent-skills","ref":"3ed0d80a5f9bf2bbdafba478008633ed042d898b","paths":["skills/video-subtitle-translator"],"entry":"video-subtitle-translator","execution":"studio-provider-adapter"},
+    {"id":"video-dubbing","name":"翻译与配音","repo":"renky1025/agent-skills","ref":"32ce6c04a9c0627343da024b678e05dcacaa17a5","paths":["video-dubbing"],"entry":"video-dubbing","execution":"windows-adapter"},
+    {"id":"app-demo-agent","name":"产品录屏成片","repo":"michaelboeding/skills","ref":"ca686c565bd3498ddc792dc34397a116d24f2adb","paths":["skills/app-demo-agent"],"entry":"app-demo-agent","execution":"studio-adapter"},
+    {"id":"browser-video-recording","name":"浏览器截图演示","repo":"MengTo/Skills","ref":"83a47fee32f0b6349bff1fede99257a5ef03dc93","paths":["agent-skills/codex/browser-video-recording"],"entry":"browser-video-recording","execution":"upstream-python"},
+    {"id":"imagegen","name":"生成与导入视觉素材","repo":"openai/skills","ref":"builtin","paths":["skills/.system/imagegen"],"entry":"imagegen","execution":"codex-handoff-or-studio-image-provider"}
+  ]
+}

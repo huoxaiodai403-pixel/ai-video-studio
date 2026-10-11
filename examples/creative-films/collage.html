@@ -1,0 +1,43 @@
+<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#f0e9d9}canvas{display:block}</style>
+<canvas id="stage" width="1280" height="720"></canvas>
+<!-- CREATIVE_FILM -->
+<script>
+const ctx=document.getElementById('stage').getContext('2d'),cream='#f0e9d9',green='#254a41',red='#b4422f',blue='#325c98',gold='#e8ba46';
+function paper(x,y,w,h,color,rotation=0){ctx.save();ctx.translate(x,y);ctx.rotate(rotation);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,4);for(let i=0;i<11;i++)ctx.lineTo(w*i/10,(i*7%5)-2);ctx.lineTo(w,h-4);for(let i=10;i>=0;i--)ctx.lineTo(w*i/10,h+(i*3%5)-2);ctx.closePath();ctx.fill();ctx.restore();}
+function bike(x,y,w,rotation=0){const im=Film.asset('bicycle');ctx.save();ctx.translate(x,y);ctx.rotate(rotation);ctx.drawImage(im,-w/2,-w*im.naturalHeight/im.naturalWidth/2,w,w*im.naturalHeight/im.naturalWidth);ctx.restore();}
+function route(points,progress,color=green){ctx.beginPath();ctx.moveTo(...points[0]);for(let i=1;i<points.length;i++){const q=Film.clamp(progress*(points.length-1)-(i-1));if(q<=0)break;ctx.lineTo(points[i-1][0]+q*(points[i][0]-points[i-1][0]),points[i-1][1]+q*(points[i][1]-points[i-1][1]));}ctx.lineWidth=14;ctx.strokeStyle=color;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();}
+function leaf(x,y,angle){ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.fillStyle=green;ctx.beginPath();ctx.ellipse(0,0,36,89,.5,0,7);ctx.fill();ctx.strokeStyle=cream;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-19,58);ctx.lineTo(20,-63);ctx.stroke();ctx.restore();}
+window.renderFrame=function(t){const s=Film.shot(t),p=s.progress,e=Film.ease;ctx.fillStyle=cream;ctx.fillRect(0,0,1280,720);
+ // Fixed grain belongs to the film's paper stock; no random frame-to-frame flicker.
+ ctx.fillStyle='rgba(63,52,29,.08)';for(let i=0;i<2000;i++)ctx.fillRect(i*83%1280,i*137%720,1,1);
+ Film.text(ctx,'城市散步计划 / 原创短片',58,45,16,s.id==='arrive'?cream:green,'left',500);
+ if(s.id==='rush'){
+  paper(770,120-300*(1-e(p*4)),365,440,'#d5d9bd',.065);
+  route([[890,500],[920,370],[865,300],[990,215]],e((p-.12)*2));
+  paper(901,177,135,50,green,-.05);Film.text(ctx,'终点',962,204,25,cream,'center');
+  Film.text(ctx,'赶路时',68,145,65,green);Film.text(ctx,'只看见终点。',68,229,65,green);
+  bike(365-670*(1-e(p*2.8)),451,600,-.035);
+ }else if(s.id==='look'){
+  paper(0,198,690,364,blue,-.028);bike(371,465,860+.08*p*860,-.035);
+  leaf(988,438,Math.sin(p*5)*.12);leaf(1088,468,.8+Math.sin(p*4)*.1);leaf(950,529,-.7);
+  Film.text(ctx,'慢一点',754,178,67,green);Film.text(ctx,'风就有了形状',758,254,39,green,'left',500);
+  for(let i=0;i<3;i++){ctx.strokeStyle=blue;ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(955+p*30,336+i*24,99+i*7,15,0,Math.PI,Math.PI*1.9);ctx.stroke();}
+ }else if(s.id==='choose'){
+  paper(55,126,755,447,'#d5d9bd',-.024);
+  for(let i=0;i<6;i++){ctx.strokeStyle='rgba(37,74,65,.2)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(81,159+i*65);ctx.lineTo(790,146+i*63);ctx.stroke();}
+  route([[125,500],[315,500],[413,315],[706,243]],1,'#9da990');
+  route([[125,500],[315,500],[402,410],[629,410],[697,321]],e(p*1.8),gold);
+  bike(275+e(p)*355,374-e(p)*60,326);
+  Film.text(ctx,'拐个弯',846,259,59,green);Film.text(ctx,'让好奇心带路',846,339,34,green,'left',500);
+ }else{
+  paper(0,0,1280,625,green);
+  paper(67-550*(1-e(p*4)),130,493,334,blue,-.07);
+  paper(681,126-370*(1-e(p*3)),470,440,gold,.04);
+  bike(388,407,580-.06*580*e(p),-.055);
+  Film.text(ctx,'今天的收获',700,221,40,green,'left',500);
+  Film.text(ctx,'也可以',700,315,76,green);Film.text(ctx,'是沿途。',700,415,76,green);
+  ctx.globalAlpha=e((p-.45)*3);Film.text(ctx,'给生活留一点绕路的余地',714,502,24,green,'left',500);ctx.globalAlpha=1;
+ }
+ Film.caption(ctx,t,1280,720);
+};
+</script>

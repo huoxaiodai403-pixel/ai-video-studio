@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#1c2424}canvas{display:block}</style></head><body><canvas width="1280" height="720"></canvas>
+<!-- CREATIVE_FILM -->
+<script>
+const c=document.querySelector('canvas'),g=c.getContext('2d');
+window.renderFrame=function(t){const s=Film.shot(t),p=Film.ease(s.progress);g.fillStyle='#1b2525';g.fillRect(0,0,1280,720);Film.text(g,'人生副本 / 原创虚构',46,38,19,'#cebd98','left',500);
+if(s.index===0){let n=(s.progress>.72?2:Math.floor(s.progress*10)%3),names=['送信人','木匠','修伞人'];let hue=['#53666a','#9f7755','#55726b'][n];g.fillStyle=hue;g.fillRect(150,125,980,440);Film.text(g,'今天体验的人生',640,209,26,'#f4e5ce','center',400);Film.text(g,names[n],640,348,105,'#fff2d7','center',700);Film.text(g,'一间小店，一双手，一个平凡的早晨。',640,493,26,'#f4e5ce','center',400);}
+else{let i=Math.max(0,s.index-2);g.fillStyle='#eedfc4';g.fillRect(34,66,1212,538);let zoom=s.index===3?1.08:s.index===4?1.1-.1*p:1+.055*p;let pan=s.index===3?-.4+.8*p:s.index===5?.3-.6*p:0;Film.atlas(g,'comic',i,42,74,1196,522,zoom,pan);if(s.index===1){g.fillStyle='#162522ae';g.fillRect(63,415,407,135);Film.text(g,'修伞人',91,477,79,'#fff2d7');}Film.text(g,String(Math.max(1,s.index-1)).padStart(2,'0')+' / 04',1226,38,18,'#cebd98','right',400);}
+Film.caption(g,t,1280,720,true);};
+</script></body></html>

@@ -127,8 +127,21 @@ def map_boundaries(text, events, seconds):
     return result
 
 
-def cues(words, limit=18):
+def cues(words, limit=18, text=None, seconds=None):
     """Break captions only at actual synthesis word boundaries."""
+    if text is not None:
+        # Quantized forced aligners can put neighboring characters at one
+        # instant. Group them with a measured neighbor, never invent duration.
+        grouped=[]
+        for word in words:
+            start,end=float(word['start']),float(word['end'])
+            if not all(math.isfinite(t) for t in (start,end)) or end<start or start<0 or (grouped and start<grouped[-1]['start']):
+                raise ValueError('语音服务返回无效时间戳，未生成字幕。')
+            if grouped and (end==start or grouped[-1]['end']==grouped[-1]['start']):
+                grouped[-1]['text']+=word['text'];grouped[-1]['end']=max(grouped[-1]['end'],end)
+            else:grouped.append(dict(word))
+        words=grouped
+        words = map_boundaries(text, words, seconds)
     result, pending = [], None
     for word in words:
         if pending and len(norm(pending['text'] + word['text'])) > limit:
@@ -139,7 +152,7 @@ def cues(words, limit=18):
         else:
             pending['text'] += word['text']
             pending['end'] = word['end']
-        if pending['text'].rstrip().endswith(('。', '！', '？', '；', '.', '!', '?', ';', '\n')):
+        if pending['text'].rstrip().endswith(('。', '！', '？', '；', '，', '.', '!', '?', ';', ',', '\n')):
             result.append(pending)
             pending = None
     if pending:

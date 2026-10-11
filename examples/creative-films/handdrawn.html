@@ -1,0 +1,21 @@
+<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#f8f6ef}canvas{display:block}</style>
+<canvas id="stage" width="720" height="1280"></canvas>
+<!-- CREATIVE_FILM -->
+<script>
+const ctx=document.getElementById('stage').getContext('2d'),paper='#f8f6ef',ink='#282827',yellow='#ecc640',blue='#5e8da8',red='#bf5547';
+function rough(points,progress=1){ctx.beginPath();ctx.moveTo(...points[0]);for(let i=1;i<points.length;i++){let q=Film.clamp(progress*(points.length-1)-(i-1));if(q<=0)break;ctx.lineTo(points[i-1][0]+(points[i][0]-points[i-1][0])*q,points[i-1][1]+(points[i][1]-points[i-1][1])*q);}ctx.strokeStyle=ink;ctx.lineWidth=7;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();}
+function jar(progress=1){rough([[213,460],[207,479],[208,509],[185,540],[186,885],[201,912],[512,914],[534,889],[536,543],[514,511],[514,461]],progress);rough([[212,461],[294,456],[428,460],[515,458]],progress);}
+function stone(y,angle=0){ctx.save();ctx.translate(360,y);ctx.rotate(angle);ctx.beginPath();ctx.moveTo(-108,-64);ctx.lineTo(-53,-116);ctx.lineTo(67,-111);ctx.lineTo(121,-41);ctx.lineTo(115,85);ctx.lineTo(31,122);ctx.lineTo(-96,85);ctx.closePath();ctx.fillStyle=yellow;ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=7;ctx.stroke();for(let i=0;i<14;i++){ctx.strokeStyle='rgba(161,128,28,.22)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-70+i*11,-55);ctx.lineTo(-90+i*11,65);ctx.stroke();}ctx.restore();}
+function sand(p,around=false){for(let i=0;i<144;i++){const seed=(i*73%139)/139;const col=around?i%2===0?203+(i*13%32):479+(i*17%36):206+(i*31%305);let base=around?884-Math.floor(i/16)*16:890-Math.floor(i/17)*40;let q=Film.clamp(p*1.8-i/144);if(q<=0)continue;let y=base-(1-Film.ease(q*3))*(base-260);ctx.fillStyle=i%4===0?red:blue;ctx.beginPath();ctx.ellipse(col,y,6+seed*2,3+seed*2,i*.4,0,7);ctx.fill();}}
+window.renderFrame=function(t){const s=Film.shot(t),p=s.progress;ctx.fillStyle=paper;ctx.fillRect(0,0,720,1280);
+ Film.text(ctx,'日常的小比喻',360,126,24,'#888174','center',500);
+ const title={noise:['一天，怎么就满了？',''],stuck:['重要的事','却没有位置'],first:['先装重要的事',''],space:['给琐事','留下合适的空隙']}[s.id];
+ title.filter(Boolean).forEach((v,i)=>Film.text(ctx,v,360,226+i*64,45,ink,'center'));
+ if(s.id==='noise'){jar(Film.clamp(p*5));sand(p);}
+ if(s.id==='stuck'){jar();sand(1);stone(440+Math.sin(Math.min(1,p*2)*Math.PI)*12,-.05);rough([[538,401],[570,375]]);rough([[556,426],[592,424]]);}
+ if(s.id==='first'){jar(Film.clamp(p*5));stone(365+430*Film.ease(p/.7),.1*(1-Film.ease(p/.7)));}
+ if(s.id==='space'){jar();stone(795);sand(p,true);ctx.globalAlpha=Film.ease((p-.4)/.4);Film.text(ctx,'顺序，也是一种选择。',360,1021,30,'#716747','center',500);ctx.globalAlpha=1;}
+ Film.text(ctx,'视觉比喻 · 非容量实验',360,1103,19,'#948d80','center',400);
+ Film.caption(ctx,t,720,1280);
+};
+</script>

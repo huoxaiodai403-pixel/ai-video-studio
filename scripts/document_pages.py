@@ -32,8 +32,18 @@ if not EXTERNAL_VAULT:
     if studio_edition.is_friend():
         DOCS['/plan'] = ('运行依赖', NOTES/'local-models.md', 'CPU 渲染、Windows 系统配音与可选在线服务。')
 
+# Legacy links remain readable pages instead of octet-stream downloads.
+BRIEF = ROOT/'workflows/制作简报模板.md'
+REFERENCES = ROOT/'skills/ai-video-studio/references'
+REFERENCE_FILES = (BRIEF, ROOT/'NOTICE.md', ROOT/'workflows/generation-routes.json')
+DOCS['/brief'] = ('制作简报模板', BRIEF, '先确定内容、素材与交付要求，再进入工作流制作。')
+
 def allowed(path):
-    return path.resolve().is_relative_to(NOTES.resolve())
+    return any(path.resolve().is_relative_to(p.resolve()) for p in (NOTES,ROOT/'docs',REFERENCES)) or any(path.resolve() == p.resolve() for p in REFERENCE_FILES)
+
+def document_path(path):
+    base=ROOT if path.resolve().is_relative_to(ROOT.resolve()) else VAULT
+    return path.resolve().relative_to(base.resolve()).as_posix()
 
 def resolve_note(name, source):
     name = name.replace('\\|', '|').split('|')[0]
@@ -46,7 +56,7 @@ def resolve_note(name, source):
 def note_url(path):
     for route, (_, p, _) in DOCS.items():
         if path.resolve() == p.resolve(): return route
-    return '/docs/view?path='+quote(path.relative_to(VAULT).as_posix())
+    return '/docs/view?path='+quote(document_path(path))
 
 def render(source, title, description, active):
     text = source.read_text(encoding='utf-8-sig')
@@ -79,32 +89,46 @@ def render(source, title, description, active):
             if parsed.scheme or href.startswith(('/', '#')):continue
             p=(source.parent/unquote(parsed.path)).resolve()
             if allowed(p) and p.is_file():
-                child.attrSet(key,note_url(p) if p.suffix=='.md' else '/docs/asset?path='+quote(p.relative_to(VAULT).as_posix()))
+                child.attrSet(key,note_url(p) if p.suffix=='.md' else '/docs/asset?path='+quote(document_path(p)))
     body=md.renderer.render(tokens,md.options,{})
     # Provenance comes from metadata; retain the first heading for CSS suppression.
     body=re.sub(r'(<h1\b[^>]*>.*?</h1>)',lambda m:m.group(1)+provenance,body,count=1,flags=re.S)
     body=re.sub(r'<a href="(/docs/asset\?path=[^"<>]+\.(?:mp4|webm))">[^<]*</a>',r'<video controls preload="metadata" src="\1"></video><p><a href="\1">打开视频附件</a></p>',body)
-    body=re.sub(r'<table>(.*?)</table>',r'<div class="table-scroll"><table>\1</table></div>',body,flags=re.S)
+    body=re.sub(r'<table>(.*?)</table>',r'<div class="table-scroll" tabindex="0" role="region" aria-label="文档表格，可横向滚动"><table>\1</table></div>',body,flags=re.S)
     toc_html=''.join('<a href="#'+ident+'" class="level-'+tag+'">'+html.escape(label)+'</a>' for tag,label,ident in toc if tag in ('h2','h3'))
     nav=''.join('<a href="'+url+'">'+label+'</a>' for url,label in [('/', '插画与提示词'),('/production','视频制作'),('/motion','动态镜头'),('/subtitles','语音转字幕'),('/speech','音色克隆与配音'),('http://127.0.0.1:8188','ComfyUI'),('/settings','在线接口设置'),('/plan','部署方案'),('/research','文章与项目参考'),('/guide','使用说明')])
-    tabs=''.join('<a '+('aria-current="page" ' if url==active else '')+'href="'+url+'">'+label+'</a>' for url,(label,_,_) in DOCS.items())
-    raw_url='/docs/raw?path='+quote(source.relative_to(VAULT).as_posix())
-    return render_page(f'''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} · AI 工作台</title><link rel="stylesheet" href="/assets/workbench.css"><link rel="stylesheet" href="/assets/documents.css"><main><nav aria-label="工作台导航">{nav}</nav><p id="services" hidden>正在检查服务</p><header><div class="eyebrow">资料中心 / LOCAL KNOWLEDGE</div><h1>{html.escape(title)}</h1><p>{html.escape(description)}</p><div class="doc-tabs">{tabs}</div><div class="doc-meta">知识库实时读取 · {html.escape(source.name)} <a href="{raw_url}" download>下载 Markdown</a><button id="print-doc">打印 / 保存 PDF</button></div></header><div class="doc-layout"><aside class="doc-toc"><strong>本页目录</strong>{toc_html}</aside><article class="doc-body">{body}</article></div></main><script src="/assets/document.js"></script><script src="/assets/workbench.js"></script></html>''', active)
+    tabs=''.join('<a '+('aria-current="page" ' if p.resolve()==source.resolve() else '')+'href="'+url+'">'+label+'</a>' for url,(label,p,_) in DOCS.items())
+    help_url='/docs/view?path=docs/production-paths.md'
+    tabs='<a '+('aria-current="page" ' if source.resolve()==(ROOT/'docs/production-paths.md').resolve() else '')+'href="'+help_url+'">制作方式与角色</a>'+tabs
+    raw_url='/brief?download=1' if source.resolve()==BRIEF.resolve() else '/docs/raw?path='+quote(document_path(source))
+    origin='工作台随包文档' if source.resolve().is_relative_to(ROOT.resolve()) else '知识库实时读取'
+    return render_page(f'''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} · AI 工作台</title><link rel="stylesheet" href="/assets/workbench.css"><link rel="stylesheet" href="/assets/documents.css"><main><nav aria-label="工作台导航">{nav}</nav><p id="services" hidden>正在检查服务</p><header><div class="eyebrow">资料中心 / LOCAL KNOWLEDGE</div><h1>{html.escape(title)}</h1><p>{html.escape(description)}</p><div class="doc-tabs">{tabs}</div><div class="doc-meta">{origin} · {html.escape(source.name)} <a href="{raw_url}" download>下载 Markdown</a><button id="print-doc">打印 / 保存 PDF</button></div></header><div class="doc-layout"><aside class="doc-toc"><strong>本页目录</strong>{toc_html}</aside><article class="doc-body">{body}</article></div></main><script src="/assets/document.js"></script><script src="/assets/workbench.js"></script></html>''', active)
 
 def handle(handler, route):
+    if route.path == '/tutorial-note':
+        handler.send_response(302)
+        handler.send_header('Location', '/guide')
+        handler.send_header('Content-Length', '0')
+        handler.end_headers()
+        return True
     if route.path in DOCS:
         title,source,description=DOCS[route.path]
         if not source.is_file():handler.reply({'error':'资料尚未安装，请查看仓库 docs 目录。'},404);return True
-        payload=render(source,title,description,route.path).encode('utf-8');mime='text/html; charset=utf-8'
+        if route.path == '/brief' and parse_qs(route.query).get('download') == ['1']:
+            payload=source.read_bytes();mime='text/plain; charset=utf-8'
+        else:
+            payload=render(source,title,description,route.path).encode('utf-8');mime='text/html; charset=utf-8'
     elif route.path in ('/docs/view','/docs/raw','/docs/asset'):
         name=parse_qs(route.query).get('path',[''])[0]
-        source=(VAULT/name).resolve()
+        base=ROOT if name.startswith(('docs/','skills/ai-video-studio/references/')) or name in {p.relative_to(ROOT).as_posix() for p in REFERENCE_FILES} else VAULT
+        source=(base/name).resolve()
         if not allowed(source) or not source.is_file():handler.reply({'error':'资料不存在'},404);return True
         if route.path in ('/docs/view','/docs/raw') and source.suffix!='.md':handler.reply({'error':'仅支持 Markdown'},400);return True
         if route.path=='/docs/view':
-            payload=render(source,source.stem,'知识库原文 · 内容与来源保留，正文中的媒体从本地附件读取。','/research').encode('utf-8');mime='text/html; charset=utf-8'
+            description='工作台操作与参考 · 与当前版本一起维护。' if source.is_relative_to(ROOT.resolve()) else '知识库原文 · 内容与来源保留，正文中的媒体从本地附件读取。'
+            payload=render(source,source.stem,description,note_url(source)).encode('utf-8');mime='text/html; charset=utf-8'
         else:
-            if source.suffix.lower() not in ('.md','.png','.jpg','.jpeg','.webp','.gif','.mp4','.webm','.mp3','.wav','.pdf'):
+            if source.suffix.lower() not in ('.md','.json','.png','.jpg','.jpeg','.webp','.gif','.mp4','.webm','.mp3','.wav','.pdf'):
                 handler.reply({'error':'不支持的资料类型'},400);return True
             payload=source.read_bytes();mime='text/plain; charset=utf-8' if source.suffix=='.md' else mimetypes.guess_type(source.name)[0] or 'application/octet-stream'
     else:return False

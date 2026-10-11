@@ -6,13 +6,17 @@ from comfy_client import HTTP, URL, unload
 
 
 def complete(config, body):
+    import studio_edition
+    studio_edition.require_local()
     if not config['local_model']:
         raise ValueError('请先在本地模型与设置中选择编剧模型。')
     base = config['local_url'].rstrip('/')
     managed = base == 'http://127.0.0.1:11434/v1' and (ROOT/'apps/Ollama/ollama.exe').is_file()
     body = {**body, 'model': config['local_model']}
     if managed:
-        body.update(response_format={'type': 'json_object'}, reasoning_effort='none', max_tokens=8192)
+        body.update(response_format={'type': 'json_object'})
+        body.setdefault('reasoning_effort','none')
+        body.setdefault('max_tokens',8192)
     with requests.Session() as session:
         session.trust_env = False
         try:

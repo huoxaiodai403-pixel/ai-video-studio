@@ -8,6 +8,13 @@ For code changes, inspect the affected API and its tests. Keep model workers
 isolated from the lightweight HTTP/UI environment. Use paths derived from the
 repository root and preserve existing project files and per-job settings.
 
+For frontend changes, read `docs/design-system.md`. Keep palette, typography,
+controls and motion in the shared design layers; page styles own task-specific
+layout. Do not add another page theme or a tail of global overrides. Verify the
+affected flow in the real browser, including short desktop and narrow screens,
+input preservation, transient states and focus. A passing test suite is not
+visual acceptance. Maintain one workbench; local models remain optional.
+
 Useful checks:
 
 ```powershell

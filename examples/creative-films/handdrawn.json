@@ -1,0 +1,14 @@
+{
+  "title":"先装重要的事 · 手绘讲解",
+  "width":720, "height":1280, "fps":25,
+  "speech":{"backend":"windows","voice_id":"Microsoft Huihui Desktop","speed":1},
+  "scene_html":"handdrawn.html",
+  "style":"暖白纸底、黑色粗线、黄蓝红蜡笔色；竖屏构图，逐笔画出与物体落下。",
+  "brief":"原创时间安排的视觉比喻，瓶子容量是示意，不是实验或精确统计。",
+  "scenes":[
+    {"id":"noise","narration":"零碎的小事，总能填满一天。","visual":"沙粒不断落进玻璃罐","action":"零散色点落下并在罐底堆积","camera":"固定中景"},
+    {"id":"stuck","narration":"等到重要的事出现，却发现已经装不下。","visual":"黄色大石头被已经填满的罐口挡住","action":"石头下落，触碰沙堆后停住","camera":"罐口近景"},
+    {"id":"first","narration":"换个顺序。先放进今天最重要的一件事。","visual":"空罐里先放入一颗黄色大石头","action":"画出罐子轮廓，大石头落到底部","camera":"全景"},
+    {"id":"space","narration":"再让零碎的小事，去填剩下的空隙。","visual":"蓝红沙粒落在石头两侧，石头保持可见","action":"细粒绕过石头堆积，末态停留","camera":"固定中景"}
+  ]
+}

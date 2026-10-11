@@ -4,6 +4,7 @@ import os
 import re
 import socket
 import subprocess
+import sys
 import threading
 import uuid
 from pathlib import Path
@@ -17,10 +18,15 @@ import library_api
 import online_services
 import generation_api
 import studio_edition
+import review_api
+import video_tools_api
+import character_library
 
 SERVICES = {}
 CONTROL = threading.Lock()
 PYTHON = ROOT / 'tools/.venv/Scripts/python.exe'
+if not PYTHON.is_file():
+    PYTHON = Path(sys.executable)
 
 
 def listening(port):
@@ -29,19 +35,24 @@ def listening(port):
         return sock.connect_ex(('127.0.0.1', port)) == 0
 
 
-def launch(name, command, cwd=ROOT):
+def launch(name, command, cwd=ROOT, *, provider_snapshot=None):
     env = os.environ.copy()
     env.update(PYTHONUTF8='1', HF_HUB_DISABLE_TELEMETRY='1', HF_HOME=str(ROOT/'cache/huggingface'))
+    (ROOT/'logs').mkdir(parents=True, exist_ok=True)
     with (ROOT/'logs'/f'{name}.log').open('w', encoding='utf-8') as log:
-        process = subprocess.Popen(list(map(str, command)), cwd=cwd, env=env,
-                                   stdout=log, stderr=subprocess.STDOUT,
-                                   creationflags=subprocess.CREATE_NO_WINDOW)
+        options = dict(cwd=cwd, env=env, stdout=log, stderr=subprocess.STDOUT,
+                       creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+        process = (providers.start_worker(command, provider_snapshot, **options) if provider_snapshot is not None
+                   else subprocess.Popen(list(map(str, command)), **options))
     SERVICES[name] = process
     return process
 
 
 def handle_get(handler, route, jobs=None):
     if studio_edition.reject(handler, route.geturl(), 'GET'):return True
+    if character_library.get(handler,route):return True
+    if review_api.get(handler,route,jobs):return True
+    if video_tools_api.get(handler,route,jobs):return True
     if generation_api.get(handler, route, jobs):return True
     if online_services.get(handler, route):return True
     if route.path == '/api/jianying/status':
@@ -61,9 +72,11 @@ def handle_get(handler, route, jobs=None):
     if route.path=='/api/music':
         import music_api
         return music_api.get(handler,route)
-    if not studio_edition.is_friend():
-        import investigation_api
-        if investigation_api.get(handler,route):return True
+    if route.path=='/api/enhance':
+        import enhancement
+        return enhancement.get(handler,route)
+    import investigation_api
+    if investigation_api.get(handler,route):return True
     if whiteboard_api.get(handler,route):return True
     if creation_api.get(handler,route):return True
     if route.path == '/api/providers':
@@ -92,6 +105,9 @@ def _jianying_project_id(value):
 
 def handle_post(handler, data, jobs):
     if studio_edition.reject(handler, handler.path, 'POST', data):return True
+    if character_library.post(handler,data):return True
+    if review_api.post(handler,data,jobs):return True
+    if video_tools_api.post(handler,data,jobs):return True
     if generation_api.post(handler, data, jobs):return True
     if handler.path in ('/api/jianying/export', '/api/jianying/open'):
         import jianying_bridge
@@ -118,13 +134,11 @@ def handle_post(handler, data, jobs):
     if handler.path=='/api/music':
         import music_api
         return music_api.post(handler,data,jobs)
-    if not studio_edition.is_friend():
-        import investigation_api
-        if investigation_api.post(handler,data,jobs):return True
+    import investigation_api
+    if investigation_api.post(handler,data,jobs):return True
     if whiteboard_api.post(handler,data,jobs):return True
-    if not studio_edition.is_friend():
-        import enhancement
-        if enhancement.post(handler,data,jobs):return True
+    import enhancement
+    if enhancement.post(handler,data,jobs):return True
     if online_services.post(handler,data,jobs):return True
     if creation_api.post(handler,data,jobs):return True
     if handler.path == '/api/providers':
@@ -135,7 +149,9 @@ def handle_post(handler, data, jobs):
         creation=creation_settings.validate(data.get('settings',{}),check_models=False,check_voice=False)
         backend=data.get('backend','local')
         if backend not in ('local','online'):raise ValueError('未知模型来源。')
-        if backend=='online':providers.configured('video')
+        provider_snapshot=providers.freeze(['video'] if backend=='online' else [])
+        if backend=='online':
+            with providers.frozen(provider_snapshot):providers.configured('video')
         if backend=='local':
             import model_profiles
             model_profiles.require('motion',creation['motion']['engine'],creation['models'])
@@ -170,14 +186,16 @@ def handle_post(handler, data, jobs):
                 jobs[job].update(status='error',error=str(exc))
             finally:
                 (dest/'status.json').write_text(json.dumps(jobs[job],ensure_ascii=False),encoding='utf-8')
-        threading.Thread(target=motion,daemon=True).start()
+        threading.Thread(target=providers.bind(provider_snapshot,motion),daemon=True).start()
         handler.reply({'job_id':job},202)
         return True
     if handler.path == '/api/transcribe':
         creation=creation_settings.validate(data.get('settings',{}),check_models=False,check_voice=False)
         backend=data.get('backend','local')
         if backend not in ('local','online'):raise ValueError('未知模型来源。')
-        if backend=='online':providers.configured('asr')
+        provider_snapshot=providers.freeze(['asr'] if backend=='online' else [])
+        if backend=='online':
+            with providers.frozen(provider_snapshot):providers.configured('asr')
         if backend=='local' and listening(7860):
             handler.reply({'error':'请先停止配音界面。'},409)
             return True
@@ -203,7 +221,7 @@ def handle_post(handler, data, jobs):
                 jobs[job].update(status='error',error=str(exc))
             finally:
                 (dest/'status.json').write_text(json.dumps(jobs[job],ensure_ascii=False),encoding='utf-8')
-        threading.Thread(target=transcribe,daemon=True).start()
+        threading.Thread(target=providers.bind(provider_snapshot,transcribe),daemon=True).start()
         handler.reply({'job_id':job},202)
         return True
     if handler.path == '/api/services/tts':
@@ -235,9 +253,11 @@ def handle_post(handler, data, jobs):
     if any(spec.get('backends',{}).get(kind,'local')=='local' for kind in required) and (listening(7860) or ('tts' in SERVICES and SERVICES['tts'].poll() is None)):
         handler.reply({'error':'请先在导航中停止配音界面，再运行使用本地模型的制片任务。'},409)
         return True
-    for kind,backend in spec.get('backends',{}).items():
-        if kind not in ('tts','asr','image','video') or backend not in ('local','online'):raise ValueError('未知流水线模型来源。')
-        if backend=='online' and kind in required:providers.configured(kind)
+    provider_snapshot=providers.freeze([kind for kind in required if spec.get('backends',{}).get(kind)=='online'])
+    with providers.frozen(provider_snapshot):
+        for kind,backend in spec.get('backends',{}).items():
+            if kind not in ('tts','asr','image','video') or backend not in ('local','online'):raise ValueError('未知流水线模型来源。')
+            if backend=='online' and kind in required:providers.configured(kind)
     ids=[]
     if spec.get('render_mode','illustrated') not in ('illustrated','whiteboard'):
         raise ValueError('未知的制作模式。')
@@ -264,7 +284,7 @@ def handle_post(handler, data, jobs):
     def run():
         try:
             jobs[job]['status']='running'
-            proc=launch(job,[PYTHON,ROOT/'scripts/pipeline.py',dest])
+            proc=launch(job,[PYTHON,ROOT/'scripts/pipeline.py',dest],provider_snapshot=provider_snapshot)
             code=proc.wait()
             if code:
                 raise RuntimeError(f'制作失败，日志：{ROOT / "logs" / (job + ".log")}')
@@ -279,6 +299,12 @@ def handle_post(handler, data, jobs):
 
 
 PAGES = {
+    '/characters': ROOT/'scripts/characters.html',
+    '/assets/character-picker.js': ROOT/'scripts/character-picker.js', '/assets/characters.js': ROOT/'scripts/characters.js',
+    '/assets/characters.css': ROOT/'scripts/characters.css',
+    '/review': ROOT/'scripts/review.html',
+    '/assets/review.js': ROOT/'scripts/review.js',
+    '/assets/review.css': ROOT/'scripts/review.css',
     '/favicon.ico': ROOT/'assets/brand/studio-mark.ico',
     '/assets/brand/studio-mark.svg': ROOT/'assets/brand/studio-mark.svg',
     '/assets/brand/studio-mark.png': ROOT/'assets/brand/studio-mark.png',
@@ -291,6 +317,11 @@ PAGES = {
     '/assets': ROOT/'scripts/assets.html',
     '/workflows': ROOT/'scripts/workflows.html',
     '/generation': ROOT/'scripts/generation.html',
+    '/video-tools': ROOT/'scripts/video-tools.html',
+    '/assets/video-tools.js': ROOT/'scripts/video-tools.js',
+    '/assets/video-editor-state.js': ROOT/'scripts/video-editor-state.js',
+    '/assets/video-tools.css': ROOT/'scripts/video-tools.css',
+    '/video-tools-example.html': ROOT/'examples/video-tools-hyperframes.html',
     '/assets/generation.js': ROOT/'scripts/generation.js',
     '/assets/generation.css': ROOT/'scripts/generation.css',
     '/model-library': ROOT/'scripts/model-library.html',
@@ -302,16 +333,28 @@ PAGES = {
     '/assets/model-library.js': ROOT/'scripts/model-library.js',
     '/music': ROOT/'scripts/music.html',
     '/assets/music.js': ROOT/'scripts/music.js',
+    '/assets/media-tool.js': ROOT/'scripts/media-tool.js',
     '/assets/image_references.js': ROOT/'scripts/image_references.js',
+    '/assets/studio-storage.js': ROOT/'scripts/studio-storage.js',
+    '/assets/tool-draft-state.js': ROOT/'scripts/tool-draft-state.js',
+    '/assets/tool-workspace.js': ROOT/'scripts/tool-workspace.js',
+    '/assets/tool-workspace.css': ROOT/'scripts/tool-workspace.css',
+    '/assets/workflow-stages.js': ROOT/'scripts/workflow-stages.js',
+    '/assets/workflow-stages.css': ROOT/'scripts/workflow-stages.css',
+    '/assets/image-page.js': ROOT/'scripts/image-page.js',
+    '/assets/speech-page.js': ROOT/'scripts/speech-page.js',
     '/investigation': ROOT/'scripts/investigation.html',
     '/assets/investigation.js': ROOT/'scripts/investigation.js',
     '/investigation-reference.mp4': ROOT/'apps/simon-skills/skills/investigation-video/assets/sample-preview.mp4',
     '/voices': ROOT/'scripts/voices.html',
     '/assets/voices.js': ROOT/'scripts/voices.js',
+    '/assets/voice-editor-state.js': ROOT/'scripts/voice-editor-state.js',
+    '/assets/draft-migration.js': ROOT/'scripts/draft-migration.js',
     '/assets/speech_voices.js': ROOT/'scripts/speech_voices.js',
     '/assets/speech-picker.js': ROOT/'scripts/speech-picker.js',
     '/whiteboard': ROOT/'scripts/whiteboard.html',
     '/assets/whiteboard.js': ROOT/'scripts/whiteboard.js',
+    '/assets/whiteboard.css': ROOT/'scripts/whiteboard.css',
     '/assets/documents.css': ROOT/'scripts/documents.css',
     '/assets/document.js': ROOT/'scripts/document.js',
     '/enhance': ROOT/'scripts/enhance.html',
@@ -320,14 +363,22 @@ PAGES = {
     '/models': ROOT/'scripts/local-models.html',
     '/runtime-settings': ROOT/'scripts/models.html',
     '/assets/local-models.js': ROOT/'scripts/local-models.js',
+    '/assets/model-catalog.js': ROOT/'scripts/model-catalog.js',
+    '/assets/model-catalog.css': ROOT/'scripts/model-catalog.css',
     '/novel': ROOT/'scripts/novel.html',
     '/director': ROOT/'scripts/director.html',
     '/assets/director.js': ROOT/'scripts/director.js',
     '/learn': ROOT/'scripts/learn.html',
     '/assets/creation.js': ROOT/'scripts/creation.js',
     '/assets/novel.js': ROOT/'scripts/novel.js',
+    '/assets/storyboard-state.js': ROOT/'scripts/storyboard-state.js',
     '/assets/controls.css': ROOT/'scripts/controls.css',
     '/assets/workbench.css': ROOT/'scripts/workbench.css',
+    '/assets/design-tokens.css': ROOT/'scripts/design-tokens.css',
+    '/assets/ui-components.css': ROOT/'scripts/ui-components.css',
+    '/assets/ui-components.js': ROOT/'scripts/ui-components.js',
+    '/assets/voices.css': ROOT/'scripts/voices.css',
+    '/assets/reference-pages.css': ROOT/'scripts/reference-pages.css',
     '/assets/workbench.js': ROOT/'scripts/workbench.js',
     '/settings': ROOT/'scripts/online-services.html',
     '/assets/online-services.css': ROOT/'scripts/online-services.css',

@@ -27,12 +27,25 @@ DEFAULTS = {'auth_mode': 'api_key', 'app_id': '', 'resource_id': 'seed-tts-2.0',
 
 def load(public=False):
     frozen=SNAPSHOT.get()
+    shared=providers.SNAPSHOT.get()
+    if frozen is None and shared is not None:
+        frozen={**DEFAULTS, **shared.get('volc', {})}
     row = copy.deepcopy(frozen) if frozen is not None else {**DEFAULTS, **(json.loads(CONFIG.read_text(encoding='utf-8')) if CONFIG.exists() else {})}
     if public:
         for name in ('api_key', 'access_token'):
-            row['has_'+name] = bool(row.pop(name+'_encrypted', '') or os.getenv('VOLC_TTS_'+name.upper()))
+            row['has_'+name] = bool(row.pop(name+'_encrypted', '') or (os.getenv('VOLC_TTS_'+name.upper()) if frozen is None else ''))
         row['configured'] = bool(row['voice'] and row['resource_id'] and
                                  (row['has_api_key'] if row['auth_mode'] == 'api_key' else row['app_id'] and row['has_access_token']))
+    return row
+
+
+def freeze():
+    row = load()
+    if SNAPSHOT.get() is None and providers.SNAPSHOT.get() is None:
+        for name in ('api_key', 'access_token'):
+            value = os.getenv('VOLC_TTS_'+name.upper(), '')
+            if not row.get(name+'_encrypted') and value:
+                row[name+'_encrypted'] = providers.crypt(value)
     return row
 
 
@@ -73,7 +86,7 @@ def configured():
     headers = {'Content-Type': 'application/json', 'X-Api-Resource-Id': row['resource_id'],
                'X-Api-Connect-Id': str(uuid.uuid4())}
     def secret(name):
-        return providers.crypt(row[name+'_encrypted'], True) if row.get(name+'_encrypted') else os.getenv('VOLC_TTS_'+name.upper(), '')
+        return providers.crypt(row[name+'_encrypted'], True) if row.get(name+'_encrypted') else (os.getenv('VOLC_TTS_'+name.upper(), '') if SNAPSHOT.get() is None and providers.SNAPSHOT.get() is None else '')
     if row['auth_mode'] == 'api_key':
         key = secret('api_key')
         if not key:

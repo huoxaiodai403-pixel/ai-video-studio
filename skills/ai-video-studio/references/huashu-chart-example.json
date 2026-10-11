@@ -1,0 +1,27 @@
+{
+  "grammar": "t3_finance_chart",
+  "width": 1280,
+  "height": 720,
+  "fps": 25,
+  "duration": 6,
+  "theme": "paper",
+  "data": {
+    "title": "让素材跟上叙事",
+    "unit": "已覆盖镜头 / 个",
+    "source": "工作台流程演示 · 非真实统计",
+    "badge": "演示数据",
+    "chart": "bar",
+    "decimals": 0,
+    "series": [
+      {"label": "脚本初稿", "value": 4},
+      {"label": "补齐分镜", "value": 7},
+      {"label": "素材入库", "value": 10},
+      {"label": "审片完成", "value": 12}
+    ]
+  },
+  "cues": [
+    {"at": 0, "kind": "title"},
+    {"at": 0.8, "kind": "bar", "dur": 1.8},
+    {"at": 3.2, "kind": "highlight", "text": "逐镜核对", "sub": "画面与口播对应", "data": {"index": 3}}
+  ]
+}

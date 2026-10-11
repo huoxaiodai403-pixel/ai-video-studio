@@ -18,8 +18,9 @@ from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_ope
 JSON_LIMIT = 8 * 1024 * 1024
 REQUEST_LIMIT = 500_000
 EDITION_FILE = Path(__file__).resolve().parents[1] / 'EDITION'
-FRIEND = EDITION_FILE.is_file() and EDITION_FILE.read_text(encoding='utf-8-sig').strip() == 'friend'
+FRIEND = False  # Legacy command shape; one workbench exposes all optional backends.
 ACTIONS = {
+    'video-tools': '/api/video-tools/run',
     'whiteboard-preview': '/api/whiteboard/preview',
     'whiteboard-render': '/api/whiteboard/render',
     'investigation-save': '/api/investigation/save',
@@ -39,10 +40,8 @@ ACTIONS = {
     'generation-compose': '/api/generation/compose',
     'generation-render': '/api/generation/render',
 }
-if FRIEND:
-    ACTIONS = {key: value for key, value in ACTIONS.items()
-               if key.startswith(('whiteboard-', 'generation-')) or key == 'speech'}
-JOB_PATTERN = r'(?:[a-f0-9]{12}|gen-[a-f0-9]{32}|(?:whiteboard|investigation|speech|music|motion|asr|video|enhance|story|generation)-[a-f0-9]{10})'
+# All workflows are available; each selected backend checks its own dependencies.
+JOB_PATTERN = r'(?:video-tools-[a-f0-9]{12}|[a-f0-9]{12}|gen-[a-f0-9]{32}|(?:whiteboard|investigation|speech|music|motion|asr|video|enhance|story|generation)-[a-f0-9]{10})'
 LIB_PATTERN = r'lib-[a-f0-9]{24}'
 PROJECT_PATTERN = r'[A-Za-z0-9][A-Za-z0-9_-]{0,119}'
 DOWNLOAD_FIELDS = ('video', 'audio', 'subtitle', 'bundle', 'image', 'storyboard_url',

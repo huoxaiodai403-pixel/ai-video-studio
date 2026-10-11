@@ -3,28 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>朋友版工作台 · AI STUDIO</title>
+  <title>工作台 · AI STUDIO</title>
   <link rel="stylesheet" href="/assets/workbench.css">
   <link rel="stylesheet" href="/assets/hub.css">
 </head>
 <body class="hub-page dashboard-page" data-workbench-services="true">
 <main>
-  <nav aria-label="工作台导航"><a href="/home">工作台</a><a href="/library">我的作品</a><a href="/gallery">图库</a><a href="/workflows">工作流</a><a href="/settings">设置</a></nav>
+  <nav aria-label="工作台导航"><a href="/home">工作台</a><a href="/library">我的作品</a><a href="/assets">资源库</a><a href="/workflows">工作流</a><a href="/settings">设置</a></nav>
   <p id="services" hidden>检查服务状态…</p>
   <header class="dashboard-heading">
-    <div><span class="hub-kicker">AI STUDIO · 朋友版</span><h1>和 Codex 一起做视频</h1><p>让 Codex 创作，在这里看样片、选声音、管理作品。</p></div>
-    <a class="hub-button primary dashboard-new" href="/workflows">开始创作</a>
+    <div><h1>创作工作台</h1><p>从一个想法开始，或接着完成你的作品。</p></div>
+    <a class="hub-button primary dashboard-new" href="/workflows"><span aria-hidden="true">＋</span> 开始创作</a>
   </header>
-  <section class="dashboard-create-section" aria-labelledby="flows-heading">
-    <div class="hub-section-head"><h2 id="flows-heading">从这里开始</h2><a class="dashboard-text-link" href="#codex-start">如何配合 Codex →</a></div>
-    <div class="dashboard-create-grid">
-      <a class="dashboard-create-card" href="/generation?route=code-animation"><svg class="dashboard-create-icon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-12-2 18"/></svg><strong>代码动画 <span aria-hidden="true">↗</span></strong><span>让文字、图形和步骤动起来</span><small>Codex 写动画，工作台渲染</small></a>
-      <a class="dashboard-create-card" href="/whiteboard"><svg class="dashboard-create-icon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h18v14H3Zm9 14v5m-5 0 5-5 5 5M7 8h5m-5 4h10"/></svg><strong>手绘白板 <span aria-hidden="true">↗</span></strong><span>用图形和旁白一步步讲清楚</span><small>适合方法讲解、流程演示</small></a>
-      <a class="dashboard-create-card" href="/speech"><svg class="dashboard-create-icon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0m-7 7v5m-4 0h8"/></svg><strong>配音试听 <span aria-hidden="true">↗</span></strong><span>把台词变成自然清楚的声音</span><small>先试听，再放进作品</small></a>
-      <a class="dashboard-create-card" href="/library"><svg class="dashboard-create-icon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M9 4 6 9m9-5-3 5m8-5-3 5m-7 3 5 3-5 3Z"/></svg><strong>我的作品 <span aria-hidden="true">↗</span></strong><span>查看、下载和继续修改</span><small>成片也从这里送到剪映</small></a>
-    </div>
-  </section>
-  <section class="dashboard-recent-section" aria-labelledby="recent-heading">
+  <section class="ui-panel dashboard-recent-section" aria-labelledby="recent-heading">
     <div class="hub-section-head"><h2 id="recent-heading">继续最近的工程</h2><div class="hub-actions"><button class="hub-button secondary" id="refresh-overview" type="button">刷新</button><a class="dashboard-text-link" href="/library">全部工程 →</a></div></div>
     <div class="dashboard-recent-content">
       <ul class="dashboard-project-list" id="recent-products" aria-label="最近工程" aria-busy="true">
@@ -32,25 +23,34 @@
         <li class="dashboard-project-row dashboard-skeleton" aria-hidden="true"><span class="dashboard-product-visual"></span><span class="dashboard-product-body"><span class="dashboard-skeleton-title"></span><span class="dashboard-skeleton-meta"></span></span><span class="dashboard-skeleton-action"></span></li>
         <li class="dashboard-project-row dashboard-skeleton" aria-hidden="true"><span class="dashboard-product-visual"></span><span class="dashboard-product-body"><span class="dashboard-skeleton-title"></span><span class="dashboard-skeleton-meta"></span></span><span class="dashboard-skeleton-action"></span></li>
       </ul>
-      <div class="dashboard-empty" id="recent-empty" hidden><h3 id="recent-empty-title">还没有工程记录</h3><p id="recent-empty-description">从一段代码动画或白板讲解开始，保存后就能在这里继续。</p><a class="dashboard-text-link" id="recent-empty-action" href="/generation?route=code-animation">开始第一份创作 →</a></div>
+      <div class="dashboard-empty" id="recent-empty" hidden><h3 id="recent-empty-title">还没有工程记录</h3><p id="recent-empty-description">从一个主题、故事或参考素材开始，保存后就能在这里继续。</p><a class="dashboard-text-link" id="recent-empty-action" href="/workflows">开始第一份创作 →</a></div>
     </div>
     <p class="hub-status" id="task-overview-status" role="status" aria-live="polite">正在读取工程记录…</p>
   </section>
-  <section class="dashboard-tools-section" id="tools" aria-labelledby="tools-heading">
-    <div class="hub-section-head"><div><h2 id="tools-heading">声音、素材与精修</h2><p>选好声音和画面，再完善作品。</p></div></div>
-    <div class="dashboard-tool-grid">
-      <a href="/voices"><strong>音色库</strong><span>选择并复用自己的声音预设</span></a>
-      <a href="/gallery"><strong>图库</strong><span>查看图片与视频素材</span></a>
-      <a href="/library"><strong>送到剪映</strong><span>从已完成作品的详情交接草稿</span></a>
+  <section class="dashboard-create-section" aria-labelledby="flows-heading">
+    <div class="hub-section-head">
+      <h2 id="flows-heading">你想创作什么？</h2><a class="dashboard-text-link" href="/workflows">全部创作方式 →</a>
+    </div>
+    <div class="dashboard-create-grid">
+      <a class="dashboard-create-card" href="/generation?route=code-animation"><svg class="dashboard-create-icon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-12-2 18"/></svg><strong>动效视频 <span aria-hidden="true">↗</span></strong><span>把文字、数据和图形做成动效</span><small>适合知识解释、产品演示</small></a>
+      <a class="dashboard-create-card" href="/generation?route=character-story"><svg class="dashboard-create-icon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="3"/><path d="M3 21v-4a6 6 0 0 1 12 0v4m2-11 5 3-5 3Z"/></svg><strong>角色短片 <span aria-hidden="true">↗</span></strong><span>固定角色，编排分镜与声音</span><small>适合故事、绘本与情景叙事</small></a>
+      <a class="dashboard-create-card" href="/whiteboard"><svg class="dashboard-create-icon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h18v14H3Zm9 14v5m-5 0 5-5 5 5M7 8h5m-5 4h10"/></svg><strong>手绘白板 <span aria-hidden="true">↗</span></strong><span>用图形和旁白一步步讲清楚</span><small>适合方法讲解、流程演示</small></a>
+      <a class="dashboard-create-card" href="/investigation"><svg class="dashboard-create-icon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h7a2 2 0 0 1 2 2v15a4 4 0 0 0-4-2H3Zm18 0h-7a2 2 0 0 0-2 2v15a4 4 0 0 1 4-2h5ZM6 8h3m-3 4h3m6-4h3m-3 4h3"/></svg><strong>调查长片 <span aria-hidden="true">↗</span></strong><span>把来源、章节和素材组织成片</span><small>适合专题分析、深度内容</small></a>
     </div>
   </section>
-  <details class="dashboard-help" id="codex-start" open>
-    <summary>第一次用：在 Codex 中开始</summary>
-    <p>在 Codex 中打开工作台目录，安装配套 Skill 后开始新对话。你可以直接说：</p>
-    <blockquote>使用 $ai-video-studio，先检查环境。由你写口播和分镜，做一段解释“先查原始出处”的代码动画，生成短样片让我检查，保留源码与工程。</blockquote>
-    <p>Codex 提交后，在这里查看结果并继续反馈。代码动画页也可使用自己已配置的编剧；文字、构图、动作与听感仍需实际审看。</p>
-    <div class="hub-inline-links"><a href="/workflows">查看制作步骤</a><a href="/settings">配音与编剧设置</a></div>
-  </details>
+  <section class="ui-panel dashboard-tools-section" id="tools" aria-labelledby="tools-heading">
+    <div class="hub-section-head"><div><h2 id="tools-heading">单步工具</h2><p>补一张图、一段声音或一个镜头。</p></div><a class="dashboard-text-link" href="/assets">打开资源库 →</a></div>
+    <div class="dashboard-tool-grid">
+      <a class="ui-action-row" href="/image"><strong>图像创作</strong><span>生图与参考图编辑</span></a>
+      <a class="ui-action-row" href="/motion"><strong>短镜头</strong><span>首帧与动态生成</span></a>
+      <a class="ui-action-row" href="/speech"><strong>配音</strong><span>台词与角色声音</span></a>
+      <a class="ui-action-row" href="/music"><strong>音乐与音效</strong><span>配乐与声音素材</span></a>
+      <a class="ui-action-row" href="/subtitles"><strong>语音转字幕</strong><span>文字与时间轴</span></a>
+      <a class="ui-action-row" href="/enhance"><strong>视频增强</strong><span>放大与补帧</span></a>
+    </div>
+    <div class="dashboard-resource-links"><span>我的素材</span><a href="/gallery">图库</a><a href="/voices">音色库</a><a href="/audio-library">音频库</a></div>
+  </section>
+  <details class="dashboard-help"><summary>帮助与运行设置</summary><div class="hub-inline-links"><a href="/learn">上手教程</a><a href="/director">运镜词典与方法</a><a href="/models">运行与默认参数</a><a href="/settings">在线接口设置</a><a href="/guide">使用说明</a></div></details>
 </main>
 <script src="/assets/workbench.js"></script>
 <script src="/assets/home.js"></script>

@@ -1,5 +1,6 @@
 """Workbench model inventory, voice library, drafts and novel adaptation."""
 import base64
+import copy
 import fnmatch
 import json
 import re
@@ -18,27 +19,35 @@ from comfy_client import HTTP,URL,unload
 ROOT=settings.ROOT
 
 def snapshot(spec):
+    import character_library
+    character_library.apply_storyboard(spec)
     stages=['tts','asr']+([] if spec.get('render_mode')=='whiteboard' else ['image'])
     if spec.get('motion_enabled') and spec.get('render_mode')!='whiteboard':stages.append('video')
-    spec['settings']=settings.validate(spec.get('settings',{}),check_models=False)
     local_stages={kind for kind in stages if spec.get('backends',{}).get(kind,'local')=='local'}
+    if local_stages:
+        import studio_edition
+        studio_edition.require_local()
+    spec['settings']=settings.validate(spec.get('settings',{}),check_models=False,check_voice='tts' in local_stages)
     import model_profiles
     for stage,kind in [('image','image'),('video','motion')]:
         if stage in local_stages:model_profiles.require(kind,spec['settings'][kind]['engine'],spec['settings']['models'])
     if 'asr' in local_stages and not (Path(spec['settings']['models']['align_dir'])/'config.json').is_file():
         raise ValueError('本地字幕对齐模型尚未安装，请准备 ForcedAligner 或选择在线识别')
+    local_voice = 'tts' in local_stages
+    voice = {**spec['settings']['voice']}
     if spec.get('voice_reference'):
-        spec['settings']['voice']=settings.validate_voice({**spec['settings']['voice'],'reference':spec['voice_reference']})
+        voice['reference'] = spec['voice_reference']
+    spec['settings']['voice'] = settings.validate_voice(voice, check_reference=local_voice)
     characters=spec.get('characters',{})
     if not isinstance(characters,dict) or len(characters)>30:raise ValueError('角色最多 30 个')
     for name,voice in characters.items():
         if not isinstance(name,str) or not 1<=len(name)<=50:raise ValueError('角色名称应为 1–50 字')
-        characters[name]=settings.validate_voice(settings.merge(spec['settings']['voice'],voice))
+        characters[name]=settings.validate_voice(settings.merge(spec['settings']['voice'],voice), check_reference=local_voice)
     for scene in spec.get('scenes',[]):
         if spec['settings']['image']['engine']=='flux2-klein-4b' and scene.get('steps',4)!=4:
             raise ValueError('FLUX.2 klein 4B 的逐镜图像步数必须为 4，请修改分镜设置')
         if scene.get('speaker') and scene['speaker'] not in characters:raise ValueError('镜头指定的角色没有音色配置：'+scene['speaker'])
-        if 'voice' in scene:scene['voice']=settings.validate_voice(settings.merge(spec['settings']['voice'],scene['voice']))
+        if 'voice' in scene:scene['voice']=settings.validate_voice(settings.merge(spec['settings']['voice'],scene['voice']), check_reference=local_voice)
         if 'emotion' in scene:
             if not isinstance(scene['emotion'],list) or len(scene['emotion'])!=8:raise ValueError('情感向量需要 8 个值')
             scene['emotion']=[settings.number(x,0,.8,'情感强度') for x in scene['emotion']]
@@ -58,6 +67,10 @@ def get(handler,route):
     if voice_get(handler,route):return True
     if route.path=='/api/director':handler.reply(director.catalog());return True
     if route.path=='/api/story/status':
+        import studio_edition
+        if studio_edition.is_friend():
+            handler.reply({'ready': False, 'message': '精简版不包含本地编剧模型，请使用在线编剧或 Codex。'})
+            return True
         c=settings.load()['story'];state={'model':c['local_model'],'ready':False}
         try:
             with requests.Session() as session:
@@ -88,7 +101,7 @@ def get(handler,route):
         raw=p.read_bytes();handler.send_response(200);handler.send_header('Content-Type','audio/wav');handler.send_header('Content-Length',str(len(raw)));handler.end_headers();handler.wfile.write(raw);return True
     return False
 
-def adapt(data):
+def adapt(data, *, story_settings=None):
     text=data.get('text','').strip();mode=data.get('mode','split');style=data.get('style','国漫电影感，统一人物设定')
     if not 1<=len(text)<=16000:raise ValueError('请按章节输入 1–16000 字小说；长篇请分批制作')
     limit=settings.number(data.get('count',6),1,12,'镜头数',True)
@@ -110,7 +123,9 @@ def adapt(data):
     if mode=='online':
         raw=providers.story(body['messages'],temperature=body['temperature'])
     else:
-        c=settings.load()['story']
+        import studio_edition
+        studio_edition.require_local()
+        c=story_settings if story_settings is not None else settings.load()['story']
         from local_story import complete
         response=complete(c,body)
         raw=response['choices'][0]['message']['content']
@@ -179,10 +194,17 @@ def post(handler,data,jobs):
     if path=='/api/novel':
         # Local splitting is instant; LLM adaptation is an observable background job.
         if data.get('mode','split')=='split':handler.reply(adapt(data));return True
+        # Freeze request-scoped settings before the worker starts. Secrets remain
+        # in memory; subsequent changes in the settings page affect future jobs.
+        payload=copy.deepcopy(data)
+        story_settings=copy.deepcopy(settings.load()['story']) if payload.get('mode')=='local' else None
+        provider_settings=providers.freeze(['story']) if payload.get('mode')=='online' else None
         job='story-'+uuid.uuid4().hex[:10];jobs[job]={'kind':'story','status':'queued'}
         def run():
-            try:jobs[job]['status']='running';jobs[job].update(status='done',storyboard=adapt(data))
+            token=providers.SNAPSHOT.set(provider_settings)
+            try:jobs[job]['status']='running';jobs[job].update(status='done',storyboard=adapt(payload,story_settings=story_settings))
             except Exception as exc:jobs[job].update(status='error',error=str(exc))
+            finally:providers.SNAPSHOT.reset(token)
         threading.Thread(target=run,daemon=True).start();handler.reply({'job_id':job},202);return True
     if path=='/api/speech' and data.get('backend','online')=='local':
         from studio_extensions import listening,launch,PYTHON

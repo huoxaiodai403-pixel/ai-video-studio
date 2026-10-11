@@ -10,10 +10,7 @@
   const emptyAction = document.getElementById('recent-empty-action');
   const cacheKey = 'studio-home-recent-v1';
   const recentLimit = 3;
-  const editorParameters = {'/generation':['plan', 'id'], '/whiteboard':['project'], '/investigation':['project'], '/novel':['draft'], '/production':['project']};
-  if (document.documentElement.dataset.studioEdition === 'friend') {
-    for (const path of ['/investigation', '/novel', '/production']) delete editorParameters[path];
-  }
+  const editorParameters = {'/video-tools':['project'], '/generation':['plan', 'id'], '/whiteboard':['project'], '/investigation':['project'], '/novel':['draft'], '/production':['project']};
   const states = {done:'已生成', queued:'排队中', running:'制作中', error:'需处理', draft:'草稿', preview:'样片'};
   const workflows = {image:'图像', motion:'短镜头', generation:'生成工坊', whiteboard:'手绘白板', investigation:'调查长片', video:'视频制作', enhance:'视频增强', speech:'配音', music:'配乐', sfx:'音效', asr:'字幕', story:'编剧'};
   let pending = false;
@@ -84,7 +81,7 @@
     emptyTitle.textContent = failed ? '工程记录暂时无法读取' : '还没有工程记录';
     emptyDescription.textContent = failed ? '可以重试读取，或从上方开始新的创作。' : '从一个主题、故事或参考素材开始，保存后就能在这里继续。';
     emptyAction.textContent = failed ? '打开作品库 →' : '开始第一份创作 →';
-    emptyAction.href = failed ? '/library' : '/generation';
+    emptyAction.href = failed ? '/library' : '/workflows';
   }
   function showItems(items) {
     const nextSignature = JSON.stringify(items);
@@ -97,7 +94,7 @@
   }
   function restoreCache() {
     try {
-      const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+      const cached = JSON.parse(StudioStorage.session.getItem(cacheKey) || 'null');
       if (!cached || cached.version !== 1 || !validItems(cached.items) || cached.items.length > recentLimit || !Number.isFinite(cached.readAt) || cached.readAt <= 0) return;
       showItems(displayItems(recentProjects(cached.items)));
       lastRead = cached.readAt;
@@ -105,7 +102,7 @@
     } catch (_) { /* A storage restriction must not prevent a live library read. */ }
   }
   function saveCache(items) {
-    try { sessionStorage.setItem(cacheKey, JSON.stringify({version:1, readAt:lastRead, items})); }
+    try { StudioStorage.session.setItem(cacheKey, JSON.stringify({version:1, readAt:lastRead, items})); }
     catch (_) { /* The current page remains usable when session storage is unavailable. */ }
   }
   function render(item) {
@@ -126,7 +123,7 @@
     }
     const body = element('div', null, 'dashboard-product-body');
     const heading = element('h3');
-    const detail = element('a', item.title || item.project_id || '未命名工程');
+    const detail = element('a', item.title || item.project_id || '未命名工程', 'ui-title-link');
     detail.href = '/library?item=' + encodeURIComponent(item.id);
     detail.title = item.title || item.project_id || '未命名工程';
     heading.append(detail);

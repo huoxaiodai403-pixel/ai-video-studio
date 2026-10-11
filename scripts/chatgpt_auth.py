@@ -10,6 +10,7 @@ import secrets
 import threading
 import time
 import uuid
+from contextlib import contextmanager
 from urllib.parse import urlencode
 
 import requests
@@ -41,6 +42,31 @@ def save(value):
     temp.replace(CONFIG)
 
 
+@contextmanager
+def account_lock():
+    """All account writes share the worker refresh lock and the same lock order."""
+    CONFIG.parent.mkdir(exist_ok=True)
+    with LOCK, FileLock(str(CONFIG.with_suffix('.refresh.lock')), timeout=40):
+        yield
+
+
+def _identity(row, expected=None):
+    changed = '本次任务使用的 ChatGPT 账号已切换或断开，请重新连接原账号，或使用当前账号新建任务。'
+    if not (row.get('access_token') and row.get('client_id') and row.get('subject')
+            and 'chatgpt.tokens.use.direct' in row.get('scopes', [])):
+        raise ValueError(changed if expected is not None else '请先在「在线服务 → 编剧与分镜」登录并授权 ChatGPT。')
+    value = hashlib.sha256(json.dumps([row['client_id'], row['subject']], separators=(',', ':')).encode()).hexdigest()
+    if expected is not None and (not isinstance(expected, str) or not secrets.compare_digest(value, expected)):
+        raise ValueError(changed)
+    return value
+
+
+def identity(expected=None):
+    """An opaque account identity, without a token or personal account fields."""
+    with LOCK:
+        return _identity(load(), expected)
+
+
 def status():
     with LOCK:
         row = load()
@@ -54,7 +80,7 @@ def status():
 
 def start(port, new_account=False):
     global PENDING, GENERATION, LAST_ERROR
-    with LOCK:
+    with account_lock():
         row = load()
         if not row.get('host_id'):
             row['host_id'] = 'urn:uuid:'+str(uuid.uuid4())
@@ -121,7 +147,7 @@ def verify_identity(token, client, nonce):
 
 def complete(query):
     global PENDING, LAST_ERROR
-    with LOCK:
+    with account_lock():
         pending = PENDING
         if not pending or pending['expires_at'] <= time.time():
             raise ValueError('授权已取消或过期，请回工作台重新登录。')
@@ -154,7 +180,7 @@ def complete(query):
         scopes = tokens.get('scope', '').split()
         if 'chatgpt.tokens.use.direct' not in scopes:
             raise ValueError('账号已识别，但未获得 ChatGPT 套餐使用授权。请检查账号资格与授权选项。')
-        with LOCK:
+        with account_lock():
             if pending['generation'] != GENERATION:
                 raise ValueError('此次登录已取消，不会保存迟到的授权结果。')
             record = {'host_id': row['host_id'], 'client_id': client, 'subject': identity['sub'],
@@ -173,12 +199,10 @@ def complete(query):
         raise
 
 
-def access(force=False):
-    CONFIG.parent.mkdir(exist_ok=True)
-    with FileLock(str(CONFIG.with_suffix('.refresh.lock')), timeout=40), LOCK:
+def access(force=False, *, account_id=None):
+    with account_lock():
         row = load()
-        if not row.get('access_token') or 'chatgpt.tokens.use.direct' not in row.get('scopes', []):
-            raise ValueError('请先在「在线服务 → 编剧与分镜」登录并授权 ChatGPT。')
+        _identity(row, account_id)
         if force or row.get('expires_at', 0) < time.time()+60:
             tokens = token_request({'grant_type': 'refresh_token', 'client_id': row['client_id'],
                                     'refresh_token': row['refresh_token'], 'resource': RESOURCE})
@@ -191,9 +215,10 @@ def access(force=False):
         return row['access_token']
 
 
-def request(method, path, **kwargs):
+def request(method, path, *, account_id=None, **kwargs):
+    account_id = identity(account_id)
     for attempt in range(2):
-        token = access(force=attempt > 0)
+        token = access(force=attempt > 0, account_id=account_id)
         try:
             response = requests.request(method, RESOURCE+path, headers={'Authorization': 'Bearer '+token}, timeout=(15, 180), allow_redirects=False, **kwargs)
         except requests.RequestException:
@@ -209,8 +234,8 @@ def request(method, path, **kwargs):
     raise RuntimeError('ChatGPT 账号需要重新登录。')
 
 
-def models():
-    response = request('GET', '/models')
+def models(*, account_id=None):
+    response = request('GET', '/models', account_id=account_id)
     try:
         return [{'id': r['slug'], 'name': r.get('display_name', r['slug'])} for r in response.json().get('models', [])
                 if r.get('visibility') == 'list' and isinstance(r.get('slug'), str)]
@@ -220,10 +245,12 @@ def models():
         response.close()
 
 
-def generate(model, messages):
-    if not model or model not in {r['id'] for r in models()}:
+def generate(model, messages, *, account_id=None):
+    account_id = identity(account_id)
+    if not model or model not in {r['id'] for r in models(account_id=account_id)}:
         raise ValueError('请先选择当前 ChatGPT 账号实际可用的模型。')
-    response = request('POST', '/responses', json={'model': model, 'input': messages, 'store': False, 'stream': True}, stream=True)
+    response = request('POST', '/responses', account_id=account_id,
+                       json={'model': model, 'input': messages, 'store': False, 'stream': True}, stream=True)
     output, completed = [], False
     try:
         for line in response.iter_lines():
@@ -250,7 +277,7 @@ def generate(model, messages):
 
 def logout():
     global GENERATION, PENDING, LAST_ERROR
-    with LOCK:
+    with account_lock():
         row = load()
         GENERATION += 1
         PENDING = None

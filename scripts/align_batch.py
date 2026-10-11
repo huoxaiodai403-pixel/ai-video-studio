@@ -52,28 +52,11 @@ def main():
             raise RuntimeError(f'No alignment: {scene["id"]}')
         alignment_file.write_text(json.dumps(entries,ensure_ascii=False,indent=2),encoding='utf-8')
         cache_file.write_text(json.dumps({'input_sha256':key,'alignment_sha256':file_sha(alignment_file)}),encoding='utf-8')
-        # Prefer punctuation boundaries in the supplied script; timing stays model-derived.
-        clean = lambda value: ''.join(c for c in value if c.isalnum()).lower()
-        clauses = [s for s in re.split(r'[，。！？；、,.!?;]+', scene['narration']) if s]
-        boundaries, position = {}, 0
-        for clause in clauses:
-            position += len(clean(clause))
-            boundaries[position] = clause
-        matched = clean(''.join(x['text'] for x in entries)) == clean(scene['narration'])
-        group = []
-        position = 0
-        for i, item in enumerate(entries):
-            group.append(item)
-            position += len(clean(item['text']))
-            length = len(''.join(x['text'] for x in group))
-            if (matched and position in boundaries and length >= 5) or length >= 18 or i == len(entries)-1:
-                start = max(0, min(group[0]['start'], duration))
-                end = max(start, min(group[-1]['end'], duration))
-                if end <= start:
-                    raise RuntimeError(f'Nonpositive subtitle interval: {scene["id"]}')
-                text = ''.join(x['text'] for x in group)
-                subtitles.append(f'{len(subtitles)+1}\n{stamp(offset+start)} --> {stamp(offset+end)}\n{text}\n')
-                group = []
+        from lightweight_speech import cues
+        size=spec.get('settings',load())['output']
+        for cue in cues(entries,limit=14 if size['height']>size['width'] else 18,
+                        text=scene['narration'],seconds=duration):
+            subtitles.append(f"{len(subtitles)+1}\n{stamp(offset+cue['start'])} --> {stamp(offset+cue['end'])}\n{cue['text']}\n")
         timeline.append({'id': scene['id'], 'start': offset, 'duration': duration})
         offset += duration
     (project / 'subtitles.srt').write_text('\n'.join(subtitles), encoding='utf-8')

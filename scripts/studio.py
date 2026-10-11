@@ -161,7 +161,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         try:
             size = int(self.headers.get('Content-Length', '0'))
-            if size > (18*1024*1024 if self.path in ('/api/voices','/api/image-references') else 3*1024*1024 if self.path=='/api/generation/render' else 500000):
+            if size > (45*1024*1024 if self.path == '/api/video-tools/import' else 18*1024*1024 if self.path in ('/api/voices','/api/image-references') else 3*1024*1024 if self.path=='/api/generation/render' else 500000):
                 return self.reply({'error': 'request too large'}, 413)
             data = json.loads(self.rfile.read(size))
             if studio_edition.reject(self, self.path, 'POST', data):
@@ -179,8 +179,9 @@ class Handler(BaseHTTPRequestHandler):
             backend=data.get('backend','local')
             if backend not in ('local','online'):
                 return self.reply({'error':'未知模型来源'},400)
+            provider_snapshot=providers.freeze(['image'] if backend=='online' else [])
             if backend=='online':
-                configured,_=providers.configured('image')
+                with providers.frozen(provider_snapshot):configured,_=providers.configured('image')
                 data['model']=configured['model']
             else:
                 import model_profiles
@@ -213,12 +214,18 @@ class Handler(BaseHTTPRequestHandler):
                     JOBS[job].update(status='error', error=str(exc))
                 finally:
                     (dest / 'status.json').write_text(json.dumps(JOBS[job], ensure_ascii=False, indent=2), encoding='utf-8')
-            threading.Thread(target=run, daemon=True).start()
+            threading.Thread(target=providers.bind(provider_snapshot,run), daemon=True).start()
             return self.reply({'job_id': job}, 202)
         except (ValueError, TypeError, KeyError, OSError, RuntimeError) as exc:
             return self.reply({'error': str(exc)}, 400)
 
 
 if __name__ == '__main__':
-    print('AI Video Studio: http://127.0.0.1:8189', flush=True)
-    ThreadingHTTPServer(('127.0.0.1', 8189), Handler).serve_forever()
+    import argparse
+    parser = argparse.ArgumentParser(description='Local AI Video Studio')
+    parser.add_argument('--port', type=int, default=8189)
+    args = parser.parse_args()
+    if not 1024 <= args.port <= 65535:
+        parser.error('port must be 1024-65535')
+    print(f'AI Video Studio: http://127.0.0.1:{args.port}', flush=True)
+    ThreadingHTTPServer(('127.0.0.1', args.port), Handler).serve_forever()

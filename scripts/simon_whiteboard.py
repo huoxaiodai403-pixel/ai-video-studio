@@ -37,16 +37,12 @@ def readiness():
     checks = [{'name': 'node', 'ready': bool(node), 'message': str(node or '缺少 Node.js')},
               {'name': 'ffmpeg', 'ready': bool(ffmpeg), 'message': str(ffmpeg or '缺少 ffmpeg')},
               {'name': 'simon-source', 'ready': source_ready, 'message': source_message}]
-    env = os.environ.copy(); env['PLAYWRIGHT_BROWSERS_PATH'] = str(ROOT / 'cache/ms-playwright')
     if node and (SKILL / 'package.json').is_file():
-        try:
-            probe = subprocess.run([str(node), '-e', "const fs=require('fs');require('roughjs');require('lz-string');const p=require('playwright').chromium.executablePath();console.log(JSON.stringify({path:p,ready:fs.existsSync(p)}))"],
-                                   cwd=str(SKILL), env=env, capture_output=True, text=True, timeout=15, check=True)
-            browser = json.loads(probe.stdout)
-            checks.extend([{'name': 'node-packages', 'ready': True, 'message': 'Playwright / RoughJS / lz-string'},
-                           {'name': 'chromium', 'ready': browser['ready'], 'message': browser['path']}])
-        except (OSError, ValueError, subprocess.SubprocessError) as error:
-            checks.append({'name': 'node-packages', 'ready': False, 'message': f'请安装白板 Node 依赖及 Chromium: {error}'})
+        import renderer_health
+        installed = renderer_health.inspect(ROOT)
+        checks.append({'name': 'node-packages', 'ready': installed['ready'], 'message': installed['message']})
+        if installed['ready']:
+            checks.append({'name': 'chromium', 'ready': True, 'message': installed['executable']})
     else:
         checks.append({'name': 'node-packages', 'ready': False, 'message': '需要 Node.js 与 Simon 项目'})
     return {'ready': all(item['ready'] for item in checks), 'checks': checks,

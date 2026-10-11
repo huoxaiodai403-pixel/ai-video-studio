@@ -20,6 +20,10 @@ change licenses of dependencies, downloaded models, media or fonts.
 - The investigation renderer retains its specific attribution at
   `apps/investigation-renderer/NOTICE.md` and the complete upstream MIT license at
   `apps/investigation-renderer/LICENSE.simon-skills`.
+- The standalone publication-draft validator in `scripts/check_publish_copy.py`
+  adapts the template checks from Simon Skills' MIT-licensed
+  `skills/investigation-video/assets/check-publish-copy.py` at the same pinned
+  revision. It checks the workbench document template, not current platform rules.
 - Bundled Noto Sans SC fonts are under SIL Open Font License 1.1. The full notice
   is at `apps/investigation-renderer/fonts/LICENSE.OFL.txt`.
 - The optional Jianying draft bridge installs [pyJianYingDraft](https://github.com/GuanYixuan/pyJianYingDraft)

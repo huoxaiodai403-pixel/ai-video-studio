@@ -1,0 +1,14 @@
+{
+  "title":"春晓 · 逐句画卷","width":720,"height":1280,"fps":25,"tail":1.8,
+  "speech":{"backend":"windows","voice_id":"Microsoft Huihui Desktop","speed":0.65},
+  "scene_html":"poem.html","assets":{"poem":"assets/poem.webp"},
+  "audio_bed":{"path":"assets/garden.wav","gain":0.28,"loop":true,"credit":"项目自制合成风雨、啁啾与水声，不是现场或模型环境录音；make_soundbeds.py"},
+  "style":"四景统一绢本国风，镜头固定；代码生成的雨丝、水波和字层与底图分开。",
+  "brief":"孟浩然《春晓》全文逐句分景。原文核对：https://zh.wikisource.org/wiki/春曉_(孟浩然)。本地版本为原创画卷加局部后期特效，非 Gemini I2V，不声称鸟体具有模型动作。",
+  "scenes":[
+    {"id":"dawn","narration":"春眠不觉晓。","visual":"晨光照入窗棂与空榻，右侧逐句诗文","action":"晨光微亮，细尘漂浮","camera":"固定室内中景"},
+    {"id":"birds","narration":"处处闻啼鸟。","visual":"两只鸟栖在开花的枝头，花鸟特写","action":"保持原鸟体，轻雾慢移；声音作为诗意解释","camera":"固定花鸟近景"},
+    {"id":"rain","narration":"夜来风雨声。","visual":"回忆夜雨中的屋檐和石盆","action":"局部雨丝与水波叠加，画面结构固定","camera":"固定庭院全景"},
+    {"id":"petals","narration":"花落知多少。","visual":"石阶边的落花与水面倒影","action":"轻缓同心水波，末尾停留完整诗句","camera":"固定俯视细节"}
+  ]
+}

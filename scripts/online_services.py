@@ -47,10 +47,8 @@ def get(handler, route):
     return True
 
 
-def queue(handler, jobs, kind, backend, operation):
+def queue(handler, jobs, kind, backend, operation, *, provider_snapshot):
     # Keep each submitted request on the settings that were reviewed at submission.
-    provider_snapshot=providers.load()
-    volc_snapshot=volc_speech.load()
     identity = ('speech-' if kind == 'speech' else 'service-test-') + uuid.uuid4().hex[:10]
     dest = ROOT/'projects/studio'/identity
     dest.mkdir(parents=True)
@@ -61,8 +59,6 @@ def queue(handler, jobs, kind, backend, operation):
         speech.write_json(dest/'status.json', state)
     persist()
     def run():
-        token=providers.SNAPSHOT.set(provider_snapshot)
-        volc_token=volc_speech.SNAPSHOT.set(volc_snapshot)
         try:
             state.update(status='running', phase='正在请求服务并检查实际输出')
             persist()
@@ -78,9 +74,7 @@ def queue(handler, jobs, kind, backend, operation):
             state.update(status='error', phase='未完成', error=str(exc))
         finally:
             persist()
-            providers.SNAPSHOT.reset(token)
-            volc_speech.SNAPSHOT.reset(volc_token)
-    threading.Thread(target=run, daemon=True).start()
+    threading.Thread(target=providers.bind(provider_snapshot,run), daemon=True).start()
     handler.reply({'job_id': identity}, 202)
 
 
@@ -104,28 +98,33 @@ def post(handler, data, jobs):
         voice = data.get('settings', {}).get('voice', {})
         speed = data.get('speed', voice.get('speed', 1.0))
         identity = data.get('voice_id', voice.get('online_voice', '') if backend == 'online' else '')
-        identity = speech.validate(backend, identity, speed)
         text = data.get('text', '')
         if not isinstance(text, str) or not 1 <= len(text.strip()) <= 4000:
             raise ValueError('请输入 1–4000 字的配音文本。')
         subtitles = data.get('subtitles', backend != 'online')
         if not isinstance(subtitles, bool):
             raise ValueError('字幕开关必须为 true 或 false。')
-        if backend == 'online' and subtitles:
-            providers.configured('asr')
+        selected = (['tts']+(['asr'] if subtitles else [])) if backend == 'online' else ['volc'] if backend == 'volc' else []
+        provider_snapshot = providers.freeze(selected)
+        with providers.frozen(provider_snapshot):
+            identity = speech.validate(backend, identity, speed)
+            if backend == 'online' and subtitles:
+                providers.configured('asr')
         def speak(dest):
             metadata = speech.synthesize(text, dest/'audio.wav', backend, identity, speed, subtitles)
             speech.write_json(dest/'request.json', {'text': text, 'voice_id': identity, 'speed': speed, 'backend': backend})
             return {'audio': 'audio.wav', 'voice_engine': backend, 'speech': metadata,
                     **({'subtitle': 'audio.srt', 'alignment': 'audio.alignment.json'} if subtitles else {})}
-        queue(handler, jobs, 'speech', backend, speak)
+        queue(handler, jobs, 'speech', backend, speak, provider_snapshot=provider_snapshot)
         return True
     if handler.path != '/api/providers/test':
         return False
     kind = data.get('kind')
     if kind not in providers.KINDS:
         raise ValueError('请选择要验证的服务。')
-    providers.configured(kind)
+    provider_snapshot = providers.freeze([kind])
+    with providers.frozen(provider_snapshot):
+        providers.configured(kind)
     def check(dest):
         if kind == 'image':
             providers.image('A simple blue ceramic cup on a light background, no text.', dest/'image.png')
@@ -152,5 +151,5 @@ def post(handler, data, jobs):
         if not isinstance(text, str) or not text.strip():
             raise ValueError('模型没有返回文本，请检查模型是否支持对话接口。')
         return {'text': text}
-    queue(handler, jobs, 'service-test', kind, check)
+    queue(handler, jobs, 'service-test', kind, check, provider_snapshot=provider_snapshot)
     return True

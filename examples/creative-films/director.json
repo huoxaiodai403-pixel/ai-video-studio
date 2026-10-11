@@ -1,0 +1,15 @@
+{
+ "title":"手心里的小纸条 · 第一人称故事","width":1280,"height":720,"fps":25,
+ "speech":{"backend":"windows","voice_id":"Microsoft Huihui Desktop","speed":0.95},
+ "scene_html":"director.html",
+ "audio_bed":{"path":"assets/story.wav","gain":0.22,"loop":true,"credit":"项目自制合成柔和音床，非商业歌曲；make_soundbeds.py"},
+ "style":"原创二维人物故事，短发、青绿外套、杏色上衣和小纸条为固定身份锚点；靛蓝舞台与暖米色近景。",
+ "brief":"director 的 Storytime 模式，第一人称原创虚构，不冒充用户经历。事件从准备、卡壳、折纸、抬头到留存递进；角色动作由代码绘制，非 Seedance 人物表演。",
+ "scenes":[
+  {"id":"backstage","narration":"第一次上台前，我把开场白写满了一张纸。","visual":"后台等待的短发女生拿着写满字的纸","action":"低头看稿，手中纸张轻轻抖动","camera":"后台全景"},
+  {"id":"blank","narration":"可灯一亮，我连第一句都找不到。","visual":"舞台聚光灯下人物与展开的大纸张","action":"灯亮，目光在密密的字行间移动","camera":"人物中近景"},
+  {"id":"fold","narration":"我停下来，把纸对折，只留下一句想说的话。","visual":"双手在桌面上对折纸张，只露出一句话","action":"纸面沿中线折叠，手指跟随折痕压下","camera":"俯视手部特写"},
+  {"id":"look","narration":"抬头的时候，台下有人点了点头。","visual":"从讲述者肩后看向台下几位听众","action":"人物抬头，一名听众点头回应","camera":"过肩反打"},
+  {"id":"keep","narration":"那张小纸条，我到现在还留着。","visual":"书桌抽屉中留下折好的同一张纸","action":"手放下纸条后离开，画面安静停留","camera":"纸条与抽屉近景"}
+ ]
+}

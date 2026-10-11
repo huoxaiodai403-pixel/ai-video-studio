@@ -133,13 +133,21 @@ def _deliverables(folder, primary, kind):
                   ('sources.csv', '来源台账', 'sources'), ('publish-copy.md', '发布文案', 'publishing'),
                   ('delivery.zip', '交付包', 'bundle'), ('chapters.txt', '章节时间', 'chapters')]
     associated.extend([('plan.json', '创作计划', 'plan'), ('qa.json', '生成检查记录', 'qa'),
+                       ('stages.json', '制作步骤与产物', 'timeline'), ('request.json', '制作参数', 'source'),
                        ('scene.html', '可编辑动画源码', 'source'), ('scene.blend', '可编辑三维场景', 'source'),
                        ('scene-spec.json', '三维场景参数', 'source'), ('timeline.json', '镜头时间轴', 'timeline')])
     state = _read(folder / 'status.json', {})
+    if isinstance(state, dict) and state.get('method_id'):
+        associated.extend([('rendered/qa.json', '生成检查记录', 'qa'),
+                           ('rendered/scene.html', '可编辑动画源码', 'source'),
+                           ('method-snapshot.json', '方法与素材快照', 'source'),
+                           ('delivery-manifest.json', '交付清单', 'source')])
     whiteboard = folder.name.startswith('whiteboard-') or isinstance(state, dict) and state.get('kind') == 'whiteboard'
     if whiteboard:
         associated.extend([('旁白稿.md', '旁白稿', 'script'), ('发布.md', '发布文案', 'publishing')])
     for relative, label, item_kind in associated:
+        if relative.startswith('rendered/') and _file(folder, relative.removeprefix('rendered/'), 'document'):
+            continue
         path = _file(folder, relative, 'document')
         if path and path != primary:
             result.append({'label': label, 'url': _output(path), 'kind': item_kind})
@@ -170,7 +178,9 @@ def _deliverables(folder, primary, kind):
                 seen.add(path)
                 label = name.removesuffix('.md').removesuffix('.excalidraw')
                 result.append({'label': '可编辑白板 · ' + label, 'url': _output(path), 'kind': 'excalidraw'})
-    for relative in ('封面-4x3.png', '封面-3x4.png', 'cover-4x3.png', 'cover-3x4.png', 'cover-landscape.png', 'cover.png'):
+    for relative in ('封面-4x3.png', '封面-3x4.png', 'cover-4x3.png', 'cover-3x4.png', 'cover-landscape.png', 'cover.png', 'rendered/cover.png'):
+        if relative == 'rendered/cover.png' and _file(folder, 'cover.png', 'image'):
+            continue
         path = _file(folder, relative, 'image')
         if path:
             result.append({'label': '封面 · ' + path.stem, 'url': _output(path), 'kind': 'cover'})
@@ -212,11 +222,11 @@ def _product(job, state, folder):
         elif state.get('workflow_kind') == 'character-loop':
             media_type, names = 'image', ['animation.gif', 'animation.webp']
         else:
-            media_type, names = 'video', ['video.mp4', 'sample.mp4']
+            media_type, names = 'video', ['video.mp4', 'sample.mp4', 'rendered/video.mp4']
     path = next((p for name in names if (p := _file(folder, name, media_type))), None) if folder else None
     job_status = state.get('status')
     status = job_status if isinstance(job_status, str) and job_status in STATUSES else 'error'
-    cover = next((p for name in ('封面-4x3.png', 'cover-landscape.png', 'cover-4x3.png', 'cover.png')
+    cover = next((p for name in ('封面-4x3.png', 'cover-landscape.png', 'cover-4x3.png', 'cover.png', 'rendered/cover.png')
                   if (p := _file(folder, name, 'image'))), None) if folder else None
     if status == 'done' and (not path or workflow == 'story'):
         status = 'preview' if cover else 'draft' if spec or workflow == 'story' else 'error'
@@ -234,13 +244,14 @@ def _product(job, state, folder):
     row = _row(_id('project', job), workflow, media_type, title, stamp, status, job, path,
                job_status=job_status, phase=_text(state.get('phase'), 300), error=_text(state.get('error'), 1000),
                engine=_text(state.get('engine') or state.get('image_engine') or state.get('voice_engine')),
-               source_url=('/' + workflow + '?project=' + quote(job)) if workflow in ('whiteboard', 'investigation') else
-                   {'image': '/image', 'video': '/production', 'speech': '/speech', 'music': '/music', 'sfx': '/music',
-                    'story': '/novel', 'motion': '/motion', 'enhance': '/enhance', 'asr': '/subtitles',
+               source_url=('/video-tools?project=' + quote(job)) if state.get('video_tools') else ('/' + workflow + '?project=' + quote(job)) if workflow in ('whiteboard', 'investigation') else
+                   {'image': '/image', 'video': ('/novel' if spec.get('editor') == 'novel' else '/production') + '?project=' + quote(job), 'speech': '/speech', 'music': '/music?job=' + quote(job), 'sfx': '/music?job=' + quote(job),
+                    'story': '/novel', 'motion': '/motion?job=' + quote(job), 'enhance': '/enhance?job=' + quote(job), 'asr': '/subtitles?job=' + quote(job),
                     'generation': '/generation?plan=' + quote(state.get('plan_id') or job)}[workflow],
                quality_review=_text(state.get('quality_review')), plan_id=_text(state.get('plan_id')),
+               method_id=_text(state.get('method_id') or spec.get('method_id') or ('simon-skills' if workflow=='whiteboard' else '')),
                provenance_url=_url(prompt.get('source_url') or request.get('source_url')),
-               collections=['products', 'assets'] if status == 'done' and media_type in ('image', 'video', 'audio') else ['products'],
+               collections=['assets'] if state.get('imported') else ['products', 'assets'] if status == 'done' and media_type in ('image', 'video', 'audio') else ['products'],
                temporary=folder is None, thumbnail_url=_output(cover) if cover else _output(path) if path and media_type == 'image' else None,
                deliverables=_deliverables(folder, path, media_type) if folder else [])
     if not path and cover:
@@ -339,9 +350,11 @@ def _drafts():
             continue
         identity = _id('draft', record.stem)
         url = '/api/library/file?id=' + identity
-        yield _row(identity, 'story', 'document', _text(data.get('title')) or '小说分镜 · ' + record.stem,
+        editor = 'production' if data.get('editor') == 'production' else 'novel'
+        workflow = 'video' if editor == 'production' else 'story'
+        yield _row(identity, workflow, 'document', _text(data.get('title')) or ('制作分镜 · ' if editor == 'production' else '小说分镜 · ') + record.stem,
                    record.stat().st_mtime, 'draft', 'draft-' + record.stem, path,
-                   source_tool='novel', source_url='/novel?draft=' + identity, draft_id=record.stem, collections=['products'],
+                   source_tool=editor, source_url='/' + editor + '?draft=' + identity, draft_id=record.stem, collections=['products'],
                    preview_url=url, download_url=url, deliverables=[{'label': '完整分镜', 'url': url, 'kind': 'storyboard'}])
 
 
@@ -384,7 +397,7 @@ def _all(jobs=None):
     return sorted(rows, key=lambda row: (-row['created_at'], row['id']))
 
 
-def catalog(view='products', q='', kind='all', status=None, favorite=None, jobs=None):
+def catalog(view='products', q='', kind='all', status=None, favorite=None, jobs=None, method=''):
     if view not in ('products', 'assets'):
         raise ValueError('目录视图应为 products 或 assets')
     status = status or 'done'
@@ -392,6 +405,8 @@ def catalog(view='products', q='', kind='all', status=None, favorite=None, jobs=
         raise ValueError('未知的作品类型或状态筛选')
     if not isinstance(q, str) or len(q) > 200 or favorite not in (None, '0', '1'):
         raise ValueError('搜索词最多 200 字，收藏筛选应为 0 或 1')
+    if not isinstance(method,str) or method and not re.fullmatch(r'[a-z][a-z0-9-]{0,63}',method):
+        raise ValueError('创作方法筛选格式不正确')
     rows = [row for row in _all(jobs) if view in row['collections']]
     if view == 'assets':
         grouped = {}
@@ -414,9 +429,10 @@ def catalog(view='products', q='', kind='all', status=None, favorite=None, jobs=
                  or kind == 'image-reference' and row.get('reference_id')
                  or kind == 'registered-media' and any(copy.get('media_id') for copy in row.get('registered_copies', [])))
             and (favorite is None or row['favorite'] == (favorite == '1'))
+            and (not method or row.get('method_id')==method)
             and all(word in ' '.join([row['title'], row['project_id'] or '', row['workflow'], *row['tags']]).casefold() for word in words)]
     return {'items': rows, 'total': len(rows), 'view': view, 'counts': counts,
-            'filters': {'q': q, 'kind': kind, 'status': status, 'favorite': favorite},
+            'filters': {'q': q, 'kind': kind, 'status': status, 'favorite': favorite, 'method':method},
             'scope': '工作台项目主交付物与已登记素材；不包含模型、缓存、项目中间帧或音色参考录音'}
 
 
@@ -475,7 +491,7 @@ def get(handler, route, jobs=None):
             else:
                 raise ValueError('该工程尚无可下载的主要文件')
             return True
-        if set(query) - {'view', 'q', 'kind', 'status', 'favorite'} or any(len(value) != 1 for value in query.values()):
+        if set(query) - {'view', 'q', 'kind', 'status', 'favorite', 'method'} or any(len(value) != 1 for value in query.values()):
             raise ValueError('目录筛选包含未知或重复参数')
         handler.reply(catalog(**{key: value[0] for key, value in query.items()}, jobs=jobs))
     except (ValueError, OSError) as error:

@@ -8,7 +8,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def render(project):
     project=Path(project).resolve()
     from creation_settings import load
-    spec=json.loads((project/'storyboard.json').read_text(encoding='utf-8'));out=spec.get('settings',load())['output']
+    spec=json.loads((project/'storyboard.json').read_text(encoding='utf-8'));out=(spec['settings'] if 'settings' in spec else load())['output']
     env=os.environ.copy();env['BOARD_PROJECT']=str(project);env['PYTHONUTF8']='1'
     python=ROOT/'apps/animation/.venv/Scripts/python.exe'
     subprocess.run([str(python),'-m','manim','-qm','--fps',str(out['fps']),'--media_dir',str(project/'board'),

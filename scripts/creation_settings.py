@@ -46,7 +46,7 @@ def number(value,lo,hi,label,integer=False):
     if not lo<=n<=hi or (integer and n!=int(n)):raise ValueError(f'{label}应在 {lo}–{hi} 范围内')
     return int(n) if integer else n
 
-def validate_voice(v):
+def validate_voice(v, *, check_reference=True):
     v=merge(DEFAULTS['voice'],v)
     if v['engine'] not in ('index-tts','qwen3-custom','qwen3-design','qwen3-clone'):raise ValueError('未知本地配音引擎')
     if v['qwen_speaker'] not in ('Vivian','Serena','Uncle_Fu','Dylan','Eric','Ryan','Aiden','Ono_Anna','Sohee'):raise ValueError('未知 Qwen 音色')
@@ -55,14 +55,14 @@ def validate_voice(v):
     if not isinstance(v['qwen_ref_text'],str) or len(v['qwen_ref_text'])>2000:raise ValueError('克隆参考原文应不超过2000字')
     v['qwen_seed']=number(v['qwen_seed'],0,2147483647,'声音随机种子',True)
     ref=Path(v['reference'])
-    if v['engine'] in ('index-tts','qwen3-clone') and (not ref.is_absolute() or not ref.is_file() or ref.suffix.lower() not in ('.wav','.mp3','.flac','.m4a')):raise ValueError('请选择或上传已有参考音频')
+    if check_reference and v['engine'] in ('index-tts','qwen3-clone') and (not ref.is_absolute() or not ref.is_file() or ref.suffix.lower() not in ('.wav','.mp3','.flac','.m4a')):raise ValueError('请选择或上传已有参考音频')
     if v['emotion'] not in EMOTIONS:raise ValueError('未知情感')
     v['intensity']=number(v['intensity'],0,0.8,'情感强度');v['speed']=number(v['speed'],0.5,2,'语速')
     v['duration_factor']=number(v['duration_factor'],0.8,1.2,'合成节奏')
     v['pitch_semitones']=number(v['pitch_semitones'],-3,3,'音高微调')
     v['formant_shift']=number(v['formant_shift'],0.9,1.1,'共振峰微调')
     if not isinstance(v['prosody_reference'],str):raise ValueError('表达参考应为已登记音频或留空')
-    if v['prosody_reference']:
+    if check_reference and v['prosody_reference']:
         prosody=Path(v['prosody_reference'])
         if not prosody.is_absolute() or not prosody.is_file() or prosody.suffix.lower() not in ('.wav','.mp3','.flac','.m4a'):raise ValueError('表达参考音频不存在')
     v['prosody_strength']=number(v['prosody_strength'],0,1,'表达参考强度')
@@ -86,6 +86,9 @@ def validate(data, *, check_models=True, check_voice=True):
         saved=(data or {}).get(kind)
         if isinstance(saved,dict) and 'engine' not in saved and {'width','height','steps','seed'}.issubset(saved):
             c[kind]['engine']=legacy
+    saved_voice=(data or {}).get('voice')
+    if isinstance(saved_voice,dict) and 'engine' not in saved_voice and {'reference','emotion','intensity','speed'}.issubset(saved_voice):
+        c['voice']['engine']='index-tts'
     import model_profiles
     for kind in ('image','motion'):
         model_profiles.profile(kind,c[kind]['engine'])
@@ -126,9 +129,33 @@ def validate(data, *, check_models=True, check_voice=True):
     return c
 
 def save(data):
-    c=validate(data);CONFIG.parent.mkdir(exist_ok=True)
-    temp=CONFIG.with_name('creation-'+uuid.uuid4().hex+'.tmp');temp.write_text(json.dumps(c,ensure_ascii=False,indent=2),encoding='utf-8');os.replace(temp,CONFIG)
-    return c
+    from filelock import FileLock
+    CONFIG.parent.mkdir(parents=True, exist_ok=True)
+    with FileLock(str(CONFIG) + '.lock', timeout=5):
+        c = validate(data)
+        _write_config(c)
+        return c
+
+
+def _write_config(value):
+    temp = CONFIG.with_name('creation-' + uuid.uuid4().hex + '.tmp')
+    try:
+        temp.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding='utf-8')
+        os.replace(temp, CONFIG)
+    finally:
+        temp.unlink(missing_ok=True)
+
+
+def save_voice_default(voice):
+    """Update just the voice; unrelated missing GPU models are not prerequisites."""
+    from filelock import FileLock
+    checked = validate_voice(voice)
+    CONFIG.parent.mkdir(parents=True, exist_ok=True)
+    with FileLock(str(CONFIG) + '.lock', timeout=5):
+        current = load()
+        current['voice'] = checked
+        _write_config(current)
+    return current
 
 def inventory():
     choices={};items=[]

@@ -3,17 +3,17 @@ window.ImageReferences = (() => {
   const storageKey = 'ai-video-image-references-v1';
   let references = [], selected = [], loaded = false, loading;
   const el = id => document.getElementById(id);
-  try { const saved = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (Array.isArray(saved)) selected = [...new Set(saved.filter(id => typeof id === 'string'))].slice(0, 4); } catch (_) {}
+  try { const saved = JSON.parse(StudioStorage.local.getItem(storageKey) || '[]'); if (Array.isArray(saved)) selected = [...new Set(saved.filter(id => typeof id === 'string'))].slice(0, 4); } catch (_) {}
   const message = text => { el('reference-status').textContent = text; };
   const supported = () => el('backend').value === 'local' && document.querySelector('[data-group="image"][data-key="engine"]')?.value === 'flux2-klein-4b';
   function safePreview(value) { try { const url = new URL(value, location.origin); return url.origin === location.origin && (url.pathname.startsWith('/outputs/') || url.pathname === '/api/image-references/preview') ? url.href : ''; } catch (_) { return ''; } }
-  function persist() { try { localStorage.setItem(storageKey, JSON.stringify(selected)); } catch (_) {} }
+  function persist() { try { StudioStorage.local.setItem(storageKey, JSON.stringify(selected)); } catch (_) {} document.dispatchEvent(new Event('image-references-changed')); }
   function button(text, action, disabled = false) { const node = document.createElement('button'); node.type = 'button'; node.className = 'secondary'; node.textContent = text; node.disabled = disabled; node.onclick = action; return node; }
   function thumbnail(row) { const img = document.createElement('img'); img.src = safePreview(row.preview_url); img.alt = row.name; img.loading = 'lazy'; return img; }
   function select(id) { if (!supported()) return message('参考图编辑仅支持本地 FLUX.2 klein 4B；请先切换引擎。'); if (selected.includes(id)) return; if (selected.length >= 4) return message('最多选择 4 张参考图，请先移除一张。'); selected.push(id); persist(); render(); message('已加入本次参考图。顺序会保留到生成任务。'); }
   function render() {
     const allowed = supported();
-    el('reference-mode').textContent = allowed ? '本次可使用 0–4 张参考图；不选图片时为文生图。图 1、图 2 的顺序与下面一致。' : '当前引擎不支持参考图输入。请切换到“本地模型 + FLUX.2 klein 4B”，或移除已选参考图后生成。';
+    el('reference-mode').textContent = allowed ? '本次可使用 0–4 张参考图；不选图片时为文生图。图 1、图 2 的顺序与下面一致。' : document.documentElement.dataset.studioEdition === 'friend' ? '当前在线出图接口尚未接入参考图编辑。请移除已选参考图后生成；已有图片可在资源库中复用。' : '当前引擎不支持参考图输入。请切换到“本地模型 + FLUX.2 klein 4B”，或移除已选参考图后生成。';
     el('reference-upload').disabled = !allowed; el('reference-files').disabled = !allowed;
     el('reference-count').textContent = `${selected.length} / 4 张已选`;
     const picked = el('reference-selected'); picked.replaceChildren();
@@ -25,7 +25,7 @@ window.ImageReferences = (() => {
       const move = delta => { [selected[index], selected[index + delta]] = [selected[index + delta], selected[index]]; persist(); render(); };
       actions.append(button('前移', () => move(-1), index === 0), button('后移', () => move(1), index === selected.length - 1), button('移除', () => { selected.splice(index, 1); persist(); render(); })); card.append(actions); picked.append(card);
     });
-    if (!selected.length) { const empty = document.createElement('p'); empty.className = 'small'; empty.textContent = '尚未选择参考图。可上传角色、场景或物件，再从图库中选择。'; picked.append(empty); }
+    if (!selected.length) { const empty = document.createElement('p'); empty.className = 'small'; empty.textContent = allowed ? '尚未选择参考图。可上传角色、场景或物件，再从图库中选择。' : '本次按文字提示生成，不发送参考图片。'; picked.append(empty); }
     const library = el('reference-library'); library.replaceChildren();
     for (const row of references) { const card = document.createElement('div'); card.className = 'reference-card'; const name = document.createElement('span'); name.textContent = row.name; card.append(thumbnail(row), name, button(selected.includes(row.id) ? '已选择' : '用于本次生成', () => select(row.id), !allowed || selected.includes(row.id))); library.append(card); }
     if (loaded && !references.length) library.textContent = '图库为空，上传图片或将已完成的生成图存入图库。';
@@ -54,15 +54,15 @@ window.ImageReferences = (() => {
       if (!control) throw Error('图像参数尚未就绪，请刷新页面。');
       if (reference !== null) {
         // Preserve the previous selection before replacing it with the explicitly requested image.
-        localStorage.setItem(storageKey + '-before-navigation', JSON.stringify({saved_at:new Date().toISOString(),selected}));
+        StudioStorage.local.setItem(storageKey + '-before-navigation', JSON.stringify({saved_at:new Date().toISOString(),selected}));
         selected = [reference]; persist();
       }
       el('backend').value = 'local'; el('backend').dispatchEvent(new Event('change', {bubbles:true}));
       control.value = engine; control.dispatchEvent(new Event('change', {bubbles:true}));
       render();
       message(reference !== null ? `已载入参考图「${references.find(row => row.id === reference).name}」，本次使用本地 FLUX.2 klein 4B；未修改全局默认参数。` : '已选择本次本地图像引擎；未修改全局默认参数。');
-    } catch (error) { message('无法带入图库选择：' + error.message); }
+    } catch (error) { message('无法带入图库选择：' + error.message); throw error; }
   }
   const ready = Creation.ready.then(async () => { render(); await refresh(); await applyNavigation(); }); ready.catch(() => {});
-  return { ready, referenceIds, refresh, saveJob, safePreview };
+  return { ready, referenceIds, refresh, saveJob, safePreview, peek:() => [...selected] };
 })();

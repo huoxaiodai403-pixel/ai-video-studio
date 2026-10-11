@@ -1,0 +1,240 @@
+{
+  "repo": "ACE-Step/Ace-Step1.5",
+  "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+  "license": "mit",
+  "gated": false,
+  "components": [
+    "acestep-v15-turbo",
+    "acestep-5Hz-lm-1.7B",
+    "Qwen3-Embedding-0.6B",
+    "vae"
+  ],
+  "total_bytes": 10092102593,
+  "target": "models/ACE-Step-1.5",
+  "files": [
+    {
+      "name": ".gitattributes",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/.gitattributes",
+      "bytes": 1740,
+      "sha256": null,
+      "git_blob_sha1": "a8d4cbb214bda0ce6b6e4453c02ca1a826b9f08a",
+      "target": "models/ACE-Step-1.5/.gitattributes"
+    },
+    {
+      "name": "Qwen3-Embedding-0.6B/added_tokens.json",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/Qwen3-Embedding-0.6B/added_tokens.json",
+      "bytes": 707,
+      "sha256": null,
+      "git_blob_sha1": "b54f9135e44c1e81047e8d05cb027af8bc039eed",
+      "target": "models/ACE-Step-1.5/Qwen3-Embedding-0.6B/added_tokens.json"
+    },
+    {
+      "name": "Qwen3-Embedding-0.6B/chat_template.jinja",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/Qwen3-Embedding-0.6B/chat_template.jinja",
+      "bytes": 4116,
+      "sha256": null,
+      "git_blob_sha1": "699ff8df401fe4788525e9c1f9b86a99eadd6230",
+      "target": "models/ACE-Step-1.5/Qwen3-Embedding-0.6B/chat_template.jinja"
+    },
+    {
+      "name": "Qwen3-Embedding-0.6B/config.json",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/Qwen3-Embedding-0.6B/config.json",
+      "bytes": 1359,
+      "sha256": null,
+      "git_blob_sha1": "21bd712c76114dc22587c6eeb84ab64186c9d245",
+      "target": "models/ACE-Step-1.5/Qwen3-Embedding-0.6B/config.json"
+    },
+    {
+      "name": "Qwen3-Embedding-0.6B/merges.txt",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/Qwen3-Embedding-0.6B/merges.txt",
+      "bytes": 1671853,
+      "sha256": null,
+      "git_blob_sha1": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+      "target": "models/ACE-Step-1.5/Qwen3-Embedding-0.6B/merges.txt"
+    },
+    {
+      "name": "Qwen3-Embedding-0.6B/model.safetensors",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/Qwen3-Embedding-0.6B/model.safetensors",
+      "bytes": 1191586416,
+      "sha256": "0437e45c94563b09e13cb7a64478fc406947a93cb34a7e05870fc8dcd48e23fd",
+      "git_blob_sha1": "9116264a405846ebfe4e95556b63b1ca07c892a0",
+      "target": "models/ACE-Step-1.5/Qwen3-Embedding-0.6B/model.safetensors"
+    },
+    {
+      "name": "Qwen3-Embedding-0.6B/special_tokens_map.json",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/Qwen3-Embedding-0.6B/special_tokens_map.json",
+      "bytes": 613,
+      "sha256": null,
+      "git_blob_sha1": "ac23c0aaa2434523c494330aeb79c58395378103",
+      "target": "models/ACE-Step-1.5/Qwen3-Embedding-0.6B/special_tokens_map.json"
+    },
+    {
+      "name": "Qwen3-Embedding-0.6B/tokenizer.json",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/Qwen3-Embedding-0.6B/tokenizer.json",
+      "bytes": 11423705,
+      "sha256": "def76fb086971c7867b829c23a26261e38d9d74e02139253b38aeb9df8b4b50a",
+      "git_blob_sha1": "18a4abbf4a408dc534006a455544dcc195f356d2",
+      "target": "models/ACE-Step-1.5/Qwen3-Embedding-0.6B/tokenizer.json"
+    },
+    {
+      "name": "Qwen3-Embedding-0.6B/tokenizer_config.json",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/Qwen3-Embedding-0.6B/tokenizer_config.json",
+      "bytes": 5404,
+      "sha256": null,
+      "git_blob_sha1": "ddaf69808214a44fdd26d3785b66c1367c78277a",
+      "target": "models/ACE-Step-1.5/Qwen3-Embedding-0.6B/tokenizer_config.json"
+    },
+    {
+      "name": "Qwen3-Embedding-0.6B/vocab.json",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/Qwen3-Embedding-0.6B/vocab.json",
+      "bytes": 2776833,
+      "sha256": null,
+      "git_blob_sha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "target": "models/ACE-Step-1.5/Qwen3-Embedding-0.6B/vocab.json"
+    },
+    {
+      "name": "README.md",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/README.md",
+      "bytes": 5496,
+      "sha256": null,
+      "git_blob_sha1": "a3115cec283fbdc2d500aa50fdffac3c87e6689a",
+      "target": "models/ACE-Step-1.5/README.md"
+    },
+    {
+      "name": "acestep-5Hz-lm-1.7B/added_tokens.json",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/acestep-5Hz-lm-1.7B/added_tokens.json",
+      "bytes": 2217787,
+      "sha256": null,
+      "git_blob_sha1": "584075018edeacd6dcc031b3e2cbbf90836eba41",
+      "target": "models/ACE-Step-1.5/acestep-5Hz-lm-1.7B/added_tokens.json"
+    },
+    {
+      "name": "acestep-5Hz-lm-1.7B/chat_template.jinja",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/acestep-5Hz-lm-1.7B/chat_template.jinja",
+      "bytes": 4168,
+      "sha256": null,
+      "git_blob_sha1": "01be9b307daa2d425f7c168c9fb145a286e0afb4",
+      "target": "models/ACE-Step-1.5/acestep-5Hz-lm-1.7B/chat_template.jinja"
+    },
+    {
+      "name": "acestep-5Hz-lm-1.7B/config.json",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/acestep-5Hz-lm-1.7B/config.json",
+      "bytes": 1385,
+      "sha256": null,
+      "git_blob_sha1": "1325891e0f2cb06ea22906f9c89047d09d0dac1f",
+      "target": "models/ACE-Step-1.5/acestep-5Hz-lm-1.7B/config.json"
+    },
+    {
+      "name": "acestep-5Hz-lm-1.7B/merges.txt",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/acestep-5Hz-lm-1.7B/merges.txt",
+      "bytes": 1671853,
+      "sha256": null,
+      "git_blob_sha1": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+      "target": "models/ACE-Step-1.5/acestep-5Hz-lm-1.7B/merges.txt"
+    },
+    {
+      "name": "acestep-5Hz-lm-1.7B/model.safetensors",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/acestep-5Hz-lm-1.7B/model.safetensors",
+      "bytes": 3708521528,
+      "sha256": "f161689da73e5ecefa28ff780d51c2d92a00f056d021d7933c779ed5c6cd7db8",
+      "git_blob_sha1": "24177a84e9d1da125ef1a6c87493f07c2fb3565c",
+      "target": "models/ACE-Step-1.5/acestep-5Hz-lm-1.7B/model.safetensors"
+    },
+    {
+      "name": "acestep-5Hz-lm-1.7B/special_tokens_map.json",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/acestep-5Hz-lm-1.7B/special_tokens_map.json",
+      "bytes": 1824199,
+      "sha256": null,
+      "git_blob_sha1": "aa26266349a0f38be608e07138c9047356309551",
+      "target": "models/ACE-Step-1.5/acestep-5Hz-lm-1.7B/special_tokens_map.json"
+    },
+    {
+      "name": "acestep-5Hz-lm-1.7B/tokenizer.json",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/acestep-5Hz-lm-1.7B/tokenizer.json",
+      "bytes": 24321939,
+      "sha256": "35af56c3f5cb3ea2cc578aa28a8937770981d504f183ac5c8c38baf4bbd4af4d",
+      "git_blob_sha1": "9ddbbfa4ab39a70635bbde85a4cb422afeae7d88",
+      "target": "models/ACE-Step-1.5/acestep-5Hz-lm-1.7B/tokenizer.json"
+    },
+    {
+      "name": "acestep-5Hz-lm-1.7B/tokenizer_config.json",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/acestep-5Hz-lm-1.7B/tokenizer_config.json",
+      "bytes": 14072925,
+      "sha256": "6cd70cdd89425971794f5235562edcc608b0629a6c4686ae51a8b8c8b8ba5e95",
+      "git_blob_sha1": "b24427adb48675a5389bd54813b4e63f1b7127f8",
+      "target": "models/ACE-Step-1.5/acestep-5Hz-lm-1.7B/tokenizer_config.json"
+    },
+    {
+      "name": "acestep-5Hz-lm-1.7B/vocab.json",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/acestep-5Hz-lm-1.7B/vocab.json",
+      "bytes": 2776833,
+      "sha256": null,
+      "git_blob_sha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "target": "models/ACE-Step-1.5/acestep-5Hz-lm-1.7B/vocab.json"
+    },
+    {
+      "name": "acestep-v15-turbo/config.json",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/acestep-v15-turbo/config.json",
+      "bytes": 1968,
+      "sha256": null,
+      "git_blob_sha1": "6a0b5c09a654614302947fd1d7041f7ed0764d8c",
+      "target": "models/ACE-Step-1.5/acestep-v15-turbo/config.json"
+    },
+    {
+      "name": "acestep-v15-turbo/configuration_acestep_v15.py",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/acestep-v15-turbo/configuration_acestep_v15.py",
+      "bytes": 13130,
+      "sha256": null,
+      "git_blob_sha1": "965a1b73afb1c89d0959c7d80691e487fdfde505",
+      "target": "models/ACE-Step-1.5/acestep-v15-turbo/configuration_acestep_v15.py"
+    },
+    {
+      "name": "acestep-v15-turbo/model.safetensors",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/acestep-v15-turbo/model.safetensors",
+      "bytes": 4787825604,
+      "sha256": "3f6e0797fad420a39bd33979eb6e840e30989e34a3794e843d23b60ec6e422d7",
+      "git_blob_sha1": "dd5858cb03b6587350e2c4abc4fd55c0ae7dc39b",
+      "target": "models/ACE-Step-1.5/acestep-v15-turbo/model.safetensors"
+    },
+    {
+      "name": "acestep-v15-turbo/modeling_acestep_v15_turbo.py",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/acestep-v15-turbo/modeling_acestep_v15_turbo.py",
+      "bytes": 96036,
+      "sha256": null,
+      "git_blob_sha1": "fa1162a5a01cc45c7959f3c531e2a8272ca05104",
+      "target": "models/ACE-Step-1.5/acestep-v15-turbo/modeling_acestep_v15_turbo.py"
+    },
+    {
+      "name": "acestep-v15-turbo/silence_latent.pt",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/acestep-v15-turbo/silence_latent.pt",
+      "bytes": 3841215,
+      "sha256": "a778e9dd942f5e8b2c09c55370782d318834432b03dabbcdf70e6ed49ad6358b",
+      "git_blob_sha1": "6b1e0f254e47f4f23ec505313d05e1d9fd09ae3e",
+      "target": "models/ACE-Step-1.5/acestep-v15-turbo/silence_latent.pt"
+    },
+    {
+      "name": "config.json",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/config.json",
+      "bytes": 1968,
+      "sha256": null,
+      "git_blob_sha1": "6a0b5c09a654614302947fd1d7041f7ed0764d8c",
+      "target": "models/ACE-Step-1.5/config.json"
+    },
+    {
+      "name": "vae/config.json",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/vae/config.json",
+      "bytes": 425,
+      "sha256": null,
+      "git_blob_sha1": "f49eb7b261dde15ed29c0fa1e790251dcecbd280",
+      "target": "models/ACE-Step-1.5/vae/config.json"
+    },
+    {
+      "name": "vae/diffusion_pytorch_model.safetensors",
+      "url": "https://huggingface.co/ACE-Step/Ace-Step1.5/resolve/19671f406d603126926c1b7e2adc169acbcade22/vae/diffusion_pytorch_model.safetensors",
+      "bytes": 337431388,
+      "sha256": "da17edb604c40deaf09e9b24974e590d1ca83a374070e5d0884cfa4bed9a99b0",
+      "git_blob_sha1": "1b5eb1b18009ae7ad96c3bda6412517b68ec2bc2",
+      "target": "models/ACE-Step-1.5/vae/diffusion_pytorch_model.safetensors"
+    }
+  ]
+}

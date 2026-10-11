@@ -1,0 +1,14 @@
+{
+ "title":"一页一问 · 读论语","width":720,"height":1280,"fps":25,
+ "speech":{"backend":"windows","voice_id":"Microsoft Huihui Desktop","speed":0.95},
+ "scene_html":"book.html",
+ "audio_bed":{"path":"assets/study.wav","gain":0.24,"loop":true,"credit":"项目自制简约合成音床；make_soundbeds.py"},
+ "style":"靛蓝线装书、米白纸和朱色书签；整组镜头从封面、原句、阅读桌面到远景变化，字幕固定在下方。",
+ "brief":"核对《论语·学而》公开原文：https://zh.wikisource.org/wiki/論語/學而第一 。开篇原句与现代阅读建议分开。封面为本项目原创书籍示意，不冒充出版社封面，不引用评分、销量或编造读者评论。",
+ "scenes":[
+  {"id":"cover","narration":"读论语，可以先从一页里的一个问题开始。","visual":"原创靛蓝线装书封面与小书签","action":"封面从斜侧转正，书签轻落","camera":"书籍三分之四视角"},
+  {"id":"quote","narration":"开篇的学而时习之，把学习和反复实践放在一起。","visual":"书页上显现学而时习之的原句","action":"翻开纸页，原句逐组亮起","camera":"俯视书页近景"},
+  {"id":"question","narration":"先选一句，再拿自己的经历来对照。哪里做到了，哪里还没做到。","visual":"打开的书、便签与笔，便签写下自己的问题","action":"笔尖移动留下一个问号，两张便签依次放入","camera":"桌面斜侧中景"},
+  {"id":"next","narration":"别急着一次读完。把一个问题读明白，再往下走。","visual":"书签留在这一页，画面拉远留下阅读空间","action":"纸页轻合，书签保留，最后完整停留","camera":"俯视远景"}
+ ]
+}

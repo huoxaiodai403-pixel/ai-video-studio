@@ -1,0 +1,8 @@
+{
+ "storyboard":{"title":"一条消息，三步核对 · 有声白板","scenes":[
+  {"id":"origin","board_title":"先找到原文","board_layout":"opening","board_cards":["谁最先说的","补齐前后文"],"board_sticker":"reader","narration":"看到一条消息，先找到最初的原文。只看转发截图，可能漏掉前后文。"},
+  {"id":"evidence","board_title":"转发数量不等于证据数量","board_layout":"compare","board_cards":["同一个出处的转发","不同来源的独立材料"],"board_sticker":"none","narration":"多个账号转发同一句话，不等于多份独立证据。看看它们是不是都引用了同一个出处。"},
+  {"id":"limits","board_title":"把不确定留下来","board_layout":"summary","board_cards":["核对日期","区分事实与推测","等待新证据"],"board_sticker":"none","narration":"最后核对日期，分清事实和推测。还不能确认的部分，先留下问号，再等待新的证据。"}
+ ]},
+ "backends":{"tts":"windows","asr":"synthesis"}
+}

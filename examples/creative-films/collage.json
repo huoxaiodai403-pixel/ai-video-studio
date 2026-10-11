@@ -1,0 +1,15 @@
+{
+  "title":"慢一点，看见这座城 · 拼贴短片",
+  "width":1280,"height":720,"fps":25,
+  "speech":{"backend":"windows","voice_id":"Microsoft Huihui Desktop","speed":1},
+  "scene_html":"collage.html",
+  "assets":{"bicycle":"assets/bicycle.webp"},
+  "style":"奶油纸底、朱红单车剪贴、森林绿与钴蓝纸片；主物体、地图与文字分别运动。",
+  "brief":"原创城市骑行小故事。使用自有或新生成的透明单车图层，不能把拼贴位移称为模型生成的人物运动。",
+  "scenes":[
+    {"id":"rush","narration":"赶路的时候，城市只剩下一个终点。","visual":"地图连线与终点纸签，单车从左侧进入","action":"地图纸片先落下，单车后滑入","camera":"固定全景"},
+    {"id":"look","narration":"慢一点，才看见转角的树影和风。","visual":"单车局部放大，蓝色风线与剪纸叶片","action":"叶片轻摆，镜头缓慢推近车把","camera":"局部近景"},
+    {"id":"choose","narration":"选一条没走过的小路，让好奇心带路。","visual":"路线分岔，金黄新路线逐段画出","action":"路线与路标分别出现，单车沿图面平移","camera":"俯看平面地图"},
+    {"id":"arrive","narration":"今天的收获，也可以是沿途。","visual":"单车和三张彩色纸片组成最终海报","action":"纸片独立入场，单车落位，定格收尾","camera":"拉回完整构图"}
+  ]
+}
